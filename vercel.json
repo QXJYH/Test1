@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "functions": {
+    "asset/index.php": {
+      "runtime": "vercel-php@0.6.0"
+    }
+  },
+  "routes": [{ "src": "/(.*)", "dest": "/asset/index.php" }]
+}
