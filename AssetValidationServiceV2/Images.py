@@ -56,7 +56,7 @@ def Validate(data: bytes, ext: str) -> bool:
         print(f"image validation failed, most likely false detection: {e}")
         return False
         
-Images = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".gif")
+Images = (".png", ".jpg", ".jpeg", ".webp")
 @app.post("/validateImage")
 async def ValidateImage(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(Images):
