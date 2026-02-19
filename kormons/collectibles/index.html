@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collectibles • Kornet</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/collectibles/styles.css">
+</head>
+<body class="fade-in collectibles-page">
+  <header class="topbar">
+    <div class="logo logo-collectibles">
+      <img src="/collectibles/logo2.png" alt="Kornet">
+    </div>
+
+    <nav class="nav-center">
+      <a href="https://kornet.lat/home">Home</a>
+      <a href="/collectibles" class="active">Collectibles</a>
+      <a href="/rap">RAP Leaderboard</a>
+    </nav>
+
+    <a href="https://kornet.lat/home" class="reblox-btn back-home">Back to Home</a>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="avatar-wrap" id="avatar-wrap"><span id="user-loading">Loading user…</span></div>
+        <h2 id="displayName" class="username">—</h2>
+        <p id="username" class="subuser">@—</p>
+        <p id="status" class="status">—</p>
+        <p id="rap-rank" class="status">RAP Rank: —</p>
+        <p id="desc" class="desc">—</p>
+        <a id="profileLink" class="profile-link" href="#" target="_blank" rel="noopener">Open Profile ↗</a>
+        <hr class="divider">
+        <form id="userForm" class="sidebar-search">
+          <input id="userIdInput" type="number" placeholder="Enter User ID..." />
+          <button type="submit">Load</button>
+        </form>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <h2 id="collectiblesTitle">Collectibles</h2>
+        <div id="count" class="count-badge">0</div>
+      </div>
+      <div id="notice" class="notice" hidden></div>
+      <div id="grid" class="grid"></div>
+      <div id="loading" class="loading">Loading collectibles…</div>
+    </main>
+  </div>
+
+  <div id="loadingOverlay">
+    <img src="/collectibles/loading.gif" alt="Loading..." />
+  </div>
+
+  <script src="/collectibles/script.js"></script>
+  <script>
+    document.querySelectorAll("a[href]").forEach(a => {
+      const href = a.getAttribute("href");
+      if (href.startsWith("/") && !href.includes("#")) {
+        a.addEventListener("click", e => {
+          e.preventDefault();
+          document.body.classList.add("fade-out");
+          setTimeout(() => (window.location.href = href), 250);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

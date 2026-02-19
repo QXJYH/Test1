@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAP Leaderboard • Kornet</title>
+<style>
+:root {
+  --bg:#0b0b0d; --panel:#0a0a0a; --muted:#1b1b22;
+  --text:#e9eaee; --sub:#9aa0aa; --accent:#ef4444;
+  --border:#111; --shadow:rgba(0,0,0,0.5);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;}
+img{display:block;max-width:100%;border-radius:6px;}
+*,a,button{transition:all 0.25s ease;}
+.topbar{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:12px 24px;border-bottom:1px solid var(--border);backdrop-filter:blur(6px);gap:20px;}
+.logo img{max-width:180px;height:auto;}
+.nav-center{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:center;}
+.nav-center a{color:var(--sub);font-weight:600;position:relative;padding:6px 8px;text-decoration:none;}
+.nav-center a:hover{color:var(--accent);transform:translateY(-1px);}
+.nav-center a.active{color:var(--accent);font-weight:700;}
+.nav-center a.active::after{content:"";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:60%;height:2px;background:var(--accent);border-radius:2px;}
+.reblox-btn,.rap-btn{background:var(--accent);color:#fff;font-weight:700;border-radius:8px;padding:6px 14px;cursor:pointer;}
+.reblox-btn:hover,.rap-btn:hover{opacity:0.85;transform:scale(1.02);}
+.main{flex:1;padding:20px 30px;overflow-y:auto;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;}
+.card{background:linear-gradient(180deg,#131318,#101016);border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 18px var(--shadow);cursor:pointer;transition:all 0.2s ease;}
+.card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 6px 22px var(--shadow);}
+.card img{width:80px;height:80px;border-radius:12px;margin:10px auto 6px;display:block;}
+.card .name{font-weight:700;font-size:1rem;margin-bottom:4px;text-align:center;}
+.card .rap{font-weight:700;color:#ffd;text-align:center;}
+.card .rank{font-weight:600;color:var(--accent);text-align:center;margin-bottom:4px;}
+.loading{text-align:center;opacity:0.5;margin:2rem 0;}
+.footer{text-align:center;padding:12px 0;background:var(--panel);border-top:1px solid var(--border);color:var(--sub);font-size:0.9rem;position:fixed;bottom:0;width:100%;backdrop-filter:blur(6px);}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo"><img src="logo2.png" alt="Kornet"></div>
+  <nav class="nav-center">
+    <a href="https://kornet.lat/home">Home</a>
+    <a href="/collectibles">Collectibles</a>
+    <a href="/rap" class="active">RAP Leaderboard</a>
+  </nav>
+  <a href="https://kornet.lat/home" class="reblox-btn back-home">Back to Home</a>
+</header>
+
+<main class="main">
+  <h2>RAP Leaderboard</h2>
+  <div id="grid" class="grid"></div>
+  <div id="loading" class="loading"><img src="rap/loading.gif" height="32"></div>
+</main>
+
+<script src="rap.js"></script>

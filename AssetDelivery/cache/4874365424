@@ -1,0 +1,2040 @@
+<roblox version="4">
+  <Item class="ModuleScript" referent="0">
+    <Properties>
+      <string name="Name">MainModule</string>
+      <string name="Source">-- UTILITY
+local DirectoryService = require(4926442976)
+local Maid = require(5086306120)
+local Signal = require(4893141590)
+
+
+
+-- CREATE ICON UI
+local topbarPlusGui = Instance.new("ScreenGui")
+topbarPlusGui.Enabled = true
+topbarPlusGui.DisplayOrder = 0
+topbarPlusGui.IgnoreGuiInset = true
+topbarPlusGui.ResetOnSpawn = false
+topbarPlusGui.Name = "Topbar+"
+
+local topbarContainer = Instance.new("Frame")
+topbarContainer.BackgroundTransparency = 1
+topbarContainer.Name = "TopbarContainer"
+topbarContainer.Position = UDim2.new(0, 0, 0, 0)
+topbarContainer.Size = UDim2.new(1, 0, 0, 36)
+topbarContainer.Visible = true
+topbarContainer.ZIndex = 1
+topbarContainer.Parent = topbarPlusGui
+
+local iconContainer = Instance.new("Frame")
+iconContainer.BackgroundTransparency = 1
+iconContainer.Name = "_IconTemplate"
+iconContainer.Position = UDim2.new(0, 104, 0, 4)
+iconContainer.Size = UDim2.new(0, 32, 0, 32)
+iconContainer.Visible = false
+iconContainer.ZIndex = 1
+iconContainer.Parent = topbarContainer
+
+local iconButton = Instance.new("ImageButton")
+iconButton.ImageTransparency = 0.5
+iconButton.Name = "IconButton"
+iconButton.Position = UDim2.new(0, 0, 0, 0)
+iconButton.Size = UDim2.new(1, 0, 1, 0)
+iconButton.Visible = true
+iconButton.ZIndex = 2
+iconButton.BackgroundTransparency = 1
+iconButton.ImageColor3 = Color3.new(0,0,0)
+iconButton.BorderSizePixel = 0
+iconButton.Image = "http://www.bloxup.lol/asset/?id=5540166883"
+iconButton.ScaleType = Enum.ScaleType.Crop
+iconButton.Parent = iconContainer
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0.25,0)
+uiCorner.Parent = iconButton
+
+local stateOverlay = Instance.new("ImageLabel")
+stateOverlay.BackgroundTransparency = 1
+stateOverlay.Name = "StateOverlay"
+stateOverlay.Position = iconButton.Position
+stateOverlay.Size = iconButton.Size
+stateOverlay.Visible = true
+stateOverlay.ZIndex = iconButton.ZIndex + 1
+stateOverlay.ImageTransparency = 1
+stateOverlay.ImageColor3 = Color3.new(1,1,1)
+stateOverlay.BorderSizePixel = 0
+stateOverlay.Image = "http://www.bloxup.lol/asset/?id=5540166883"
+stateOverlay.ScaleType = Enum.ScaleType.Crop
+stateOverlay.Parent = iconButton.Parent
+
+local stateUiCorner = Instance.new("UICorner")
+stateUiCorner.CornerRadius = uiCorner.CornerRadius
+stateUiCorner.Parent = stateOverlay
+
+local gradient = Instance.new("UIGradient")
+gradient.Enabled = false
+gradient.Parent = iconButton
+
+local iconImage = Instance.new("ImageLabel")
+iconImage.BackgroundTransparency = 1
+iconImage.Name = "IconImage"
+iconImage.AnchorPoint = Vector2.new(0.5, 0.5)
+iconImage.Position = UDim2.new(0.5, 0, 0.5, 0)
+iconImage.Size = UDim2.new(0, 20, 0, 20)
+iconImage.Visible = true
+iconImage.ZIndex = 3
+iconImage.ImageTransparency = 0
+iconImage.ImageColor3 = Color3.fromRGB(255, 255, 255)
+iconImage.ScaleType = Enum.ScaleType.Fit
+iconImage.Parent = iconButton
+
+local iconLabel = Instance.new("TextLabel")
+iconLabel.BackgroundTransparency = 1
+iconLabel.Name = "IconLabel"
+iconLabel.AnchorPoint = Vector2.new(0, 0.5)
+iconLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+iconLabel.Size = UDim2.new(0, 20, 0, 20)
+iconLabel.Text = ""
+iconLabel.TextXAlignment = Enum.TextXAlignment.Left
+iconLabel.Font = Enum.Font.GothamSemibold
+iconLabel.TextSize = 14
+iconLabel.ZIndex = 3
+iconLabel.Parent = iconButton
+
+local notification = Instance.new("ImageLabel")
+notification.BackgroundTransparency = 1
+notification.Name = "Notification"
+notification.Position = UDim2.new(0.45, 0, 0, -2)
+notification.Size = UDim2.new(1, 0, 0.7, 0)
+notification.Visible = false
+notification.ZIndex = 4
+notification.Image = "http://www.bloxup.lol/asset/?id=4871790969"
+notification.ImageTransparency = 0
+notification.ImageColor3 = Color3.fromRGB(255, 255, 255)
+notification.ScaleType = Enum.ScaleType.Fit
+notification.Parent = iconButton
+
+local amount = Instance.new("TextLabel")
+amount.BackgroundTransparency = 1
+amount.Name = "Amount"
+amount.Position = UDim2.new(0.25, 0, 0.15, 0)
+amount.Size = UDim2.new(0.5, 0, 0.7, 0)
+amount.Visible = true
+amount.ZIndex = 5
+amount.Font = Enum.Font.Arial
+amount.Text = "0"
+amount.TextColor3 = Color3.fromRGB(31, 33, 35)
+amount.TextScaled = true
+amount.Parent = notification
+
+--CAPTION
+local caption = Instance.new("Frame")
+caption.Name = "Caption"
+caption.Position = UDim2.new(0.5,0,1,4)
+caption.BackgroundTransparency = 1
+caption.AnchorPoint = Vector2.new(0.5,0)
+caption.ClipsDescendants = true
+caption.ZIndex = 100
+caption.Visible = false
+caption.Parent = iconContainer
+
+local captionBackground = Instance.new("Frame")
+captionBackground.Name = "Background"
+captionBackground.BackgroundTransparency = 0.5
+captionBackground.BorderSizePixel = 0
+captionBackground.BackgroundColor3 = Color3.new(0,0,0)
+captionBackground.AnchorPoint = Vector2.new(0.5,0.5)
+captionBackground.Position = UDim2.new(0.5,0,0.5,0)
+captionBackground.Size = UDim2.new(1,0,1,0)
+captionBackground.ZIndex = 101
+captionBackground.Parent = caption
+
+local captionText = Instance.new("TextLabel")
+captionText.BackgroundTransparency = 1
+captionText.Font = Enum.Font.GothamSemibold
+captionText.TextScaled = true
+captionText.TextSize = 12
+captionText.Position = UDim2.new(0,3,0.12,3)
+captionText.Size = UDim2.new(1,-6,0.8,-6)
+captionText.ZIndex = 102
+captionText.TextColor3 = Color3.new(1,1,1)
+
+captionText.Parent = caption
+
+local captionUiCorner = Instance.new("UICorner")
+captionUiCorner.CornerRadius = UDim.new(0.25,0)
+captionUiCorner.Parent = captionBackground
+
+local captionOverlineHolder = Instance.new("Frame")
+captionOverlineHolder.Name = "OverlineHolder"
+captionOverlineHolder.BackgroundTransparency = 1
+captionOverlineHolder.AnchorPoint = Vector2.new(0.5,0.5)
+captionOverlineHolder.Position = UDim2.new(0.5,0,-0.5,3)
+captionOverlineHolder.Size = UDim2.new(1,0,1,0)
+captionOverlineHolder.ZIndex = 102
+captionOverlineHolder.ClipsDescendants = true
+captionOverlineHolder.Parent = caption
+
+local captionOverline = Instance.new("Frame")
+captionOverline.Name = "Overline"
+captionOverline.BackgroundTransparency = 0
+captionOverline.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+captionOverline.AnchorPoint = Vector2.new(0.5,0.5)
+captionOverline.Position = UDim2.new(0.5,0,1.5,-3)
+captionOverline.Size = UDim2.new(1,0,1,0)
+captionOverline.ZIndex = 102
+captionOverline.Parent = captionOverlineHolder
+
+local overlineUiCorner = Instance.new("UICorner")
+overlineUiCorner.CornerRadius = captionUiCorner.CornerRadius
+overlineUiCorner.Parent = captionOverline
+
+--CREATE DROPDOWN
+local dropdown = Instance.new("Frame")
+dropdown.Name = "Dropdown"
+dropdown.BackgroundTransparency = 1
+dropdown.Visible = false
+dropdown.ClipsDescendants = true
+dropdown.Parent = topbarPlusGui
+
+local background = Instance.new("Frame")
+background.Name = "Background"
+background.BackgroundColor3 = Color3.fromRGB(31, 33, 35)
+background.BackgroundTransparency = 0.3
+background.BorderSizePixel = 0
+background.ZIndex = 10
+background.AnchorPoint = Vector2.new(0.5,0.5)
+background.Position = UDim2.new(0.5,0,0.5,0)
+background.Size = UDim2.new(1,0,1,-8)
+background.Parent = dropdown
+
+local topRect = Instance.new("ImageLabel")
+topRect.Name = "TopRoundedRect"
+topRect.BackgroundTransparency = 1
+topRect.ImageColor3 = Color3.fromRGB(31, 33, 35)
+topRect.ImageTransparency = 0.3
+topRect.Image = "rbxasset://textures/ui/BottomRoundedRect8px.png"
+topRect.ScaleType = Enum.ScaleType.Slice
+topRect.SliceCenter = Rect.new(8,8,24,16)
+topRect.SliceScale = 0.5
+topRect.Size = UDim2.new(1,0,0,4)
+topRect.AnchorPoint = Vector2.new(0,1)
+topRect.Position = UDim2.new(0,0,0,0)
+topRect.Parent = background
+
+local bottomRect = topRect:Clone()
+bottomRect.Name = "BottomRoundedRect"
+bottomRect.Image = "rbxasset://textures/ui/TopRoundedRect8px.png"
+topRect.AnchorPoint = Vector2.new(0,0)
+topRect.Position = UDim2.new(0,0,1,0)
+bottomRect.Parent = background
+
+local uiSize = Instance.new("UISizeConstraint")
+uiSize.Name = "_UISizeConstraint"
+uiSize.MinSize = Vector2.new(150,0)
+uiSize.Parent = dropdown
+
+local tempFolder = Instance.new("Folder")
+tempFolder.Name = "Temp"
+tempFolder.Parent = script:WaitForChild("Dropdown")
+
+local clickSound = Instance.new("Sound")
+clickSound.Name = "ClickSound"
+clickSound.SoundId = "rbxassetid://5273899897"
+clickSound.Parent = topbarPlusGui
+
+local indicator = Instance.new("ImageLabel")
+indicator.Name = "Indicator"
+indicator.BackgroundTransparency = 1
+indicator.Image = "rbxassetid://5278151556"
+indicator.Size = UDim2.new(0,32,0,32)
+indicator.AnchorPoint = Vector2.new(0.5,0)
+indicator.Position = UDim2.new(0.5,0,0,5)
+indicator.ScaleType = Enum.ScaleType.Fit
+indicator.Visible = false
+indicator.Active = true
+indicator.Parent = topbarPlusGui
+
+
+--TOOL TIP
+local toolTip = Instance.new("Frame")
+toolTip.Name = "ToolTip"
+toolTip.BackgroundTransparency = 1
+toolTip.AnchorPoint = Vector2.new(0,1)
+toolTip.ClipsDescendants = true
+toolTip.ZIndex = 100
+toolTip.Visible = false
+toolTip.Parent = topbarPlusGui
+
+local toolTipBackground = Instance.new("Frame")
+toolTipBackground.Name = "Background"
+toolTipBackground.BackgroundTransparency = 0.1
+toolTipBackground.BorderSizePixel = 0
+toolTipBackground.BackgroundColor3 = Color3.new(1,1,1)
+toolTipBackground.AnchorPoint = Vector2.new(0.5,0.5)
+toolTipBackground.Position = UDim2.new(0.5,0,0.5,0)
+toolTipBackground.Size = UDim2.new(1,0,1,-8)
+toolTipBackground.ZIndex = 101
+toolTipBackground.Parent = toolTip
+
+local topRect = Instance.new("ImageLabel")
+topRect.Name = "TopRoundedRect"
+topRect.BackgroundTransparency = 1
+topRect.ImageColor3 = Color3.new(1,1,1)
+topRect.ImageTransparency = 0.1
+topRect.Image = "rbxasset://textures/ui/BottomRoundedRect8px.png"
+topRect.ScaleType = Enum.ScaleType.Slice
+topRect.SliceCenter = Rect.new(8,8,24,16)
+topRect.SliceScale = 0.5
+topRect.Size = UDim2.new(1,0,0,4)
+topRect.AnchorPoint = Vector2.new(0,1)
+topRect.Position = UDim2.new(0,0,0,0)
+topRect.ZIndex = 101
+topRect.Parent = toolTipBackground
+
+local bottomRect = topRect:Clone()
+bottomRect.Name = "BottomRoundedRect"
+bottomRect.Image = "rbxasset://textures/ui/TopRoundedRect8px.png"
+topRect.AnchorPoint = Vector2.new(0,0)
+topRect.Position = UDim2.new(0,0,1,0)
+bottomRect.Parent = toolTipBackground
+
+local toolTipText = Instance.new("TextLabel")
+toolTipText.BackgroundTransparency = 1
+toolTipText.Font = Enum.Font.GothamSemibold
+toolTipText.TextScaled = false
+toolTipText.TextSize = 12
+toolTipText.Position = UDim2.new(0,3,0,3)
+toolTipText.Size = UDim2.new(1,-6,1,-6)
+toolTipText.ZIndex = 102
+toolTipText.Parent = toolTip
+
+-- SETUP DIRECTORIES
+local projectName = "Topbar+"
+DirectoryService:createDirectory("ReplicatedStorage.HDAdmin."..projectName, script:GetChildren())
+DirectoryService:createDirectory("StarterGui", {topbarPlusGui})
+
+
+
+return true</string>
+    </Properties>
+    <Item class="ModuleScript" referent="1">
+      <Properties>
+        <string name="Name">Dropdown</string>
+        <string name="Source">local contentProvider = game:GetService("ContentProvider")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+local starterGui = game:GetService("StarterGui")
+local HDAdmin = replicatedStorage:WaitForChild("HDAdmin")
+local Maid = require(HDAdmin:WaitForChild("Maid"))
+local Signal = require(HDAdmin:WaitForChild("Signal"))
+
+local dropdown = {}
+dropdown.__index = dropdown
+
+function dropdown.new(icon, options)
+	local self = {}
+	setmetatable(self, dropdown)
+	
+	local maid = Maid.new()
+	self._maid = maid
+	self._tempConnections = maid:give(Maid.new())
+	self.closed = maid:give(Signal.new())
+	self.opened = maid:give(Signal.new())
+	self.isOpen = false
+	self.icon = icon
+	self.dropdownContainer = self.icon.objects.container.Parent.Parent.Dropdown
+	self.options = {}
+	self.bringBackPlayerlist = false
+	self.bringBackChat = false
+	self.settings = {
+		bindToIcon = false,
+		closeWhenClicked = true,
+		closeWhenClickedAway = true,
+		canHidePlayerlist = true,
+		canHideChat = true,
+		tweenSpeed = 0.2,
+		easingDirection = Enum.EasingDirection.Out,
+		easingStyle = Enum.EasingStyle.Quad,
+		chatDefaultDisplayOrder = 6,
+		backgroundColor = Color3.fromRGB(31, 33, 35),
+		textColor = Color3.new(1,1,1),
+		imageColor = Color3.new(1,1,1)
+	}
+
+	local preload = {}
+	for i, option in ipairs(options) do
+		option.order = i
+		self:createOption(option)
+		table.insert(preload, option.container.Icon)
+	end
+	coroutine.wrap(function()
+		contentProvider:PreloadAsync(preload)
+	end)()
+	
+	local function open(input)
+		local position = input and Vector2.new(input.Position.X,input.Position.Y)
+		if self.isOpen then self:hide() return end
+		self:open(position)
+	end
+	maid:give(self.icon.objects.button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton2 then
+			open(input)
+		end
+		input:Destroy()
+	end))
+	maid:give(self.icon.objects.button.TouchLongPress:Connect(function(positions,state)
+		if state == Enum.UserInputState.Begin then
+			open()
+		end
+	end))
+	
+	self:close()
+	self:update()
+	return self
+end
+
+function dropdown:createOption(option)
+	
+	local optionContainer = self._maid:give(Instance.new("Frame"))
+	optionContainer.Name = "Option"
+	optionContainer.BackgroundColor3 = Color3.new(1,1,1)
+	optionContainer.BackgroundTransparency = 1
+	optionContainer.BorderSizePixel = 0
+	optionContainer.Size = UDim2.new(1,0,0,35)
+	optionContainer.Active = true
+	optionContainer.Selectable = true
+	optionContainer.ZIndex = 11
+	optionContainer.Visible = false
+	
+	local optionIcon = Instance.new("ImageLabel")
+	optionIcon.Name = "Icon"
+	optionIcon.Image = option.icon or ""
+	optionIcon.ScaleType = Enum.ScaleType.Fit
+	optionIcon.BackgroundTransparency = 1
+	optionIcon.AnchorPoint = Vector2.new(0.5,0.5)
+	optionIcon.Position = UDim2.new(0.1,5,0.5,0)
+	optionIcon.Size = UDim2.new(0,25,0,25)
+	optionIcon.ZIndex = 12
+	optionIcon.Parent = optionContainer
+	
+	local optionText = Instance.new("TextLabel")
+	optionText.Name = "OptionName"
+	optionText.Text = option.name
+	optionText.BackgroundTransparency = 1
+	optionText.AnchorPoint = Vector2.new(0,0.5)
+	optionText.Position = UDim2.new(0.1,25,0.5,0)
+	optionText.Size = UDim2.new(0.95,-40,0,25)
+	optionText.Font = Enum.Font.GothamSemibold
+	optionText.TextScaled = true
+	optionText.TextColor3 = Color3.new(1,1,1)
+	optionText.ZIndex = 12
+	optionText.TextXAlignment = Enum.TextXAlignment.Left
+	optionText.Parent = optionContainer
+	
+	local uiText = Instance.new("UITextSizeConstraint")
+	uiText.MaxTextSize = 18
+	uiText.MinTextSize = 8
+	uiText.Parent = optionText
+	
+	option.container = optionContainer
+	option.order = option.order or 1
+	option.events = option.events or {}
+	table.insert(self.options, option)
+	
+	optionContainer.MouseEnter:Connect(function()
+		optionContainer.BackgroundTransparency = 0.9
+	end)
+	optionContainer.MouseLeave:Connect(function()
+		optionContainer.BackgroundTransparency = 1
+	end)
+	optionContainer.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if option.clicked then
+				option.clicked()
+			end
+			if self.settings.closeWhenClicked then
+				self:close()
+			end
+		end
+		input:Destroy()
+	end)
+	optionContainer.TouchTap:Connect(function()
+		if option.clicked then
+			option.clicked()
+		end
+		if self.settings.closeWhenClicked then
+			self:close()
+		end
+	end)
+
+	optionContainer.Parent = script.Temp
+	
+	self:update()
+	return option
+end
+
+function dropdown:removeOption(nameOrIndex)
+	local index = tonumber(nameOrIndex)
+	if not index then
+		local name = tostring(nameOrIndex)
+		for i, option in pairs(self.options) do
+			if option.name == name then
+				index = i
+				break
+			end
+		end
+	end
+	local option = self.options[index]
+	if not option then
+		return false
+	end
+	option.container:Destroy()
+	table.remove(self.options, index)
+	self:update()
+end
+
+function dropdown:update()
+	local dropdownContainer = self.dropdownContainer
+	if not dropdownContainer then return end
+	dropdownContainer.Background.BackgroundColor3 = self.settings.backgroundColor
+	dropdownContainer.Background.BottomRoundedRect.ImageColor3 = self.settings.backgroundColor
+	dropdownContainer.Background.TopRoundedRect.ImageColor3 = self.settings.backgroundColor
+	for _,option in pairs(self.options) do
+		option.container.OptionName.TextColor3 = self.settings.textColor
+		option.container.Icon.ImageColor3 = self.settings.imageColor
+	end
+	
+	local isIcon = false
+	for _, option in pairs(self.options) do
+		if option.container.Icon.Image ~= "" then
+			isIcon = true
+		end
+	end
+	if isIcon then
+		for _, option in pairs(self.options) do
+			option.container.OptionName.Position = UDim2.new(0.1,25,0.5,0)
+		end
+	else
+		for _, option in pairs(self.options) do
+			option.container.OptionName.Position = UDim2.new(0,10,0.5,0)
+		end
+	end
+end
+
+local settingActions = {
+	["bindToIcon"] = function(self, value)
+		if value then
+			self._maid.bindToIconSelected = self.icon.selected:Connect(function()
+				if not self.isOpen then
+					self:open()
+				end
+			end)
+			self._maid.bindToIconDeselected = self.icon.deselected:Connect(function()
+				if self.isOpen then
+					self:close()
+				end
+			end)
+			self._maid.bindToIconOpened = self.opened:Connect(function()
+				self.icon:select()
+			end)
+			self._maid.bindToIconClosed = self.closed:Connect(function()
+				self.icon:deselect()
+			end)
+		else
+			self._maid.bindToIconSelected = nil
+			self._maid.bindToIconDeselected = nil
+			self._maid.bindToIconOpened = nil
+			self._maid.bindToIconClosed = nil
+		end
+	end
+}
+function dropdown:set(setting, value)
+	if self.settings[setting] ~= nil then
+		self.settings[setting] = value
+		local settingAction = settingActions[setting]
+		if settingAction then
+			settingAction(self, value)
+		end
+	end
+end
+
+function dropdown:close()
+	if not self.isOpen then
+		return
+	end
+	self.isOpen = false
+
+	self._tempConnections:clean()
+	if self.bringBackPlayerlist then
+		starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,true)
+		self.bringBackPlayerlist = false
+	end
+	local dropdownContainer = self.dropdownContainer
+	if self.bringBackChat then
+		local chat = dropdownContainer.Parent.Parent:FindFirstChild("Chat")
+		if chat then
+			chat.DisplayOrder = self.settings.chatDefaultDisplayOrder
+		end
+	end
+	dropdownContainer:TweenSize(
+		UDim2.new(0.1,0,0,0),
+		self.settings.easingDirection,
+		self.settings.easingStyle,
+		self.settings.tweenSpeed,
+		true,
+		function()
+			if dropdownContainer.Size == UDim2.new(0.1,0,0,0) then
+				dropdownContainer.Visible = false
+			end
+		end
+	)
+	self.closed:Fire()
+end
+dropdown.hide = dropdown.close
+
+local function ToScale(offsetUDim2,viewportSize)
+	return UDim2.new(offsetUDim2.X.Offset/viewportSize.X,0,offsetUDim2.Y.Offset/viewportSize.Y,0)
+end
+
+function dropdown:open(position)
+	if self.isOpen then
+		return
+	end
+	self.isOpen = true
+
+	local dropdownContainer = self.dropdownContainer
+	if position then
+		dropdownContainer.Position = UDim2.new(0,position.X,0,math.clamp(position.Y+36,36,10000000))
+	else
+		dropdownContainer.Position = UDim2.new(0,self.icon.objects.container.AbsolutePosition.X,0,self.icon.objects.container.AbsolutePosition.Y+36+32)--topbar offset and icon size
+	end
+	
+	if workspace.CurrentCamera then
+		local viewportSize = workspace.CurrentCamera.ViewportSize
+		local newPosition = UDim2.new(
+			0,
+			math.clamp(dropdownContainer.Position.X.Offset,0,viewportSize.X-dropdownContainer.AbsoluteSize.X-16),
+			0,
+			math.clamp(dropdownContainer.Position.Y.Offset,40,viewportSize.Y-dropdownContainer.AbsoluteSize.Y)
+		)
+		dropdownContainer.Position = ToScale(newPosition,viewportSize)
+	end
+	
+	for _,option in pairs(dropdownContainer:GetChildren()) do
+		if option:IsA("Frame") and option.Name == "Option" then
+			option.Visible = false
+			option.Parent = script.Temp
+		end
+	end
+	local containerSizeY = 8 --for top and bottom rounded rect
+	table.sort(self.options, function(a,b) return a.order &lt; b.order end)
+	for i, option in ipairs(self.options) do
+		option.container.Parent = dropdownContainer
+		option.container.Visible = true
+		option.container.Position = UDim2.new(0,0,0,4+(35*i)-35)
+		containerSizeY = containerSizeY + option.container.Size.Y.Offset
+	end
+	
+	if self.settings.canHidePlayerlist and self.icon.alignment == "right" and starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList) then
+		starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,false)
+		self.bringBackPlayerlist = true
+	end
+	
+	local chat = dropdownContainer.Parent.Parent:FindFirstChild("Chat")
+	if chat and self.settings.canHideChat and dropdownContainer.Parent.DisplayOrder &lt; chat.DisplayOrder then
+		chat.DisplayOrder = dropdownContainer.Parent.DisplayOrder-1
+		self.bringBackChat = true
+	end
+	
+	self:update()
+	
+	if not userInputService.MouseEnabled and userInputService.TouchEnabled then
+		local clickSound = dropdownContainer.Parent:FindFirstChild("ClickSound")
+		if clickSound and clickSound.IsLoaded then
+			clickSound.TimePosition = 0.1
+			clickSound.Volume = 0.5
+			clickSound:Play()
+		else
+			contentProvider:PreloadAsync({clickSound})
+		end
+	end
+	
+	dropdownContainer.Size = UDim2.new(0.1,0,0,0)
+	dropdownContainer.Visible = true
+	dropdownContainer:TweenSize(
+		UDim2.new(0.1,0,0,containerSizeY),
+		self.settings.easingDirection,
+		self.settings.easingStyle,
+		self.settings.tweenSpeed,
+		true
+	)
+	
+	local connection1
+	connection1 = self._tempConnections:give(runService.Heartbeat:Connect(function()
+		connection1:Disconnect()
+		self._tempConnections:give(userInputService.InputBegan:Connect(function(input,gpe)
+			if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.MouseButton2
+			or input.UserInputType == Enum.UserInputType.MouseWheel
+			or input.UserInputType == Enum.UserInputType.MouseButton3
+			or input.UserInputType == Enum.UserInputType.Touch
+			then
+				local isOn = false
+				for i,v in pairs(dropdownContainer.Parent.Parent:GetGuiObjectsAtPosition(input.Position.X,input.Position.Y)) do
+					if v:IsDescendantOf(dropdownContainer) then
+						isOn = true
+						break
+					end
+				end
+				if not isOn and self.settings.closeWhenClickedAway then
+					if not(self.settings.bindToIcon and self.icon.hovering) then
+						self:close()
+					end
+				end
+			end
+			input:Destroy()
+		end))
+	end))
+	
+	local connection2
+	connection2 = self._tempConnections:give(runService.Heartbeat:Connect(function()
+		connection2:Disconnect()
+		if userInputService.MouseEnabled and not runService:IsStudio() then
+			self._tempConnections:give(userInputService.WindowFocusReleased:Connect(function()
+				self:close()
+			end))
+		end
+	end))
+	
+	self.opened:Fire()
+
+end
+dropdown.show = dropdown.open
+
+function dropdown:destroy()
+	self:close()
+	self._maid:clean()
+end
+
+return dropdown</string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="2">
+      <Properties>
+        <string name="Name">Icon</string>
+        <string name="Source">-- LOCAL
+local tweenService = game:GetService("TweenService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local debris = game:GetService("Debris")
+local userInputService = game:GetService("UserInputService")
+local textService = game:GetService("TextService")
+local guiService = game:GetService("GuiService")
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player.PlayerGui
+local topbarPlusGui = playerGui:WaitForChild("Topbar+")
+local topbarContainer = topbarPlusGui.TopbarContainer
+local iconTemplate = topbarContainer["_IconTemplate"]
+local HDAdmin = replicatedStorage:WaitForChild("HDAdmin")
+local Signal = require(HDAdmin:WaitForChild("Signal"))
+local Maid = require(HDAdmin:WaitForChild("Maid"))
+local Icon = {}
+Icon.__index = Icon
+
+
+
+-- CONSTRUCTOR
+function Icon.new(name, imageId, order, label)
+	local self = {}
+	setmetatable(self, Icon)
+	
+	local container = iconTemplate:Clone()
+	local button = container.IconButton
+	self.objects = {
+		["container"] = container,
+		["button"] = button,
+		["image"] = button.IconImage,
+		["label"] = button.IconLabel,
+		["corner"] = button.UICorner,
+		["notification"] = button.Notification,
+		["amount"] = button.Notification.Amount,
+		["gradient"] = button.UIGradient,
+		["captionContainer"] = container.Caption,
+		["captionBackground"] = container.Caption.Background,
+		["captionText"] = container.Caption.TextLabel,
+		["captionOverline"] = container.Caption.OverlineHolder.Overline
+	}
+	container.Name = name
+	container.Visible = true
+	
+	self.theme = {
+		-- TOGGLE EFFECT
+		["toggleTweenInfo"] = TweenInfo.new(0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		
+		-- OBJECT PROPERTIES
+		["container"] = {
+			selected = {},
+			deselected = {}
+		},
+		["button"] = {
+			selected = {
+				ImageColor3 = Color3.fromRGB(245, 245, 245),
+				ImageTransparency = 0.1
+			},
+			deselected = {
+				ImageColor3 = Color3.fromRGB(0, 0, 0),
+				ImageTransparency = 0.5
+			}
+		},
+		["image"] = {
+			selected = {
+				ImageColor3 = Color3.fromRGB(57, 60, 65),
+			},
+			deselected = {
+				ImageColor3 = Color3.fromRGB(255, 255, 255),
+			}
+		},
+		["notification"] = {
+			selected = {},
+			deselected = {},
+		},
+		["amount"] = {
+			selected = {},
+			deselected = {},
+		},
+		["gradient"] = {
+			selected = {},
+			deselected = {},
+		},
+		["corner"] = {
+			selected = {},
+			deselected = {},
+		},
+		["label"] = {
+			selected = {
+				TextColor3 = Color3.fromRGB(57, 60, 65),
+			},
+			deselected = {
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+			}
+		},
+		["captionContainer"] = {
+			deselected = {},
+		},
+		["captionBackground"] = {
+			deselected = {},
+		},
+		["captionText"] = {
+			deselected = {},
+		},
+		["captionOverline"] = {
+			deselected = {},
+		}
+	}
+	self.toggleStatus = "deselected"
+	self.isSelected = false
+	self:applyThemeToAllObjects()
+	
+	local maid = Maid.new()
+	self._maid = maid
+	self._fakeChatMaid = maid:give(Maid.new())
+	self._hoveringMaid = maid:give(Maid.new())
+	
+	self._captionTweenInfo = TweenInfo.new(0.1,Enum.EasingStyle.Quad,Enum.EasingDirection.Out)
+	self._captionTweens = {
+		inTweens = {
+			captionBackgroundTweenIn = maid:give(tweenService:Create(self.objects.captionBackground,self._captionTweenInfo,{BackgroundTransparency = 0.5})),
+			captionTextTweenIn = maid:give(tweenService:Create(self.objects.captionText,self._captionTweenInfo,{TextTransparency = 0})),
+			captionOverlineTweenIn = maid:give(tweenService:Create(self.objects.captionOverline,self._captionTweenInfo,{BackgroundTransparency = 0}))
+		},
+		outTweens = {
+			captionBackgroundTweenOut = maid:give(tweenService:Create(self.objects.captionBackground,self._captionTweenInfo,{BackgroundTransparency = 1})),
+			captionTextTweenOut = maid:give(tweenService:Create(self.objects.captionText,self._captionTweenInfo,{TextTransparency = 1})),
+			captionOverlineTweenOut = maid:give(tweenService:Create(self.objects.captionOverline,self._captionTweenInfo,{BackgroundTransparency = 1}))
+		}
+	}
+	self.updated = maid:give(Signal.new())
+	self.selected = maid:give(Signal.new())
+	self.deselected = maid:give(Signal.new())
+	self.endNotifications = maid:give(Signal.new())
+	maid:give(container)
+	
+	self.name = name
+	self.tip = ""
+	self.controllerTip = ""
+	self.caption = ""
+	self.imageId = ((imageId == "" and 0) or imageId) or 0
+	self:setImageSize(20)
+	self:setLabel(label)
+	self.order = order or 1
+	self.enabled = true
+	self.hovering = false
+	self.alignment = "left"
+	self.totalNotifications = 0
+	self.toggleFunction = function() end
+	self.hoverFunction = function() end
+	self.deselectWhenOtherIconSelected = true
+	self.maxTouchTime = 0.5
+	self._isControllerMode = false
+	
+	self.captionTween = function(active)
+		if active then
+			if not self.objects.captionContainer.Visible then
+				self.objects.captionOverline.BackgroundTransparency = 1
+				self.objects.captionBackground.BackgroundTransparency = 1
+				self.objects.captionText.TextTransparency = 1
+				self.objects.captionContainer.Visible = true
+			end
+			for _,tween in next,self._captionTweens.inTweens do
+				tween:Play()
+			end
+		else
+			for _,tween in next,self._captionTweens.outTweens do
+				tween:Play()
+			end
+		end
+	end
+	
+	if userInputService.MouseEnabled or userInputService.GamepadEnabled then
+		button.MouseButton1Click:Connect(function()
+			if self.toggleStatus == "selected" then
+				self:deselect()
+			else
+				if not self._isControllerMode then
+					topbarPlusGui.ToolTip.Visible = false
+				end
+				self.objects.captionContainer.Visible = false
+				self:select()
+			end
+		end)
+		button.MouseButton1Down:Connect(function()
+			self:updateStateOverlay(0.7, Color3.new(0, 0, 0))
+		end)
+		button.MouseButton1Up:Connect(function()
+			self:updateStateOverlay(0.9, Color3.new(1, 1, 1))
+		end)
+	elseif userInputService.TouchEnabled then
+		local inputs = {}
+		button.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.Touch then
+				local tTime = tick()
+				table.insert(inputs,tTime)
+				delay(self.maxTouchTime,function()
+					local index = table.find(inputs,tTime)
+					if index then
+						table.remove(inputs,index)
+					end
+				end)
+			end
+		end)
+		button.InputEnded:Connect(function(input)
+			local check = false
+			local currentTime = tick()
+			for i,v in pairs(inputs) do
+				if currentTime-v &lt; self.maxTouchTime then
+					check = true
+					break
+				end
+			end
+			if check then
+				if self.toggleStatus == "selected" then
+					self:deselect()
+				else
+					self:select()
+				end
+			end
+			input:Destroy()
+		end)
+	end
+	
+	if imageId then
+		self:setImage(imageId)
+	end
+	
+	self._hoverFunctions = {
+		enter = function(x,y)
+			self:updateToolTip(true, Vector2.new(x,y))
+			self:updateCaption(true)
+			self.hoverFunction(true)
+			self.hovering = true
+			self._hoveringMaid:give(button.MouseMoved:Connect(setToolTipPosition))
+			self:updateStateOverlay(0.9, Color3.new(1, 1, 1))
+		end,
+		leave = function(x,y)
+			self:updateToolTip(false)
+			self:updateCaption(false)
+			self.hoverFunction(false)
+			self.hovering = false
+			self._hoveringMaid:clean()
+			self:updateStateOverlay(1)
+		end,
+	}
+	
+	maid:give(button.MouseEnter:Connect(self._hoverFunctions.enter))
+	maid:give(button.MouseLeave:Connect(self._hoverFunctions.leave))
+	maid:give(button.SelectionGained:Connect(function()
+		self._hoverFunctions.enter()
+	end))
+	maid:give(button.SelectionLost:Connect(function()
+		self._hoverFunctions.leave()
+	end))
+	maid:give(self.objects.corner:GetPropertyChangedSignal("CornerRadius"):Connect(function()
+		self.objects.button.Parent.StateOverlay.UICorner.CornerRadius = self.objects.corner.CornerRadius
+	end))
+	
+	container.Parent = topbarContainer
+	
+	return self
+end
+
+
+
+-- METHODS
+function setToolTipPosition(x,y)
+	local tipContainer = topbarPlusGui.ToolTip
+	
+	local camera = workspace.CurrentCamera
+	if camera then
+		local viewportSize = camera.ViewportSize
+		local posX = math.clamp(x,5,viewportSize.X-tipContainer.Size.X.Offset-53)
+		local posY = math.clamp(y,tipContainer.Size.Y.Offset+5,viewportSize.Y)
+		x = posX
+		y = posY
+	end
+	
+	tipContainer.Position = UDim2.new(0,x,0,y)
+end
+
+function Icon:updateToolTip(visibility, position)
+	local tipContainer = topbarPlusGui.ToolTip
+	local tip = self.tip
+	if self._isControllerMode and self.controllerTip and self.controllerTip ~= "" then
+		tip = self.controllerTip
+	end
+	local textSize = textService:GetTextSize(tip,12,Enum.Font.GothamSemibold,Vector2.new(1000,20-6))
+	tipContainer.Size = UDim2.new(0,textSize.X+6,0,20)
+	if position and not self._isControllerMode then
+		setToolTipPosition(position.X,position.Y)
+	end
+	tipContainer.TextLabel.Text = tip
+	if not (userInputService.TouchEnabled and not userInputService.MouseEnabled) then
+		tipContainer.Visible = (visibility and self.toggleStatus == "deselected" and tip ~= "")
+	end
+end
+
+function Icon:updateCaption(visibility)
+	local caption = self.caption
+	if not caption then
+		return
+	end
+	local sizeMultiplier = math.clamp(((self.cellSize or 32)/32),1,2)
+	self.objects.captionText.TextSize = 12*sizeMultiplier
+	local textSize = textService:GetTextSize(caption,self.objects.captionText.TextSize,Enum.Font.GothamSemibold,Vector2.new(1000,20-6))
+	self.objects.captionContainer.Size = UDim2.new(0,textSize.X+20*sizeMultiplier,0,25*sizeMultiplier)
+	self.objects.captionText.Text = caption
+	local overlineSizeX = 3*sizeMultiplier
+	self.objects.captionOverline.Parent.Position = UDim2.new(0.5,0,-0.5,overlineSizeX)
+	self.objects.captionOverline.Position = UDim2.new(0.5,0,1.5,-overlineSizeX)
+	if self.captionTween and not (userInputService.TouchEnabled and not userInputService.MouseEnabled) then
+		self.captionTween((visibility and self.toggleStatus == "deselected" and caption ~= ""))
+	end
+	--self.objects.captionContainer.Visible = (visibility and self.toggleStatus == "deselected" and caption ~= "")
+end
+
+function Icon:updateStateOverlay(transparency, color)
+	local stateOverlay = self.objects.button.Parent.StateOverlay
+	stateOverlay.ImageTransparency = transparency or 1
+	stateOverlay.ImageColor3 = color or Color3.new(1, 1, 1)
+end
+
+function Icon:disableStateOverlay(bool)
+	if bool == nil then
+		bool = true
+	end
+	local stateOverlay = self.objects.button.Parent.StateOverlay
+	stateOverlay.Visible = not bool
+end
+
+function Icon:setLabel(text)
+	self.objects.label.Text = text or ""
+	self:setCellSize()
+end
+
+function Icon:setTip(tip, property)
+	property = property or "tip"
+	local newTip = ""
+	if tip then
+		assert(typeof(tip) == "string","Expected string, got "..typeof(tip))
+		newTip = tip
+	end
+	self[property] = newTip
+	if self.hovering then
+		self:updateToolTip(newTip)
+	end
+end
+
+function Icon:setControllerTip(tip)
+	self:setTip(tip, "controllerTip")
+end
+
+function Icon:setCaption(caption)
+	local newCaption = caption or ""
+	if newCaption then
+		assert(typeof(newCaption) == "string","Expected string, got "..typeof(newCaption))
+	end
+	self.caption = newCaption
+	if self.hovering then
+		self:updateCaption(newCaption)
+	end
+end
+
+function Icon:setCornerRadius(scale,offset)
+	local cr = self.objects.corner.CornerRadius
+	self.objects.corner.CornerRadius = UDim.new(scale or cr.Scale, offset or cr.Offset)
+end
+
+function Icon:createDropdown(options)
+	if self.dropdown then
+		self:removeDropdown()
+	end
+	local DropdownModule = require(script.Parent:WaitForChild("Dropdown"))
+	self.dropdown = self._maid:give(DropdownModule.new(self,options))
+	return self.dropdown
+end
+
+function Icon:removeDropdown()
+	if self.dropdown then
+		self.dropdown:destroy()
+		self.dropdown = nil
+	end
+end
+
+function Icon:setImage(imageId, status)
+	local textureId = (tonumber(imageId) and "http://www.bloxup.lol/asset/?id="..imageId) or imageId
+	local newStatus = status or "selected"
+	local function updateThemeSegment(statusName)
+		self.theme.image = self.theme.image or {}
+		self.theme.image[statusName] = self.theme.image[statusName] or {}
+		self.theme.image[statusName].Image = textureId
+	end
+	updateThemeSegment(newStatus)
+	if status == nil then
+		updateThemeSegment("deselected")
+	end
+	if status == nil or status == self.toggleStatus then
+		self.imageId = (textureId == "" and 0) or textureId
+		self.objects.image.Image = textureId
+		self:setCellSize()
+	end
+end
+
+function Icon:setDeselectedImage(imageId)
+	self:setImage(imageId, "deselected")
+end
+
+function Icon:setSelectedImage(imageId)
+	self:setImage(imageId, "selected")
+end
+
+function Icon:setOrder(order)
+	self.order = tonumber(order) or 1
+	self.updated:Fire()
+end
+
+function Icon:setLeft()
+	self.alignment = "left"
+	self.updated:Fire()
+end
+
+function Icon:setMid()
+	self.alignment = "mid"
+	self.updated:Fire()
+end
+
+function Icon:setRight()
+	self.alignment = "right"
+	self.updated:Fire()
+end
+
+function Icon:getIconLabelXSize()
+	local size = textService:GetTextSize(self.objects.label.Text,self.objects.label.TextSize,self.objects.label.Font,Vector2.new(10000,self.objects.label.Size.Y))
+	return size.X+((self.objects.image.Visible and self.imageId ~= 0) and self.objects.image.Size.X.Offset+((((self.cellSize or 32)/32)*12)+(6*(self.cellSize or 32)/32)) or ((self.cellSize or 32)/32)*12)
+end
+
+function Icon:setImageSize(pixelsX, pixelsY)
+	pixelsX = tonumber(pixelsX) or self.imageSize
+	if not pixelsY then
+		pixelsY = pixelsX
+	end
+	self.imageSize = Vector2.new(pixelsX, pixelsY)
+	self.objects.image.Size = UDim2.new(0, pixelsX, 0, pixelsY)
+end
+
+function Icon:setCellSize(pixelsX)
+	local originalPixelsX = self.cellSize
+	pixelsX = tonumber(pixelsX) or self.cellSize or 32
+	if originalPixelsX then
+		local differenceMultiplier = pixelsX/originalPixelsX
+		self:setImageSize(self.imageSize.X*differenceMultiplier, self.imageSize.X*differenceMultiplier)
+	end
+	self.cellSize = pixelsX
+	local notifPosYScale = 0.45
+	if self.objects.label.Text ~= "" then
+		self.objects.label.TextSize = 14*math.clamp((pixelsX/32),1,2.5)
+		self.objects.image.AnchorPoint = Vector2.new(0,0.5)
+		self.objects.image.Position = UDim2.new(0,((self.cellSize or 32)/32)*6,0.5,0)
+		self.objects.label.Position = UDim2.new(0,((self.objects.image.Visible and self.imageId ~= 0) and (((((self.cellSize or 32)/32)*12))+self.objects.image.AbsoluteSize.X) or ((self.cellSize or 32)/32)*6),0.5,0)
+		self.objects.container.Size = UDim2.new(0, self:getIconLabelXSize(), 0, pixelsX)
+		notifPosYScale = 0.5
+	else
+		self.objects.image.AnchorPoint = Vector2.new(0.5,0.5)
+		self.objects.image.Position = UDim2.new(0.5,0,0.5,0)
+		self.objects.container.Size = UDim2.new(0, pixelsX, 0, pixelsX)
+	end
+	self.objects.notification.Position = UDim2.new(notifPosYScale, 0, 0, -2)
+	self.updated:Fire()
+end
+
+function Icon:setEnabled(bool)
+	self.enabled = bool
+	self.objects.container.Visible = bool
+	self.updated:Fire()
+end
+
+function Icon:setBaseZIndex(baseValue)
+	local container = self.objects.container
+	baseValue = tonumber(baseValue) or container.ZIndex
+	local difference = baseValue - container.ZIndex
+	if difference == 0 then
+		return "The baseValue is the same"
+	end
+	for _, object in pairs(self.objects) do
+		object.ZIndex = object.ZIndex + difference
+	end
+end
+
+function Icon:setToggleMenu(guiObject)
+	if not guiObject:IsA("GuiObject") and not guiObject:IsA("LayerCollector") then
+		guiObject = nil
+	end
+	self.toggleMenu = guiObject
+end
+
+function Icon:setToggleFunction(toggleFunction)
+	if type(toggleFunction) == "function" then
+		self.toggleFunction = toggleFunction
+	end
+end
+
+function Icon:setHoverFunction(hoverFunction)
+	if type(hoverFunction) == "function" then
+		self.hoverFunction = hoverFunction
+	end
+end
+
+function Icon:setTheme(themeDetails)
+	local gradientEnabled = false
+	local function parseDetails(objectName, toggleDetails)
+		local errorBaseMessage = "Topbar+ | Failed to set theme:"
+		local object = self.objects[objectName]
+		if not object then
+			if objectName == "toggleTweenInfo" then
+				self.theme.toggleTweenInfo = toggleDetails
+			else
+				warn(("%s invalid objectName '%s'"):format(errorBaseMessage, objectName))
+			end
+			return false
+		end
+		for toggleStatus, propertiesTable in pairs(toggleDetails) do
+			local originalPropertiesTable = self.theme[objectName][toggleStatus]
+			if not originalPropertiesTable then
+				warn(("%s invalid toggleStatus '%s'. Use 'selected' or 'deselected'."):format(errorBaseMessage, toggleStatus))
+				return false
+			end
+			local oppositeToggleStatus = (toggleStatus == "selected" and "deselected") or "selected"
+			local oppositeGroup = self.theme[objectName][oppositeToggleStatus]
+			local group = self.theme[objectName][toggleStatus]
+			for key, value in pairs(propertiesTable) do
+				if objectName == "gradient" then
+					gradientEnabled = true
+				end
+				if oppositeGroup then
+					local oppositeKey = oppositeGroup[key]
+					if not oppositeKey then
+						oppositeGroup[key] = group[key]
+					end
+				end
+				group[key] = value
+			end
+			if toggleStatus == self.toggleStatus then
+				self:applyThemeToObject(objectName, toggleStatus)
+			end
+		end
+	end
+	for objectName, toggleDetails in pairs(themeDetails) do
+		parseDetails(objectName, toggleDetails)
+	end
+	self.objects.gradient.Enabled = gradientEnabled
+end
+
+function Icon:applyThemeToObject(objectName, toggleStatus)
+	local object = self.objects[objectName]
+	if object then
+		local propertiesTable = self.theme[objectName][(toggleStatus or self.toggleStatus)]
+		if propertiesTable then
+			local toggleTweenInfo = self.theme.toggleTweenInfo
+			local invalidProperties = {"Image","Color","NumberSequence","Text"}
+			local finalPropertiesTable = {}
+			local noTweenTable = {}
+			for propName, propValue in pairs(propertiesTable) do
+				if propName == "Transparency" and object:IsA("UIGradient") then
+					object[propName] = propValue
+				end
+				if table.find(invalidProperties, propName) then
+					object[propName] = propValue
+				else
+					finalPropertiesTable[propName] = propValue
+				end
+			end
+			local tween = tweenService:Create(object, toggleTweenInfo, finalPropertiesTable):Play()
+			debris:AddItem(tween,toggleTweenInfo.Time)
+		end
+	end
+end
+
+local function setToggleMenuVisible(self,bool)
+	if self.toggleMenu:IsA("LayerCollector") then
+		self.toggleMenu.Enabled = bool
+	else
+		self.toggleMenu.Visible = bool
+	end
+end
+
+function Icon:applyThemeToAllObjects(...)
+	for objectName, _ in pairs(self.theme) do
+		self:applyThemeToObject(objectName, ...)
+	end
+end
+
+function Icon:select()
+	self.toggleStatus = "selected"
+	self.isSelected = true
+	self:applyThemeToAllObjects()
+	self.toggleFunction()
+	if self.toggleMenu then
+		setToggleMenuVisible(self,true)
+	end
+	self.selected:Fire()
+end
+
+function Icon:deselect()
+	self.toggleStatus = "deselected"
+	self.isSelected = false
+	self:applyThemeToAllObjects()
+	self.toggleFunction()
+	if self.toggleMenu then
+		setToggleMenuVisible(self,false)
+	end
+	self.deselected:Fire()
+end
+
+function Icon:notify(clearNoticeEvent)
+	coroutine.wrap(function()
+		if not clearNoticeEvent then
+			clearNoticeEvent = self.deselected
+		end
+		self.totalNotifications = self.totalNotifications + 1
+		self.objects.amount.Text = (self.totalNotifications &lt; 100 and self.totalNotifications) or "99+"
+		self.objects.notification.Visible = true
+		
+		local dropdown = self.dropdown
+		local promptedOptions = {}
+		if dropdown then
+			for i, option in pairs(dropdown.options) do
+				if table.find(option.events, clearNoticeEvent) then
+					local dNotice = option.notice
+					if not dNotice then
+						dNotice = self.objects.notification:Clone()
+						dNotice.Position = UDim2.new(0.8, 0, 0.175, -1)
+						dNotice.Size = UDim2.new(0.2, 0, 0.65, 0)
+						dNotice.ZIndex = dNotice.ZIndex + 10
+						dNotice.Amount.ZIndex = dNotice.Amount.ZIndex + 10
+						dNotice.Amount.Text = 0
+						dNotice.Parent = option.container
+						option.notice = dNotice
+						local optionName = option.container.OptionName
+						local ONS = optionName.Size
+						optionName.Size = UDim2.new(0.82, ONS.X.Offset, ONS.Y.Scale, ONS.Y.Offset)
+					end
+					pcall(function() dNotice.ImageColor3 = self.theme.notification.deselected.ImageColor3 end)
+					pcall(function() dNotice.Amount.TextColor3 = self.theme.amount.deselected.TextColor3 end)
+					dNotice.Amount.Text = tonumber(dNotice.Amount.Text) + 1
+					table.insert(promptedOptions, option)
+				end
+			end
+		end
+		
+		local notifComplete = Signal.new()
+		local endEvent = self.endNotifications:Connect(function()
+			notifComplete:Fire()
+		end)
+		local customEvent = clearNoticeEvent:Connect(function()
+			notifComplete:Fire()
+		end)
+		
+		notifComplete:Wait()
+		
+		endEvent:Disconnect()
+		customEvent:Disconnect()
+		notifComplete:Disconnect()
+		
+		self.totalNotifications = self.totalNotifications - 1
+		if self.totalNotifications &lt; 1 then
+			self.objects.notification.Visible = false
+		end
+		
+		if self.dropdown then
+			for _, option in pairs(promptedOptions) do
+				local dNotice = option.notice
+				local optionName = option.container.OptionName
+				local ONS = optionName.Size
+				local totalDNotifications = tonumber(dNotice.Amount.Text) - 1
+				dNotice.Amount.Text = totalDNotifications
+				if totalDNotifications &lt; 1 then
+					option.notice = nil
+					dNotice:Destroy()
+					optionName.Size = UDim2.new(0.95, ONS.X.Offset, ONS.Y.Scale, ONS.Y.Offset)
+				end
+			end
+		end
+	end)()
+end
+
+function Icon:clearNotifications()
+	self.endNotifications:Fire()
+end
+
+function Icon:destroy()
+	self:clearNotifications()
+	self._maid:clean()
+	self._fakeChatConnections:clean()
+end
+
+
+
+return Icon</string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="3">
+      <Properties>
+        <string name="Name">IconController</string>
+        <string name="Source">-- LOCAL
+local starterGui = game:GetService("StarterGui")
+local guiService = game:GetService("GuiService")
+local hapticService = game:GetService("HapticService")
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+local players = game:GetService("Players")
+local IconController = {}
+local Icon = require(script.Parent.Icon)
+local topbarIcons = {}
+local fakeChatName = "_FakeChat"
+local function deepCopy(original)
+	local copy = {}
+	for k, v in pairs(original) do
+		if type(v) == "table" then
+			v = deepCopy(v)
+		end
+		copy[k] = v
+	end
+	return copy
+end
+local function getChatMain()
+	return players.LocalPlayer.PlayerScripts:WaitForChild("ChatScript").ChatMain
+end
+local function getTopbarPlusGui()
+	local player = game:GetService("Players").LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+	local topbarPlusGui = playerGui:WaitForChild("Topbar+")
+	return topbarPlusGui
+end
+local function checkTopbarEnabled()
+	local success, bool = xpcall(function()
+		return starterGui:GetCore("TopbarEnabled")
+	end,function(err)
+		--has not been registered yet, but default is that is enabled
+		return true	
+	end)
+	return (success and bool)
+end
+local forceTopbarDisabled = false
+local previousTopbarEnabled = checkTopbarEnabled()
+local menuOpen
+local topbarUpdating = false
+local robloxStupidOffset = 32
+
+
+
+-- PROPERTIES
+IconController.topbarEnabled = true
+IconController.forceController = false
+
+-- METHODS
+local function isControllerMode()
+	return (userInputService.GamepadEnabled and not userInputService.MouseEnabled) or (IconController.forceController and userInputService.GamepadEnabled)
+end
+
+local function isConsoleMode()
+	return guiService:IsTenFootInterface()
+end
+
+local function getScaleMultiplier()
+	if isConsoleMode() then
+		return 3
+	else
+		return 1.3
+	end
+end
+
+local function updateIconCellSize(icon, controllerEnabled)
+	if not controllerEnabled then
+		icon:setCellSize(icon._originalCellSize)
+		icon._originalCellSize = nil
+		return
+	end
+	local cellSize = icon._originalCellSize or icon.cellSize
+	icon._originalCellSize = cellSize
+	local scaleMultiplier = getScaleMultiplier()
+	icon:setCellSize(cellSize*scaleMultiplier)
+end
+
+function IconController:createIcon(name, imageId, order, withText)
+	
+	-- Verify data
+	assert(not topbarIcons[name], ("icon '%s' already exists!"):format(name))
+	
+	-- Create and record icon
+	local icon = Icon.new(name, imageId, order, withText)
+	local iconDetails = {name = name, icon = icon, order = icon.order}
+	topbarIcons[name] = iconDetails
+	icon:setOrder(icon.order)
+	
+	-- Apply game theme if found
+	local gameTheme = self.gameTheme
+	if gameTheme then
+		icon:setTheme(gameTheme)
+	end
+	
+	-- Events
+	local gap = 12
+	local function getIncrement(otherIcon)
+		local container = otherIcon.objects.container
+		local sizeX = container.Size.X.Offset
+		local increment = (sizeX + gap)
+		return increment
+	end
+	local function updateIcon()
+		assert(iconDetails, ("Failed to update Icon '%s': icon not found."):format(name))
+		
+		if topbarUpdating then -- This prevents the topbar updating and shifting icons more than it needs to
+			return false
+		end
+		topbarUpdating = true
+		runService.Heartbeat:Wait()
+		topbarUpdating = false
+		
+		iconDetails.order = icon.order or 1
+		local defaultIncrement = 44
+		local alignmentDetails = {
+			left = {
+				startScale = 0,
+				getStartOffset = function() 
+					local offset = 104
+					if not starterGui:GetCoreGuiEnabled("Chat") then
+						offset = offset - defaultIncrement
+					end
+					return offset
+				end,
+				records = {}
+			},
+			mid = {
+				startScale = 0.5,
+				getStartOffset = function(totalIconX) 
+					return -totalIconX/2 + (gap/2)
+				end,
+				records = {}
+			},
+			right = {
+				startScale = 1,
+				getStartOffset = function(totalIconX) 
+					local offset = -totalIconX
+					if starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList) or starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Backpack) or starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu) then
+						offset = offset - defaultIncrement
+					end
+					return offset
+				end,
+				records = {}
+				--reverseSort = true
+			},
+		}
+		for _, details in pairs(topbarIcons) do
+			if details.icon.enabled == true then
+				table.insert(alignmentDetails[details.icon.alignment].records, details)
+			end
+		end
+		for alignment, alignmentInfo in pairs(alignmentDetails) do
+			local records = alignmentInfo.records
+			if #records > 1 then
+				if alignmentInfo.reverseSort then
+					table.sort(records, function(a,b) return a.order > b.order end)
+				else
+					table.sort(records, function(a,b) return a.order &lt; b.order end)
+				end
+			end
+			local totalIconX = 0
+			for i, details in pairs(records) do
+				local increment = getIncrement(details.icon)
+				totalIconX = totalIconX + increment
+			end
+			local offsetX = alignmentInfo.getStartOffset(totalIconX)
+			for i, details in pairs(records) do
+				local container = details.icon.objects.container
+				local increment = getIncrement(details.icon)
+				container.Position = UDim2.new(alignmentInfo.startScale, offsetX, 0, 4)
+				offsetX = offsetX + increment
+			end
+		end
+		return true
+	end
+	coroutine.wrap(function() updateIcon() end)()
+	icon.updated:Connect(function()
+		updateIcon()
+	end)
+	icon.selected:Connect(function()
+		local allIcons = self:getAllIcons()
+		for _, otherIcon in pairs(allIcons) do
+			if icon.deselectWhenOtherIconSelected and otherIcon ~= icon and otherIcon.deselectWhenOtherIconSelected and otherIcon.toggleStatus == "selected" then
+				otherIcon:deselect()
+			end
+		end
+	end)
+	
+	if isControllerMode() then
+		updateIconCellSize(icon, true)
+		icon._previousAlignment = icon.alignment
+		icon:setMid()
+	end
+	
+	return icon
+end
+
+function IconController:setTopbarEnabled(bool, forceBool)
+	if forceBool == nil then
+		forceBool = true
+	end
+	local topbar = getTopbarPlusGui()
+	if not topbar then return end
+	local indicator = topbar.Indicator
+	local toolTip = topbar.ToolTip
+	if forceBool and not bool then
+		forceTopbarDisabled = true
+	elseif forceBool and bool then
+		forceTopbarDisabled = false
+	end
+	if isControllerMode() then
+		if bool then
+			if topbar.TopbarContainer.Visible or forceTopbarDisabled or menuOpen or not checkTopbarEnabled() then return end
+			if forceBool then
+				indicator.Visible = checkTopbarEnabled()
+			else
+				if hapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1) and hapticService:IsMotorSupported(Enum.UserInputType.Gamepad1,Enum.VibrationMotor.Small) then
+					hapticService:SetMotor(Enum.UserInputType.Gamepad1,Enum.VibrationMotor.Small,1)
+					delay(0.2,function()
+						pcall(function()
+							hapticService:SetMotor(Enum.UserInputType.Gamepad1,Enum.VibrationMotor.Small,0)
+						end)
+					end)
+				end
+				topbar.TopbarContainer.Visible = true
+				topbar.TopbarContainer:TweenPosition(
+					UDim2.new(0,0,0,5 + robloxStupidOffset),
+					Enum.EasingDirection.Out,
+					Enum.EasingStyle.Quad,
+					0.1,
+					true
+				)
+				guiService:AddSelectionParent("TopbarPlus",topbar.TopbarContainer)
+				guiService.CoreGuiNavigationEnabled = false
+				guiService.GuiNavigationEnabled = true
+				
+				local selectObject
+				local targetOffset = 0
+				runService.Heartbeat:Wait()
+				local indicatorSizeTrip = 50 --indicator.AbsoluteSize.Y * 2
+				for name,details in pairs(topbarIcons) do
+					local container = details.icon.objects.container
+					if container.Visible then
+						if not selectObject or details.order > selectObject.order then
+							selectObject = details
+						end
+					end
+					local newTargetOffset = -27 + container.AbsoluteSize.Y + indicatorSizeTrip
+					if newTargetOffset > targetOffset then
+						targetOffset = newTargetOffset
+					end
+				end
+				if guiService:GetEmotesMenuOpen() then
+					guiService:SetEmotesMenuOpen(false)
+				end
+				if guiService:GetInspectMenuEnabled() then
+					guiService:CloseInspectMenu()
+				end
+				delay(0.15,function()
+					guiService.SelectedObject = selectObject.icon.objects.container
+				end)
+				indicator.Image = "rbxassetid://5278151071"
+				indicator:TweenPosition(
+					UDim2.new(0.5,0,0,targetOffset + robloxStupidOffset),
+					Enum.EasingDirection.Out,
+					Enum.EasingStyle.Quad,
+					0.1,
+					true
+				)
+			end
+		else
+			if forceBool then
+				indicator.Visible = false
+			else
+				indicator.Visible = checkTopbarEnabled()
+			end
+			if not topbar.TopbarContainer.Visible then return end
+			guiService.AutoSelectGuiEnabled = true
+			guiService:RemoveSelectionGroup("TopbarPlus")
+			topbar.TopbarContainer:TweenPosition(
+				UDim2.new(0,0,0,-topbar.TopbarContainer.Size.Y.Offset + robloxStupidOffset),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.1,
+				true,
+				function()
+					topbar.TopbarContainer.Visible = false
+				end
+			)
+			indicator.Image = "rbxassetid://5278151556"
+			indicator:TweenPosition(
+				UDim2.new(0.5,0,0,5),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				0.1,
+				true
+			)
+			toolTip.Visible = false
+		end
+	else
+		local topbarContainer = topbar.TopbarContainer
+		if checkTopbarEnabled() then
+			topbarContainer.Visible = bool
+		else
+			topbarContainer.Visible = false
+		end
+	end
+end
+
+function IconController:enableControllerMode(bool)
+	local topbar = getTopbarPlusGui()
+	if not topbar then return end
+	local indicator = topbar.Indicator
+	local toolTip = topbar.ToolTip
+	local controllerOptionIcon = IconController:getIcon("_TopbarControllerOption")
+	if bool then
+		topbar.TopbarContainer.Position = UDim2.new(0,0,0,5)
+		topbar.TopbarContainer.Visible = false
+		local scaleMultiplier = getScaleMultiplier()
+		indicator.Position = UDim2.new(0.5,0,0,5)
+		indicator.Size = UDim2.new(0, 18*scaleMultiplier, 0, 18*scaleMultiplier)
+		indicator.Image = "rbxassetid://5278151556"
+		indicator.Visible = checkTopbarEnabled()
+		local isConsole = isConsoleMode()
+		indicator.Position = UDim2.new(0.5,0,0,5)
+		for name,details in pairs(topbarIcons) do
+			local icon = details.icon
+			updateIconCellSize(icon, true)
+			details.icon._previousAlignment = details.icon.alignment
+			details.icon:setMid()
+		end
+		if controllerOptionIcon then
+			if not userInputService.MouseEnabled then
+				controllerOptionIcon:setEnabled(false)
+			else
+				controllerOptionIcon:setEnabled(true)
+			end
+		end
+		toolTip.AnchorPoint = Vector2.new(0.5,0)
+		toolTip.Position = UDim2.new(0.5,0,0,topbar.TopbarContainer.Size.Y.Offset+60 + robloxStupidOffset)
+	else
+		if userInputService.GamepadEnabled and controllerOptionIcon then
+			--mouse user but might want to use controller
+			controllerOptionIcon:setEnabled(true)
+		elseif controllerOptionIcon then
+			controllerOptionIcon:setEnabled(false)
+		end
+		local isConsole = isConsoleMode()
+		for name,details in pairs(topbarIcons) do
+			local icon = details.icon
+			updateIconCellSize(icon, false)
+			if details.icon._previousAlignment then
+				details.icon.alignment = details.icon._previousAlignment or "left"
+				details.icon.updated:Fire()
+			end
+		end
+		topbar.TopbarContainer.Position = UDim2.new(0,0,0,0)
+		topbar.TopbarContainer.Visible = checkTopbarEnabled()
+		indicator.Visible = false
+		toolTip.AnchorPoint = Vector2.new(0,1)
+	end
+	toolTip.Visible = false
+end
+
+function updateDevice()
+	if isControllerMode() then
+		for _,icon in pairs(topbarIcons) do
+			icon.icon._isControllerMode = true
+		end
+		IconController:enableControllerMode(true)
+		return
+	end
+	for _,icon in pairs(topbarIcons) do
+		icon.icon._isControllerMode = false
+	end
+	IconController:enableControllerMode()
+end
+
+function IconController:createFakeChat()
+	local chatMainModule = getChatMain()
+	local ChatMain = require(chatMainModule)
+	local iconName = fakeChatName
+	local icon = self:getIcon(iconName)
+	local function displayChatBar(visibility)
+		icon.ignoreVisibilityStateChange = true
+		ChatMain.CoreGuiEnabled:fire(visibility)
+		ChatMain.IsCoreGuiEnabled = false
+		ChatMain:SetVisible(visibility)
+		icon.ignoreVisibilityStateChange = nil
+	end
+	local function setIconEnabled(visibility)
+		icon.ignoreVisibilityStateChange = true
+		ChatMain.CoreGuiEnabled:fire(visibility)
+		icon:setEnabled(visibility)
+		starterGui:SetCoreGuiEnabled("Chat", false)
+		icon:deselect()
+		icon.updated:Fire()
+		icon.ignoreVisibilityStateChange = nil
+	end
+	if not icon then
+		icon = self:createIcon(iconName, "rbxasset://textures/ui/TopBar/chatOff.png", -1)
+		-- Open chat via Slash key
+		icon._fakeChatMaid:give(userInputService.InputEnded:connect(function(inputObject, gameProcessedEvent)
+			if gameProcessedEvent then
+				return "Another menu has priority"
+			elseif not(inputObject.KeyCode == Enum.KeyCode.Slash or inputObject.KeyCode == Enum.SpecialKey.ChatHotkey) then
+				return "No relavent key pressed"
+			elseif ChatMain.IsFocused() then
+				return "Chat bar already open"
+			elseif not icon.enabled then
+				return "Icon disabled"
+			end
+			ChatMain:FocusChatBar(true)
+			icon:select()
+		end))
+		-- ChatActive
+		icon._fakeChatMaid:give(ChatMain.VisibilityStateChanged:connect(function(visibility)
+			if not icon.ignoreVisibilityStateChange then
+				if visibility == true then
+					icon:select()
+				else
+					icon:deselect()
+				end
+			end
+		end))
+		-- Keep when other icons selected
+		icon.deselectWhenOtherIconSelected = false
+		-- Mimic chat notifications
+		icon._fakeChatMaid:give(ChatMain.MessagesChanged:connect(function()
+			if ChatMain:GetVisibility() == true then
+				return "ChatWindow was open"
+			end
+			icon:notify(icon.selected)
+		end))
+		-- Mimic visibility when StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, state) is called
+		coroutine.wrap(function()
+			runService.Heartbeat:Wait()
+			icon._fakeChatMaid:give(ChatMain.CoreGuiEnabled:connect(function(newState)
+				if icon.ignoreVisibilityStateChange then
+					return "ignoreVisibilityStateChange enabled"
+				end
+				local topbarEnabled = checkTopbarEnabled()
+				if topbarEnabled ~= previousTopbarEnabled then
+					return "SetCore was called instead of SetCoreGuiEnabled"
+				end
+				if not icon.enabled and userInputService:IsKeyDown(Enum.KeyCode.LeftShift) and userInputService:IsKeyDown(Enum.KeyCode.P) then
+					icon:setEnabled(true)
+				else
+					setIconEnabled(newState)
+				end
+			end))
+		end)()
+	end
+	icon:setSelectedImage("rbxasset://textures/ui/TopBar/chatOn.png")
+	icon:setImageSize(20)
+	icon:setToggleFunction(function()
+		local isSelected = icon.toggleStatus == "selected"
+		displayChatBar(isSelected)
+	end)
+	setIconEnabled(starterGui:GetCoreGuiEnabled("Chat"))
+	return icon
+end
+
+function IconController:removeFakeChat()
+	local icon = IconController:getIcon(fakeChatName)
+	local enabled = icon.enabled
+	icon._fakeChatMaid:clean()
+	starterGui:SetCoreGuiEnabled("Chat", enabled)
+	IconController:removeIcon(fakeChatName)
+end
+
+function IconController:setGameTheme(theme)
+	self.gameTheme = theme
+	local icons = self:getAllIcons()
+	for _, icon in pairs(icons) do
+		icon:setTheme(theme)
+	end
+end
+
+function IconController:setDisplayOrder(value)
+	local topbarPlusGui = getTopbarPlusGui()
+	value = tonumber(value) or topbarPlusGui.DisplayOrder
+	topbarPlusGui.DisplayOrder = value
+end
+
+function IconController:getIcon(name)
+	local iconDetails = topbarIcons[name]
+	if not iconDetails then
+		return false
+	end
+	return iconDetails.icon
+end
+
+function IconController:getAllIcons()
+	local allIcons = {}
+	for _, details in pairs(topbarIcons) do
+		table.insert(allIcons, details.icon)
+	end
+	return allIcons
+end
+
+function IconController:removeIcon(name)
+	local iconDetails = topbarIcons[name]
+	assert(iconDetails, ("icon '%s' not found!"):format(name))
+	local icon = iconDetails.icon
+	icon:setEnabled(false)
+	icon:deselect()
+	icon.updated:Fire()
+	icon:destroy()
+	topbarIcons[name] = nil
+	return true
+end
+
+
+
+-- BEHAVIOUR
+local function updateTopbar()
+	local icons = IconController:getAllIcons()
+	for i, icon in pairs(icons) do
+		if i == 1 then
+			icon.updated:Fire()
+			break
+		end
+	end
+end
+coroutine.wrap(function()
+	-- Mimic the enabling of the topbar when StarterGui:SetCore("TopbarEnabled", state) is called
+	local ChatMain = require(getChatMain())
+	ChatMain.CoreGuiEnabled:connect(function()
+		local topbarEnabled = checkTopbarEnabled()
+		if topbarEnabled == previousTopbarEnabled then
+			updateTopbar()
+			return "SetCoreGuiEnabled was called instead of SetCore"
+		end
+		previousTopbarEnabled = topbarEnabled
+		if isControllerMode() then
+			IconController:setTopbarEnabled(false,false)
+		else
+			IconController:setTopbarEnabled(topbarEnabled,false)
+		end
+		updateTopbar()
+	end)
+	IconController:setTopbarEnabled(checkTopbarEnabled(),false)
+end)()
+
+guiService.MenuClosed:Connect(function()
+	menuOpen = false
+	if not isControllerMode() then
+		IconController:setTopbarEnabled(IconController.topbarEnabled,false)
+	end
+end)
+guiService.MenuOpened:Connect(function()
+	menuOpen = true
+	IconController:setTopbarEnabled(false,false)
+end)
+
+--Controller
+updateDevice()
+userInputService.GamepadConnected:Connect(updateDevice)
+userInputService.GamepadDisconnected:Connect(updateDevice)
+userInputService:GetPropertyChangedSignal("MouseEnabled"):Connect(updateDevice)
+userInputService.InputBegan:Connect(function(input,gpe)
+	local topbar = getTopbarPlusGui()
+	if not topbar then return end
+	if not isControllerMode() then return end
+	if input.KeyCode == Enum.KeyCode.DPadDown then
+		if not guiService.SelectedObject and checkTopbarEnabled() then
+			IconController:setTopbarEnabled(true,false)
+		end
+	elseif input.KeyCode == Enum.KeyCode.ButtonB then
+		IconController:setTopbarEnabled(false,false)
+	end
+	input:Destroy()
+end)
+
+local controllerOptionIcon = IconController:createIcon("_TopbarControllerOption","rbxassetid://5278150942", 100)
+controllerOptionIcon:setRight()
+controllerOptionIcon.deselectWhenOtherIconSelected = false
+controllerOptionIcon:setEnabled(false)
+controllerOptionIcon:setTip("Controller mode")
+if not isControllerMode() and userInputService.GamepadEnabled then
+	controllerOptionIcon:setEnabled(true)
+end
+controllerOptionIcon.selected:Connect(function()
+	controllerOptionIcon:setTip("Normal mode")
+	IconController.forceController = true
+	updateDevice()
+end)
+controllerOptionIcon.deselected:Connect(function()
+	controllerOptionIcon:setTip("Controller mode")
+	IconController.forceController = false
+	updateDevice()
+end)
+local topbar = getTopbarPlusGui()
+topbar.Indicator.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		IconController:setTopbarEnabled(true,false)
+	end
+	input:Destroy()
+end)
+
+return IconController</string>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

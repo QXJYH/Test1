@@ -1,0 +1,957 @@
+/* =========================================================
+   Q-Net Global Theme & Layout
+   ========================================================= */
+:root {
+  --bg: #0b0b0d;
+  --panel: #121216;
+  --muted: #1b1b22;
+  --text: #e9eaee;
+  --sub: #9aa0aa;
+  --accent: #ef4444;
+  --ring: #991b1b;
+  --border: #23232b;
+}
+
+/* Reset & Globals */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: #000;
+}
+
+img {
+  display: block;
+  border: none;
+}
+
+/* =========================================================
+   Base Transitions & Animation
+   ========================================================= */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui;
+  display: block; /* was flex — now a normal flow */
+}
+
+/* =========================================================
+   Homepage & Shared Components
+   ========================================================= */
+/* Center homepage content but keep topbar visible */
+.home-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: calc(100vh - 112px); /* leaves room for topbar + footer */
+  padding-top: 40px;
+}
+
+.logo {
+  width: 200px;
+  max-width: 70%;
+  margin-bottom: 4px;
+}
+
+.search-section {
+  display: flex;
+  gap: 8px;
+}
+
+.search-section input {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 10px;
+  width: 280px;
+  font-size: 1rem;
+}
+
+.search-section button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hint {
+  margin-top: 20px;
+  color: var(--sub);
+}
+
+/* =========================================================
+   New Unified Topbar (Lines neatly expanded)
+   ========================================================= */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0a0a0a;
+  padding: 10px 24px;
+  border-bottom: 1px solid #111;
+  height: 70px;
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+.logo-collectibles img {
+  width: auto;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 0;
+  margin-left: -25px;
+}
+
+/* Topbar navigation — side by side */
+.nav-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  flex: 1;
+  font-weight: 600;
+  text-align: center;
+}
+
+.nav-center a {
+  color: var(--sub);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.25s ease, transform 0.2s ease;
+  padding: 6px 8px;
+  position: relative;
+}
+
+.nav-center a:hover {
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+/* Active page indicator */
+.nav-center a.active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.nav-center a.active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* Remove button-like styles */
+.rap-btn {
+  all: unset;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: default;
+}
+
+.dot {
+  display: none;
+  /* no dot needed when links are stacked */
+}
+
+.reblox-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.reblox-btn:hover {
+  opacity: 0.85;
+}
+
+/* =========================================================
+   Sidebar / Cards / Collectibles Layout
+   ========================================================= */
+.container {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 340px;
+  border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--panel), var(--muted));
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.sidebar-search {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sidebar-search input {
+  flex: 1;
+  background: #121212;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.sidebar-search input:focus {
+  border-color: #ff4444;
+  outline: none;
+}
+
+.sidebar-search button {
+  background: #ff4444;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.sidebar-search button:hover {
+  opacity: 0.85;
+}
+
+.panel {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.avatar-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 1/1;
+  width: 100%;
+  background: #0c0c10;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.username {
+  margin: 14px 2px 6px;
+  font-size: 1.25rem;
+}
+
+.subuser {
+  color: var(--sub);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.status {
+  margin: 0;
+  color: var(--sub);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.desc {
+  margin: 10px 0;
+  color: var(--sub);
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-height: 160px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.profile-link {
+  display: inline-block;
+  color: var(--text);
+  background: #141419;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.profile-link:hover {
+  border-color: var(--accent);
+}
+
+.main {
+  flex: 1;
+  padding: 18px;
+  overflow-y: auto;
+  height: calc(100vh - 112px);
+}
+
+.main::after {
+  content: "";
+  display: block;
+  height: 42px;
+}
+
+.main-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.count-badge {
+  background: #141419;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.notice {
+  background: #141419;
+  border: 1px dashed var(--accent);
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: linear-gradient(180deg, #131318, #101016);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--ring);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.card .thumb {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  background: #0c0c10;
+}
+
+.card .body {
+  padding: 10px 10px 12px;
+}
+
+.card .name {
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.card .meta {
+  margin: 0;
+  color: var(--sub);
+  font-size: 0.82rem;
+}
+
+.loading {
+  margin: 18px auto;
+  text-align: center;
+  color: var(--sub);
+}
+
+/* =========================================================
+   Footer / Misc
+   ========================================================= */
+.footer {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--border);
+  color: var(--sub);
+  background: #000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+/* Right-side Back to Home button */
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff4444;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.back-home:hover {
+  opacity: 0.85;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px auto;
+}
+
+.pagination .reblox-btn {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
+/* Fix topbar so everything stacks cleanly */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0a0a0a;
+  padding: 12px 24px;
+  border-bottom: 1px solid #111;
+  height: 80px;
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+/* Logo */
+.logo-collectibles img {
+  width: auto;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin-left: -10px;
+}
+
+/* Navigation now stacked vertically under each other */
+.nav-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  flex: 1;
+}
+
+.nav-center a {
+  color: var(--sub);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.25s ease;
+}
+
+.nav-center a:hover {
+  color: var(--text);
+}
+
+.nav-center a.active {
+  color: var(--accent);
+}
+
+/* RAP Leaderboard button in nav */
+.rap-btn {
+  background: var(--accent);
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.rap-btn:hover {
+  opacity: 0.85;
+}
+
+/* Right-side Back to Home button */
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff4444;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.back-home:hover {
+  opacity: 0.85;
+}
+
+/* Homepage RAP button */
+.home-buttons {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.rap-home-btn {
+  background: var(--accent);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 14px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.rap-home-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+/* =========================================================
+   Unified Topbar Navigation (horizontal)
+   ========================================================= */
+.nav-center {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  flex: 1;
+  font-weight: 600;
+  text-align: center;
+}
+
+.nav-center a {
+  color: var(--sub);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.25s ease, transform 0.2s ease;
+  padding: 8px 10px;
+  position: relative;
+}
+
+.nav-center a:hover {
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+/* Highlight active page */
+.nav-center a.active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.nav-center a.active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* Make sure the nav sits between logo and button */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  background: #0a0a0a;
+  padding: 12px 24px;
+  border-bottom: 1px solid #111;
+  height: 80px;
+  box-sizing: border-box;
+  backdrop-filter: blur(6px);
+}
+
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 999;
+}
+
+#loadingOverlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+#loadingOverlay img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,0.4));
+}
+
+#rap-rank {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* =========================================================
+   Home + Update Log Styles levi was here (fixed)
+   ========================================================= */
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  margin-top: 60px;
+}
+
+.home-container img {
+  width: 240px;
+  max-width: 80%;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto 30px;
+}
+
+/* Toggle button under logo */
+.updates-btn {
+  margin-top: 20px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 10px rgba(239,68,68,0.3);
+}
+
+.updates-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(239,68,68,0.5);
+}
+
+/* Smooth hidden/reveal effect */
+#updateLog {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.6s ease;
+}
+
+#updateLog.show {
+  max-height: 1000px; /* expands smoothly */
+  opacity: 1;
+  margin-top: 25px;
+}
+
+/* Update log container */
+.update-log {
+  background: #0f0f11;
+  border: 1px solid #1c1c1f;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto 60px;
+  padding: 24px 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  color: #e5e7eb;
+  overflow-y: visible;
+  position: relative;
+  z-index: 5;
+}
+
+/* Update entries */
+.update-log h2 {
+  color: #ef4444;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  margin-top: 0;
+}
+
+.update-entry {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #1f1f23;
+  padding-bottom: 12px;
+}
+
+.update-entry:last-child {
+  border-bottom: none;
+}
+
+.update-entry h3 {
+  color: #f87171;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.update-entry ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.update-entry li {
+  margin-bottom: 6px;
+  color: #d1d5db;
+  line-height: 1.5;
+  transition: color 0.2s ease;
+}
+
+.update-entry li:hover {
+  color: #fff;
+}
+
+/* Body and footer fixes */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui;
+}
+
+/* Only center content on the HOME page */
+.home-page main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.footer {
+  position: relative;
+  margin-top: auto;
+  padding: 12px 0;
+  text-align: center;
+  color: #888;
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  background: #000;
+}
+
+/* =========================================================
+   Update Log Scrolling + Footer Fix
+   ========================================================= */
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+/* make only the update log scrollable */
+.update-log {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) #121216;
+}
+
+/* Scrollbar styling (for Chrome/Edge/Safari) */
+.update-log::-webkit-scrollbar {
+  width: 8px;
+}
+.update-log::-webkit-scrollbar-track {
+  background: #121216;
+  border-radius: 10px;
+}
+.update-log::-webkit-scrollbar-thumb {
+  background-color: var(--accent);
+  border-radius: 10px;
+}
+
+/* fix footer clipping */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #000;
+  border-top: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 12px 0;
+  z-index: 10;
+}
+
+.update-log::-webkit-scrollbar-thumb:hover {
+  box-shadow: 0 0 10px rgba(239,68,68,0.6);
+}
+
+/* =========================================================
+   Fix layout centering on non-home pages (Collectibles, etc.)
+   ========================================================= */
+
+/* Reset flex layout so content fills full width */
+body:not(.home-page) {
+  display: block !important;
+}
+
+body:not(.home-page) main {
+  display: block !important;
+  width: 100%;
+  margin: 0;
+  padding: 0 24px;
+  text-align: left;
+}
+
+/* Make the collectibles container fill the entire width */
+.container {
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - 112px); /* topbar + footer */
+  overflow: hidden;
+}
+
+/* Sidebar fixed to the left */
+.sidebar {
+  flex-shrink: 0;
+  width: 320px;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+/* Main section takes all remaining space */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 30px;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   Page layout fixes (different per page)
+   ========================================================= */
+
+/* ✅ Collectibles — full width layout with sidebar */
+body.collectibles-page .container {
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - 112px);
+  overflow: hidden;
+}
+
+body.collectibles-page .sidebar {
+  flex-shrink: 0;
+  width: 320px;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+body.collectibles-page .main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 30px;
+  box-sizing: border-box;
+}
+
+/* ✅ Other pages (gamble, rap, admin, etc.) — centered layout */
+body:not(.home-page):not(.collectibles-page) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+}
+
+body:not(.home-page):not(.collectibles-page) main,
+body:not(.home-page):not(.collectibles-page) .content {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: left;
+}

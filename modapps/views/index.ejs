@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KORNET // PORTAL GATE</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GATE LINK</h1>
+            <p>Select your operational role to begin transmission.</p>
+            <div class="warning-banner">AI USAGE DETECTED = INSTANT REJECTION</div>
+        </div>
+
+        <div class="role-grid">
+            <a href="/apply/Asset Mod" class="role-link">
+                <div class="role-select-btn">
+                    <div class="btn-id">ROLE // 01</div>
+                    <div class="btn-label">Asset Mod</div>
+                </div>
+            </a>
+            <a href="/apply/Asset Creator" class="role-link">
+                <div class="role-select-btn">
+                    <div class="btn-id">ROLE // 02</div>
+                    <div class="btn-label">Asset Creator</div>
+                </div>
+            </a>
+            <a href="/apply/Moderator" class="role-link">
+                <div class="role-select-btn">
+                    <div class="btn-id">ROLE // 03</div>
+                    <div class="btn-label">Moderator</div>
+                </div>
+            </a>
+            <a href="/apply/Administrator" class="role-link">
+                <div class="role-select-btn">
+                    <div class="btn-id">ROLE // 04</div>
+                    <div class="btn-label">Administrator</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        async function checkSecurity() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
+            const traits = [navigator.hardwareConcurrency, renderer, screen.width + 'x' + screen.height, navigator.platform, new Date().getTimezoneOffset()].join('|');
+            let hash = 0;
+            for (let i = 0; i < traits.length; i++) { hash = ((hash << 5) - hash) + traits.charCodeAt(i); hash = hash & hash; }
+            const hwid = 'HWID_' + Math.abs(hash).toString(36).toUpperCase();
+
+            const res = await fetch('/api/check-lock/' + hwid);
+            const data = await res.json();
+            if (data.locked) {
+                window.location.href = '/locked';
+            }
+        }
+        checkSecurity();
+    </script>
+</body>
+
+</html>

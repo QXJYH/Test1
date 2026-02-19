@@ -1,0 +1,215 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Accessory" referent="RBX8D9463BEDEC344089EF6DD686A3EFEEF">
+		<Properties>
+			<CoordinateFrame name="AttachmentPoint">
+				<X>0</X>
+				<Y>0.119999997</Y>
+				<Z>0</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<string name="Name">SparkleLanturn</string>
+		</Properties>
+		<Item class="Part" referent="RBX9582870DAF064B6F8F3471CD1E78D3E9">
+			<Properties>
+				<bool name="Anchored">false</bool>
+				<float name="BackParamA">-0.5</float>
+				<float name="BackParamB">0.5</float>
+				<token name="BackSurface">0</token>
+				<token name="BackSurfaceInput">0</token>
+				<float name="BottomParamA">-0.5</float>
+				<float name="BottomParamB">0.5</float>
+				<token name="BottomSurface">0</token>
+				<token name="BottomSurfaceInput">0</token>
+				<int name="BrickColor">194</int>
+				<CoordinateFrame name="CFrame">
+					<X>-10.4194641</X>
+					<Y>4.68949318</Y>
+					<Z>-13.2826443</Z>
+					<R00>-0.311840624</R00>
+					<R01>-0.001691335</R01>
+					<R02>0.950132966</R02>
+					<R10>-5.06524066e-006</R10>
+					<R11>0.999998391</R11>
+					<R12>0.00177844381</R12>
+					<R20>-0.950134516</R20>
+					<R21>0.000549795397</R21>
+					<R22>-0.311840177</R22>
+				</CoordinateFrame>
+				<bool name="CanCollide">false</bool>
+				<PhysicalProperties name="CustomPhysicalProperties">
+					<CustomPhysics>false</CustomPhysics>
+				</PhysicalProperties>
+				<float name="Elasticity">0.5</float>
+				<float name="Friction">0.300000012</float>
+				<float name="FrontParamA">-0.5</float>
+				<float name="FrontParamB">0.5</float>
+				<token name="FrontSurface">0</token>
+				<token name="FrontSurfaceInput">0</token>
+				<float name="LeftParamA">-0.5</float>
+				<float name="LeftParamB">0.5</float>
+				<token name="LeftSurface">0</token>
+				<token name="LeftSurfaceInput">0</token>
+				<bool name="Locked">true</bool>
+				<token name="Material">256</token>
+				<string name="Name">Handle</string>
+				<float name="Reflectance">0</float>
+				<float name="RightParamA">-0.5</float>
+				<float name="RightParamB">0.5</float>
+				<token name="RightSurface">0</token>
+				<token name="RightSurfaceInput">0</token>
+				<Vector3 name="RotVelocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<float name="TopParamA">-0.5</float>
+				<float name="TopParamB">0.5</float>
+				<token name="TopSurface">0</token>
+				<token name="TopSurfaceInput">0</token>
+				<float name="Transparency">0</float>
+				<Vector3 name="Velocity">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<token name="formFactorRaw">0</token>
+				<token name="shape">1</token>
+				<Vector3 name="size">
+					<X>1.02999997</X>
+					<Y>1</Y>
+					<Z>1.66999996</Z>
+				</Vector3>
+			</Properties>
+			<Item class="SpecialMesh" referent="RBX5E9BCB6BFFE842AFAA4EB77A4BA495DA">
+				<Properties>
+					<token name="LODX">2</token>
+					<token name="LODY">2</token>
+					<Content name="MeshId"><url>http://www.roblox.com/asset/?id=313291893 </url></Content>
+					<token name="MeshType">5</token>
+					<string name="Name">Mesh</string>
+					<Vector3 name="Offset">
+						<X>0</X>
+						<Y>0</Y>
+						<Z>0</Z>
+					</Vector3>
+					<Vector3 name="Scale">
+						<X>1.34000003</X>
+						<Y>1.34000003</Y>
+						<Z>1.34000003</Z>
+					</Vector3>
+					<Content name="TextureId"><url>http://www.roblox.com/asset/?id=313292006 </url></Content>
+					<Vector3 name="VertexColor">
+						<X>1</X>
+						<Y>1</Y>
+						<Z>1</Z>
+					</Vector3>
+				</Properties>
+			</Item>
+			<Item class="PointLight" referent="RBX867F679BFA7C4F6B8A622E00CE76235F">
+				<Properties>
+					<float name="Brightness">1</float>
+					<Color3 name="Color">4294945280</Color3>
+					<bool name="Enabled">true</bool>
+					<string name="Name">PointLight</string>
+					<float name="Range">10</float>
+					<bool name="Shadows">false</bool>
+				</Properties>
+			</Item>
+			<Item class="ParticleEmitter" referent="RBXE208D1C9A27842A7928028769C61D387">
+				<Properties>
+					<Vector3 name="Acceleration">
+						<X>0</X>
+						<Y>-1</Y>
+						<Z>2</Z>
+					</Vector3>
+					<ColorSequence name="Color">0 1 1 1 0 1 1 1 1 0 </ColorSequence>
+					<float name="Drag">0</float>
+					<token name="EmissionDirection">1</token>
+					<bool name="Enabled">true</bool>
+					<NumberRange name="Lifetime">5 10 </NumberRange>
+					<float name="LightEmission">0.5</float>
+					<bool name="LockedToPart">false</bool>
+					<string name="Name">ParticleEmitter</string>
+					<float name="Rate">6</float>
+					<NumberRange name="RotSpeed">0 0 </NumberRange>
+					<NumberRange name="Rotation">1 20 </NumberRange>
+					<NumberSequence name="Size">0 0.4 0 1 0.4 0 </NumberSequence>
+					<NumberRange name="Speed">3 3 </NumberRange>
+					<Content name="Texture"><url>http://www.roblox.com/asset/?id=314784167 </url></Content>
+					<NumberSequence name="Transparency">0 0.5 0 1 0.5 0 </NumberSequence>
+					<float name="VelocityInheritance">0</float>
+					<float name="VelocitySpread">0</float>
+					<float name="ZOffset">0</float>
+				</Properties>
+			</Item>
+			<Item class="Attachment" referent="RBX4B56BD2545FA4C6DAF930ABE4A85743C">
+				<Properties>
+					<CoordinateFrame name="CFrame">
+						<X>8.65838956e-009</X>
+						<Y>0.21999979</Y>
+						<Z>-0.000272244215</Z>
+						<R00>1</R00>
+						<R01>7.87137555e-009</R01>
+						<R02>-3.26223034e-024</R02>
+						<R10>-7.87137555e-009</R10>
+						<R11>1</R11>
+						<R12>-4.1444221e-016</R12>
+						<R20>0</R20>
+						<R21>4.1444221e-016</R21>
+						<R22>1</R22>
+					</CoordinateFrame>
+					<string name="Name">HatAttachment</string>
+					<bool name="Visible">false</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Camera" referent="RBX0EAA143304464954B80DABA740BABE24">
+			<Properties>
+				<CoordinateFrame name="CFrame">
+					<X>-13.7236061</X>
+					<Y>5.39759827</Y>
+					<Z>-11.5015669</Z>
+					<R00>0.484967738</R00>
+					<R01>0.0279636048</R01>
+					<R02>-0.87408483</R02>
+					<R10>9.31322686e-010</R10>
+					<R11>0.999488711</R11>
+					<R12>0.031975504</R12>
+					<R20>0.874532104</R20>
+					<R21>-0.015507089</R21>
+					<R22>0.484719694</R22>
+				</CoordinateFrame>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<float name="FieldOfView">70</float>
+				<CoordinateFrame name="Focus">
+					<X>-11.9754362</X>
+					<Y>5.33364725</Y>
+					<Z>-12.4710064</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<bool name="HeadLocked">true</bool>
+				<float name="HeadScale">1</float>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>

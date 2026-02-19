@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KORNET // APPLYING: <%= role %>
+    </title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">
+            < BACK // RE-ROUTING</a>
+
+                <div class="header">
+                    <h1>
+                        <%= role %>
+                    </h1>
+                    <p>Complete all fields to initiate transmission.</p>
+                </div>
+
+                <form id="appForm">
+                    <% sections.forEach((section, sIndex)=> { %>
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span>
+                                    <%= section.title %>
+                                </span>
+                                <span style="opacity: 0.3">
+                                    <%= String(sIndex + 1).padStart(2, '0' ) %>
+                                </span>
+                            </div>
+
+                            <% section.questions.forEach(q=> { %>
+                                <div class="question-group">
+                                    <label for="<%= q.id %>">
+                                        <%= q.label %>
+                                    </label>
+                                    <% if (q.type==='textarea' ) { %>
+                                        <textarea id="<%= q.id %>" name="<%= q.id %>"
+                                            placeholder="<%= q.placeholder || '' %>" required
+                                            oninput="updateProgress()"></textarea>
+                                        <% } else { %>
+                                            <input type="text" id="<%= q.id %>" name="<%= q.id %>"
+                                                placeholder="<%= q.placeholder || '' %>" required
+                                                oninput="updateProgress()">
+                                            <% } %>
+                                </div>
+                                <% }) %>
+                        </div>
+                        <% }) %>
+
+                            <button type="submit" class="submit-btn" id="submitBtn">TRANSMIT APPLICATION</button>
+                </form>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-text" id="progressLabel">LINK STATUS: 0% READY</div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <script>
+        const role = "<%= role %>";
+
+        function getDeviceHWID() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown';
+            const traits = [navigator.hardwareConcurrency, renderer, screen.width + 'x' + screen.height, navigator.platform, new Date().getTimezoneOffset()].join('|');
+            let hash = 0;
+            for (let i = 0; i < traits.length; i++) { hash = ((hash << 5) - hash) + traits.charCodeAt(i); hash = hash & hash; }
+            return 'HWID_' + Math.abs(hash).toString(36).toUpperCase();
+        }
+
+        function updateProgress() {
+            const inputs = Array.from(document.querySelectorAll('input, textarea'));
+            const filled = inputs.filter(i => i.value.trim().length > 0).length;
+            const pct = Math.round((filled / inputs.length) * 100);
+
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressLabel').innerText = `LINK STATUS: ${pct}% READY`;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = pct < 100;
+        }
+
+        document.getElementById('appForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "TRANSMITTING...";
+
+            const formData = {};
+            new FormData(e.target).forEach((value, key) => formData[key] = value);
+
+            const hwid = getDeviceHWID();
+
+            try {
+                const res = await fetch('/api/transmit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hwid, role, formData })
+                });
+
+                if (res.ok) {
+                    window.location.href = '/success';
+                } else {
+                    alert("TRANSMISSION ERROR. LINK UNSTABLE.");
+                    btn.disabled = false;
+                    btn.innerText = "TRANSMIT APPLICATION";
+                }
+            } catch (err) {
+                alert("CRITICAL SYSTEM ERROR.");
+                btn.disabled = false;
+            }
+        });
+
+        async function checkSecurity() {
+            const hwid = getDeviceHWID();
+            const res = await fetch('/api/check-lock/' + hwid);
+            const data = await res.json();
+            if (data.locked) window.location.href = '/locked';
+        }
+        checkSecurity();
+        updateProgress();
+    </script>
+</body>
+
+</html>

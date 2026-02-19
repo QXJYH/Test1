@@ -1,0 +1,171 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Part" referent="RBX0">
+		<Properties>
+			<bool name="Anchored">true</bool>
+			<float name="BackParamA">-0.5</float>
+			<float name="BackParamB">0.5</float>
+			<token name="BackSurface">0</token>
+			<token name="BackSurfaceInput">0</token>
+			<float name="BottomParamA">-0.5</float>
+			<float name="BottomParamB">0.5</float>
+			<token name="BottomSurface">0</token>
+			<token name="BottomSurfaceInput">0</token>
+			<int name="BrickColor">194</int>
+			<CoordinateFrame name="CFrame">
+				<X>11.0300007</X>
+				<Y>0.460000008</Y>
+				<Z>59.5000038</Z>
+				<R00>1</R00>
+				<R01>0</R01>
+				<R02>0</R02>
+				<R10>0</R10>
+				<R11>1</R11>
+				<R12>0</R12>
+				<R20>0</R20>
+				<R21>0</R21>
+				<R22>1</R22>
+			</CoordinateFrame>
+			<bool name="CanCollide">true</bool>
+			<float name="Elasticity">0.5</float>
+			<float name="Friction">0.300000012</float>
+			<float name="FrontParamA">-0.5</float>
+			<float name="FrontParamB">0.5</float>
+			<token name="FrontSurface">0</token>
+			<token name="FrontSurfaceInput">0</token>
+			<float name="LeftParamA">-0.5</float>
+			<float name="LeftParamB">0.5</float>
+			<token name="LeftSurface">0</token>
+			<token name="LeftSurfaceInput">0</token>
+			<bool name="Locked">false</bool>
+			<token name="Material">256</token>
+			<string name="Name">Handle</string>
+			<float name="Reflectance">0</float>
+			<float name="RightParamA">-0.5</float>
+			<float name="RightParamB">0.5</float>
+			<token name="RightSurface">0</token>
+			<token name="RightSurfaceInput">0</token>
+			<Vector3 name="RotVelocity">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+			</Vector3>
+			<float name="TopParamA">-0.5</float>
+			<float name="TopParamB">0.5</float>
+			<token name="TopSurface">0</token>
+			<token name="TopSurfaceInput">0</token>
+			<float name="Transparency">0</float>
+			<Vector3 name="Velocity">
+				<X>0</X>
+				<Y>0</Y>
+				<Z>0</Z>
+			</Vector3>
+			<token name="formFactorRaw">2</token>
+			<token name="shape">1</token>
+			<Vector3 name="size">
+				<X>1</X>
+				<Y>0.800000012</Y>
+				<Z>1</Z>
+			</Vector3>
+		</Properties>
+		<Item class="SpecialMesh" referent="RBX1">
+			<Properties>
+				<token name="LODX">2</token>
+				<token name="LODY">2</token>
+				<Content name="MeshId"><url>http://www.roblox.com/asset/?id=1285237</url></Content>
+				<token name="MeshType">5</token>
+				<string name="Name">Mesh</string>
+				<Vector3 name="Offset">
+					<X>0</X>
+					<Y>0</Y>
+					<Z>0</Z>
+				</Vector3>
+				<Vector3 name="Scale">
+					<X>1.10000002</X>
+					<Y>1.10000002</Y>
+					<Z>1.10000002</Z>
+				</Vector3>
+				<Content name="TextureId"><url>http://www.roblox.com/asset/?id=110172694</url></Content>
+				<Vector3 name="VertexColor">
+					<X>1</X>
+					<Y>1</Y>
+					<Z>1</Z>
+				</Vector3>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX2">
+			<Properties>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Script</string>
+				<ProtectedString name="Source">-- (Hat Giver Script - Loaded.)
+
+debounce = true
+
+function onTouched(hit)
+&#9;if (hit.Parent:findFirstChild(&quot;Humanoid&quot;) ~= nil and debounce == true) then
+&#9;&#9;debounce = false
+&#9;&#9;h = Instance.new(&quot;Hat&quot;)
+&#9;&#9;p = Instance.new(&quot;Part&quot;)
+&#9;&#9;h.Name = &quot;Belgium hat&quot;
+&#9;&#9;p.Parent = h
+&#9;&#9;p.Position = hit.Parent:findFirstChild(&quot;Head&quot;).Position
+&#9;&#9;p.Name = &quot;Handle&quot; 
+&#9;&#9;p.formFactor = 0
+&#9;&#9;p.Size = Vector3.new(1, 1.2, 1) 
+&#9;&#9;p.BottomSurface = 0 
+&#9;&#9;p.TopSurface = 0 
+&#9;&#9;p.Locked = true 
+&#9;&#9;script.Parent.Mesh:clone().Parent = p
+&#9;&#9;h.Parent = hit.Parent
+&#9;&#9;h.AttachmentForward = Vector3.new (-0, -0, -1)
+&#9;&#9;h.AttachmentPos = Vector3.new(0, -0.1, 0.05)
+&#9;&#9;h.AttachmentRight = Vector3.new (1, 0, 0)
+&#9;&#9;h.AttachmentUp = Vector3.new (0, 1, 0)
+&#9;&#9;wait(5)
+&#9;&#9;debounce = true
+&#9;end
+end
+
+script.Parent.Touched:connect(onTouched)</ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="Camera" referent="RBX3">
+			<Properties>
+				<Ref name="CameraSubject">null</Ref>
+				<token name="CameraType">0</token>
+				<CoordinateFrame name="CoordinateFrame">
+					<X>9.07958508</X>
+					<Y>1.60373354</Y>
+					<Z>56.324913</Z>
+					<R00>-0.837115884</R00>
+					<R01>0.13602674</R01>
+					<R02>-0.529843211</R02>
+					<R10>-0</R10>
+					<R11>0.968589306</R11>
+					<R12>0.248666063</R12>
+					<R20>0.54702574</R20>
+					<R21>0.208162308</R21>
+					<R22>-0.810821414</R22>
+				</CoordinateFrame>
+				<float name="FieldOfView">35</float>
+				<CoordinateFrame name="Focus">
+					<X>10.1392717</X>
+					<Y>1.10640132</Y>
+					<Z>57.9465561</Z>
+					<R00>1</R00>
+					<R01>0</R01>
+					<R02>0</R02>
+					<R10>0</R10>
+					<R11>1</R11>
+					<R12>0</R12>
+					<R20>0</R20>
+					<R21>0</R21>
+					<R22>1</R22>
+				</CoordinateFrame>
+				<string name="Name">ThumbnailCamera</string>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>

@@ -1,0 +1,13 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.synt2x.xyz/roblox.xsd" version="4">
+<External>null</External>
+<External>nil</External>
+<Item class="Package" referent="RBX0">
+    <Properties>
+        <Content name="PackageTemplate">
+            <url>http://www.synt2x.xyz/asset/?id=79</url>
+        </Content>
+        <string name="Name">Package</string>
+        <bool name="archivable">true</bool>
+    </Properties>
+</Item>
+</roblox>

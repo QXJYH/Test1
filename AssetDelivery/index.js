@@ -1,0 +1,94 @@
+require("dotenv").config();
+const express = require("express");
+const axios = require("axios");
+const path = require("path");
+const fs = require("fs");
+
+const app = express();
+const cacheFolder = path.join(__dirname, "cache");
+
+if (!fs.existsSync(cacheFolder)) {
+    fs.mkdirSync(cacheFolder);
+}
+
+app.get("/v1/asset/", async (req, res) => {
+    try {
+        const id = req.query.id;
+        if (!id) return res.status(400).send("Missing id");
+
+        const filePath = path.join(cacheFolder, id);
+
+        if (fs.existsSync(filePath)) {
+            console.log(`Serving cached: ${id}`);
+            return res.download(filePath, "asset");
+        }
+
+        const assetDeliveryApis = [
+            "https://assetdelivery.synt2x.xyz/v1/asset", // might require a cookie as danyal wants syntax 2 to be a wannabe roblox. lol..
+            "https://assetdelivery.pekora.zip/v1/asset", // ok
+            "https://assetdelivery.cartii.fit/v1/asset", // ok
+            //"https://assetdelivery.kornet.lat/v1/asset", // ok
+            //"https://assetdelivery.lureon.fit/v1/asset", // no
+            "https://bt.zawg.ca/v1/asset", // ok
+            "https://assetdelivery.jewblox.de/v1/asset", // fuck you jewblox
+            "https://assetdelivery.roblox.com/v1/asset" // ok
+        ];
+
+        const headers = {
+            "Cookie": `.ROBLOSECURITY=${process.env.Cookie}`,
+            "Accept-Encoding": "gzip,deflate,br",
+            "Accept": "*/*",
+            "User-Agent": "Roblox/WinInet"
+        };
+
+        let successfulResponse = null;
+
+        if (process.env.useMultiFetch) {
+            const shuffled = assetDeliveryApis.sort(() => 0.5 - Math.random());
+            
+            for (const baseUrl of shuffled) {
+                try {
+                    const check = await axios.get(`${baseUrl}/?id=1`, { headers, timeout: 2500 });
+                    if (check.status === 200) {
+                        successfulResponse = await axios.get(`${baseUrl}/?id=${id}`, {
+                            headers,
+                            responseType: "stream",
+                            timeout: 10000
+                        });
+                        break;
+                    }
+                } catch (err) {
+                    continue;
+                }
+            }
+        } else {
+            const robloxUrl = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
+            successfulResponse = await axios.get(robloxUrl, {
+                headers,
+                responseType: "stream",
+                timeout: 10000
+            });
+        }
+
+        if (!successfulResponse) {
+            return res.status(502).send("No asset for u");
+        }
+
+        res.setHeader("Content-Disposition", `attachment; filename="asset"`);
+
+        if (process.env.cacheAssets) {
+            const writer = fs.createWriteStream(filePath);
+            successfulResponse.data.pipe(writer);
+        }
+
+        successfulResponse.data.pipe(res);
+        console.log(`Serving asset: ${id}`);
+    } catch (e) {
+        console.error(e.message);
+        if (!res.headersSent) {
+            res.status(500).send("Error fetching asset");
+        }
+    }
+});
+
+app.listen(process.env.Port, () => console.log("Started on Port " + process.env.Port));
