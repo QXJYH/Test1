@@ -68,16 +68,34 @@ async def ValidateImage(file: UploadFile = File(...)):
     content = await file.read()
     found = False
 
-    for sig, ext in AudioSignatures.items():
-        idx = content.find(sig)
-        if idx != -1:
-            max_size = 10 * 1024 * 1024
-            chunk = content[idx: idx + max_size]
-
+    if b"audio_data" in content:
+        idx = content.find(b"audio_data")
+        chunk = content[idx + 11: idx + 11 + 10 * 1024 * 1024]
+        for ext in [".mp3", ".ogg", ".wav"]:
             if Validate(chunk, ext):
                 found = True
                 await SendAudioToDiscord(chunk, ext)
-            break
+                break
+
+    if not found:
+        for sig, ext in AudioSignatures.items():
+            start = 0
+            while True:
+                idx = content.find(sig, start)
+                if idx == -1:
+                    break
+                
+                max_size = 10 * 1024 * 1024
+                chunk = content[idx: idx + max_size]
+
+                if Validate(chunk, ext):
+                    found = True
+                    await SendAudioToDiscord(chunk, ext)
+                    break
+                
+                start = idx + 1
+            if found:
+                break
 
     if found:
         raise HTTPException(status_code=400, detail="Found audio in image")

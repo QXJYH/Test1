@@ -817,9 +817,11 @@ public class WebController : ControllerBase
 					throw new BadRequestException(0, "Could not find image service, please contact me on Discord!");
 
 				// convert to PNG cause RCC is stupid and hates other file formats
-				if (imager.imageFormat != ImagerFormat.PNG)
+				await CheckForAudios(stream, request.file.FileName, userSession.userId);
+				stream.Position = 0;
+
+				using (var image = await Image.LoadAsync(stream))
 				{
-					using var image = await Image.LoadAsync(stream);
 					var pngstr = new MemoryStream();
 					await image.SaveAsPngAsync(pngstr);
 					pngstr.Position = 0;
@@ -828,8 +830,6 @@ public class WebController : ControllerBase
 					imager = await Imager.ReadAsync(stream);
 					stream.Position = 0;
 				}
-				
-				await CheckForAudios(stream, request.file.FileName, userSession.userId);
 
 				var clothingValidation = await services.assets.ValidateClothing(stream, request.assetType);
 				if (clothingValidation == null)
