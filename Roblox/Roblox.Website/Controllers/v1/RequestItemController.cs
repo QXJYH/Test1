@@ -62,8 +62,8 @@ namespace Roblox.Website.Controllers
                 if (request.type != "Roblox")
                 {
                     long fee = 200;
-                    long userBalance = await services.economy.GetBalance(safeUserSession.userId, Roblox.Models.Economy.CurrencyType.Robux);
-                    if (userBalance < fee)
+                    var userBalance = await services.economy.GetBalance(Roblox.Models.Assets.CreatorType.User, safeUserSession.userId);
+                    if (userBalance.robux < fee)
                     {
                         return BadRequest(new { message = $"Insufficient funds. You need {fee} Robux to upload a UGC item." });
                     }
