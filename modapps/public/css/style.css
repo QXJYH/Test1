@@ -38,7 +38,7 @@ body::after {
     inset: 0;
     background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
     pointer-events: none;
-    z-index: 10;
+    /* z-index: 10; */
 }
 
 .container {
@@ -232,6 +232,42 @@ textarea:focus {
 .back-btn:hover {
     color: var(--error-color);
     border-color: var(--error-color);
+}
+
+.return-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--surface-main);
+    border: 1px solid var(--border-color);
+    color: var(--accent-color);
+    padding: 10px 20px;
+    font-family: var(--mono-font);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 1000;
+    box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.3);
+}
+
+.return-btn:hover {
+    background: var(--accent-color);
+    color: black;
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 600px) {
+    .return-btn {
+        position: relative;
+        display: block;
+        top: 0;
+        right: 0;
+        margin-bottom: 20px;
+        text-align: center;
+    }
 }
 
 .tag {
