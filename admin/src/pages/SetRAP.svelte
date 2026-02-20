@@ -90,16 +90,27 @@
             successmsg = `Set RAP for asset ${assetId} to ${RAP.toLocaleString()}`;
 
 			if (postMessageEnabled) {
+				let finalName = assetDetails.name;
+				let finalOldRap = oldRAP;
+				
+				if (!finalName) {
+					try {
+						const d = await request.get("/product/details?assetId=" + assetId);
+						finalName = d.data.name;
+						finalOldRap = (d.data.recentAveragePrice || d.data.rap || "0").toString();
+					} catch (e) {}
+				}
+
 				await logToDiscord(WEBHOOK_URL, {
 					embeds: [
 						{
-							title: assetDetails.name || "Asset " + assetId,
+							title: finalName || "Asset " + assetId,
 							url: `https://kornet.lat/catalog/${assetId}/--`,
 							description: "Value has changed.",
 							color: 5814783,
 							thumbnail: { url: `https://kornet.lat/Thumbs/Asset.ashx?assetId=${assetId}&width=420&height=420` },
 							fields: [
-								{ name: "Old Value", value: oldRAP, inline: true },
+								{ name: "Old Value", value: finalOldRap, inline: true },
 								{ name: "New Value", value: RAPVal, inline: true },
 							],
 							footer: { text: "Asset ID: " + assetId },
