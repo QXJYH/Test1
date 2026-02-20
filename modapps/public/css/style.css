@@ -38,6 +38,7 @@ body::after {
     inset: 0;
     background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
     pointer-events: none;
+    z-index: 10;
 }
 
 .container {

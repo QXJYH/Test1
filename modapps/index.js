@@ -1,23 +1,48 @@
+require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
 const fs = require('fs');
+const session = require('express-session');
+const rateLimit = require('express-rate-limit');
+const Filter = require('bad-words');
+
 const app = express();
+app.set('trust proxy', 1); // Crucial for rate limiting behind a proxy (VPS)
+const filter = new Filter();
+
+filter.addWords('nigger', 'niggers', 'nigga', 'niggas', 'nword');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1473758873629229079/Td2euieKJQxI0dHiCUilXfr1IbkcTY1Y4vC4KjYczCc-f0MInWM11xtj01leM8C68hzs';
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
+
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
+
+const transmissionLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 2, // Max 2 applications per hour per IP
+    message: "APPLICATION RATE LIMIT REACHED. UNAUTHORIZED ACTIVITY LOGGED.",
+    standardHeaders: true,
+    legacyHeaders: false
+});
 const LOCK_FILE = path.join(__dirname, 'locks.json');
 if (!fs.existsSync(LOCK_FILE)) fs.writeFileSync(LOCK_FILE, JSON.stringify([]));
 
-const writeToLockFile = (hwid) => {
+const writeToLockFile = (id) => {
     try {
         const locks = JSON.parse(fs.readFileSync(LOCK_FILE));
-        if (!locks.includes(hwid)) {
-            locks.push(hwid);
+        if (!locks.includes(id)) {
+            locks.push(id);
             fs.writeFileSync(LOCK_FILE, JSON.stringify(locks, null, 2));
         }
     } catch (e) {
@@ -114,26 +139,145 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/apply/:role', (req, res) => {
     const role = req.params.role;
     const sections = role === 'Administrator' ? ADMIN_QUESTIONS : STANDARD_QUESTIONS;
-    res.render('form', { role, sections });
+
+    const discordUser = req.session.discordUser;
+
+    res.render('form', {
+        role,
+        sections,
+        discordUser: discordUser || null,
+        clientId: process.env.DISCORD_CLIENT_ID,
+        redirectUri: encodeURIComponent(process.env.DISCORD_REDIRECT_URI)
+    });
 });
 
-app.get('/success', (req, res) => res.render('success'));
-app.get('/locked', (req, res) => res.render('locked'));
+app.get('/success', (req, res) => {
+    if (!req.session.justSubmitted) return res.redirect('/');
+    res.render('success');
+});
+
+app.get('/locked', (req, res) => {
+    if (!req.session.isLocked) return res.redirect('/');
+    res.render('locked');
+});
 
 app.get('/api/check-lock/:hwid', (req, res) => {
     const locks = JSON.parse(fs.readFileSync(LOCK_FILE));
-    res.json({ locked: locks.includes(req.params.hwid) });
+    const isLocked = locks.includes(req.params.hwid);
+
+    const isDiscordLocked = req.session.discordUser && locks.includes(req.session.discordUser.id);
+
+    if (isLocked || isDiscordLocked) {
+        req.session.isLocked = true;
+    }
+
+    res.json({ locked: isLocked || isDiscordLocked });
 });
 
-app.post('/api/transmit', async (req, res) => {
+app.get('/api/discord/login', (req, res) => {
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+    res.redirect(url);
+});
+
+app.get('/api/discord/callback', async (req, res) => {
+    const { code } = req.query;
+    if (!code) return res.redirect('/');
+
+    try {
+        const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            body: new URLSearchParams({
+                client_id: process.env.DISCORD_CLIENT_ID,
+                client_secret: process.env.DISCORD_CLIENT_SECRET,
+                code,
+                grant_type: 'authorization_code',
+                redirect_uri: process.env.DISCORD_REDIRECT_URI,
+                scope: 'identify',
+            }),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        });
+
+        const tokens = await tokenResponse.json();
+        if (tokens.error) throw new Error(tokens.error_description);
+
+        const userResponse = await fetch('https://discord.com/api/users/@me', {
+            headers: {
+                Authorization: `Bearer ${tokens.access_token}`,
+            },
+        });
+
+        const user = await userResponse.json();
+
+        let kornetUsername = null;
+        try {
+            const lookupRes = await fetch(`${process.env.API_BASE_URL || 'https://kornet.lat'}/botapi/tickets/user/${user.id}`, {
+                headers: {
+                    'KRNT-botAPIkey': process.env.API_KEY || '',
+                    'User-Agent': 'DiscordBot/1.0'
+                }
+            });
+
+            if (lookupRes.ok) {
+                const lookupData = await lookupRes.json();
+                kornetUsername = lookupData.username || null;
+            }
+        } catch (e) {
+            console.error("Kornet Lookup Failed:", e.message);
+        }
+
+        req.session.discordUser = {
+            id: user.id,
+            username: user.username,
+            discriminator: user.discriminator,
+            avatar: user.avatar,
+            global_name: user.global_name,
+            kornet_username: kornetUsername
+        };
+
+        res.send('<script>window.opener.postMessage({ type: "discord-verify", user: ' + JSON.stringify(req.session.discordUser) + ' }, "*"); window.close();</script>');
+    } catch (err) {
+        console.error("Discord Auth Error:", err);
+        res.status(500).send("Discord Authentication Failed");
+    }
+});
+
+app.post('/api/transmit', transmissionLimiter, async (req, res) => {
     const { hwid, role, formData } = req.body;
-    if (!hwid) {
-        console.log("Missing HWID");
-        return res.status(400).send('BAD_REQUEST');
+
+    if (!req.session.discordUser || !req.session.discordUser.id || !req.session.discordUser.kornet_username) {
+        console.log(`[SECURITY] Blocked unverified transmission from ${req.ip}`);
+        return res.status(401).send('IDENTITY_VERIFICATION_REQUIRED');
+    }
+
+    if (req.session.hasSubmitted) {
+        return res.status(403).send('ALREADY_SUBMITTED');
+    }
+
+    const VALID_ROLES = ['Administrator', 'Moderator', 'Asset Creator', 'Asset Mod'];
+    if (!VALID_ROLES.includes(role)) {
+        console.log(`[SECURITY] Fake role detected: ${role} from ID: ${req.session.discordUser.id}`);
+        return res.status(400).send('INVALID_ROLE');
+    }
+
+    formData.discord = req.session.discordUser.username;
+    formData.kornet_user = req.session.discordUser.kornet_username;
+
+    const payloadContent = JSON.stringify(formData).toLowerCase();
+    const bannedPatterns = ['nigger', 'nigga', 'nigg', 'faggot', 'kike', 'retard'];
+    const hasSlur = bannedPatterns.some(p => payloadContent.includes(p)) || filter.isProfane(payloadContent);
+
+    if (hasSlur) {
+        console.log(`[SECURITY] PROFANITY ATTEMPT BLOCKED from Discord ID: ${req.session.discordUser.id}`);
+        writeToLockFile(hwid);
+        writeToLockFile(req.session.discordUser.id);
+        req.session.isLocked = true;
+        return res.status(400).send('PROFANITY_DETECTED');
     }
 
     const locks = JSON.parse(fs.readFileSync(LOCK_FILE));
-    if (locks.includes(hwid)) return res.status(403).send('LOCKED');
+    if (locks.includes(hwid) || locks.includes(req.session.discordUser.id)) return res.status(403).send('LOCKED');
 
     const sections = role === 'Administrator' ? ADMIN_QUESTIONS : STANDARD_QUESTIONS;
     const allFields = [];
@@ -167,7 +311,11 @@ app.post('/api/transmit', async (req, res) => {
                 title: i === 0 ? `NEW APPLICATION: ${role}` : `APPLICATION CONTINUED (Part ${i + 1})`,
                 color: 3066993,
                 fields: messages[i],
-                footer: { text: `Transmission ${i + 1}/${messages.length} // ID: ${hwid}` },
+                author: {
+                    name: `${req.session.discordUser.username} (${req.session.discordUser.id})`,
+                    icon_url: req.session.discordUser.avatar ? `https://cdn.discordapp.com/avatars/${req.session.discordUser.id}/${req.session.discordUser.avatar}.png` : null
+                },
+                footer: { text: `Transmission ${i + 1}/${messages.length} // HWID: ${hwid}` },
                 timestamp: i === 0 ? new Date().toISOString() : null
             };
 
@@ -190,6 +338,10 @@ app.post('/api/transmit', async (req, res) => {
         }
 
         writeToLockFile(hwid);
+        writeToLockFile(req.session.discordUser.id);
+        req.session.isLocked = true;
+        req.session.hasSubmitted = true;
+        req.session.justSubmitted = true;
         res.sendStatus(200);
     } catch (err) {
         console.error("Transmission Error:", err.message);
@@ -200,17 +352,17 @@ app.post('/api/transmit', async (req, res) => {
 // apps.kornet.lat/api/admin/lock?hwid=ID_HERE&secret=kornet_9921
 app.get('/api/admin/lock', (req, res) => {
     const { hwid, secret } = req.query;
-    if (secret !== 'kornet_9921') return res.status(403).send('Bad Secret');
+    if (secret !== process.env.SESSION_SECRET) return res.status(403).send('nah');
     if (!hwid) return res.send('Missing HWID');
 
     writeToLockFile(hwid);
-    res.send(`DEVICE ${hwid} PERMANENTLY BANNED.`);
+    res.send(`ID ${hwid} PERMANENTLY BANNED.`);
 });
 
 // apps.kornet.lat/api/admin/unlock?hwid=ID_HERE&secret=kornet_9921
 app.get('/api/admin/unlock', (req, res) => {
     const { hwid, secret } = req.query;
-    if (secret !== 'kornet_9921') return res.status(403).send('Bad Secret');
+    if (secret !== process.env.SESSION_SECRET) return res.status(403).send('nah');
     if (!hwid) return res.send('Missing HWID');
 
     try {
@@ -218,9 +370,9 @@ app.get('/api/admin/unlock', (req, res) => {
         if (locks.includes(hwid)) {
             locks = locks.filter(id => id !== hwid);
             fs.writeFileSync(LOCK_FILE, JSON.stringify(locks, null, 2));
-            res.send(`DEVICE ${hwid} HAS BEEN UNLOCKED.`);
+            res.send(`ID ${hwid} HAS BEEN UNLOCKED.`);
         } else {
-            res.send(`DEVICE ${hwid} was not found in the lock database.`);
+            res.send(`ID ${hwid} was not found in the lock database.`);
         }
     } catch (e) {
         res.status(500).send('Database Error');
@@ -228,7 +380,7 @@ app.get('/api/admin/unlock', (req, res) => {
 });
 
 app.get('/api/admin/all-locks', (req, res) => {
-    if (req.query.secret !== 'kornet_9921') return res.status(403).send('No');
+    if (req.query.secret !== process.env.SESSION_SECRET) return res.status(403).send('dawg..');
     const locks = JSON.parse(fs.readFileSync(LOCK_FILE));
     res.json({ banned: locks });
 });

@@ -74,8 +74,47 @@ namespace Roblox.Website.Controllers
 			public string password { get; set; }
 		}
 		
-		[HttpPostBypass("mobileapi/login")]
+		[HttpPostBypass("/mobileapi/login")]
         public async Task<dynamic> MobileLogin([FromBody] MobileLoginReq request)
+        {
+            FeatureFlags.FeatureCheck(FeatureFlag.LoginEnabled);
+            await RateLimitCheck();
+
+            if (string.IsNullOrEmpty(request.username) || string.IsNullOrEmpty(request.password))
+                throw new BadRequestException(3, "Username and Password are required. Please try again.");
+
+            UserInfo userInfo;
+            try
+            {
+                userInfo = await services.users.GetUserByName(request.username);
+            }
+            catch (RecordNotFoundException)
+            {
+                throw new ForbiddenException(1, "Incorrect username or password. Please try again.");
+            }
+
+            if(await Login(request.username, request.password, userInfo.userId))
+                await CreateSessionAndSetCookie(userInfo.userId);
+
+            var userBalance = await services.economy.GetUserBalance(userInfo.userId);
+
+            return new
+            {
+                Status = "OK",
+                UserInfo = new
+                {
+                    UserName = request.username,
+                    RobuxBalance = userBalance.robux,
+                    TicketsBalance = userBalance.tickets,
+                    IsAnyBuildersClubMember = true,
+                    ThumbnailUrl = $"{Configuration.BaseUrl}/Thumbs/Avatar.ashx?userId={userInfo.userId}",
+                    UserID = userInfo.userId
+                }
+            };
+        }
+
+		[HttpPostBypass("/login/v1")]
+        public async Task<dynamic> MobileLoginV1([FromBody] MobileLoginReq request)
         {
             FeatureFlags.FeatureCheck(FeatureFlag.LoginEnabled);
             await RateLimitCheck();
