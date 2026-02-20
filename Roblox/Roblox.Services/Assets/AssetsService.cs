@@ -1300,7 +1300,7 @@ public class AssetsService : ServiceBase, IService
     public async Task<ProductEntry> GetProductForAsset(long assetId)
     {
         var result = await db.QuerySingleOrDefaultAsync<ProductEntry>(
-            "SELECT name, description, is_for_sale as isForSale, is_limited as isLimited, is_limited_unique as isLimitedUnique, price_robux as priceRobux, price_tix as priceTickets, serial_count as serialCount, offsale_at as offsaleAt, visible as isVisible FROM asset WHERE id = :id",
+            "SELECT name, description, is_for_sale as isForSale, is_limited as isLimited, is_limited_unique as isLimitedUnique, price_robux as priceRobux, price_tix as priceTickets, serial_count as serialCount, offsale_at as offsaleAt, visible as isVisible, recent_average_price as recentAveragePrice FROM asset WHERE id = :id",
             new
             {
                 id = assetId,
@@ -1503,7 +1503,7 @@ public class AssetsService : ServiceBase, IService
         watch.Start();
         var query = new SqlBuilder();
         var t = query.AddTemplate(
-            "SELECT asset.id as id, asset_type as assetType, asset.name, asset.description, asset_genre as genre, creator_type as creatorType, creator_id as creatorTargetId, offsale_at as offsaleDeadline, is_for_sale as isForSale, price_robux as priceRobux, price_tix as priceTickets, is_limited as isLimited, is_limited_unique as isLimitedUnique, serial_count as serialCount, \"group\".name as groupName, \"user\".username as username, asset.created_at as createdAt, asset.updated_at as updatedAt, asset.is_18_plus, asset.moderation_status FROM asset LEFT JOIN \"user\" ON \"user\".id = asset.creator_id LEFT JOIN \"group\" ON \"group\".id = asset.creator_id /**where**/ LIMIT 200", new
+            "SELECT asset.id as id, asset_type as assetType, asset.name, asset.description, asset_genre as genre, creator_type as creatorType, creator_id as creatorTargetId, offsale_at as offsaleDeadline, is_for_sale as isForSale, price_robux as priceRobux, price_tix as priceTickets, is_limited as isLimited, is_limited_unique as isLimitedUnique, serial_count as serialCount, \"group\".name as groupName, \"user\".username as username, asset.created_at as createdAt, asset.updated_at as updatedAt, asset.is_18_plus, asset.moderation_status, asset.recent_average_price as recentAveragePrice FROM asset LEFT JOIN \"user\" ON \"user\".id = asset.creator_id LEFT JOIN \"group\" ON \"group\".id = asset.creator_id /**where**/ LIMIT 200", new
             {
                 sale_type = PurchaseType.Purchase,
                 sub_sale_type = TransactionSubType.ItemPurchase,

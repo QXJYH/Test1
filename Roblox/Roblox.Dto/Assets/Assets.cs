@@ -39,6 +39,7 @@ namespace Roblox.Dto.Assets
         public int? priceTickets { get; set; }
         public int? serialCount { get; set; }
         public DateTime? offsaleAt { get; set; }
+        public long? recentAveragePrice { get; set; }
     }
 	
 	public class AssetVisibility
@@ -81,6 +82,7 @@ namespace Roblox.Dto.Assets
         public DateTime createdAt { get; set; }
         public DateTime updatedAt { get; set; }
         public ModerationStatus moderationStatus { get; set; }
+        public long? recentAveragePrice { get; set; }
         public MultiGetEntryLowestSeller? lowestSellerData { get; set; }
     }
 
@@ -100,6 +102,7 @@ namespace Roblox.Dto.Assets
             genres = new[] {internalEntry.genre};
             creatorType = internalEntry.creatorType;
             creatorTargetId = internalEntry.creatorTargetId;
+            recentAveragePrice = internalEntry.recentAveragePrice;
             if (internalEntry.creatorType == CreatorType.Group)
             {
                 creatorName = internalEntry.groupName;
@@ -163,6 +166,7 @@ namespace Roblox.Dto.Assets
         public CreatorType creatorType { get; set; }
         public long creatorTargetId { get; set; }
         public string creatorName { get; set; }
+        public long? recentAveragePrice { get; set; }
         public DateTime? offsaleDeadline { get; set; }
         public IEnumerable<string> itemRestrictions { get; set; }
         public int saleCount { get; set; }
