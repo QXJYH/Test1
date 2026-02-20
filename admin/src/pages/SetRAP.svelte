@@ -23,13 +23,13 @@
 		if (latestFetch) {
 			clearTimeout(latestFetch);
 		}
-		if (assetId && assetId.length > 2) {
+		if (assetId && assetId.toString().length > 2) {
 			latestFetch = setTimeout(() => {
 				request
 					.get("/product/details?assetId=" + assetId)
 					.then((d) => {
 						assetDetails = d.data;
-						oldRAP = (d.data.recentAveragePrice || d.data.rap || "0").toString();
+						oldRAP = (d.data.recentAveragePrice ?? d.data.RecentAveragePrice ?? d.data.rap ?? d.data.RAP ?? "0").toString();
 					})
 					.catch(() => {
 						assetDetails = {};
@@ -97,7 +97,7 @@
 					try {
 						const d = await request.get("/product/details?assetId=" + assetId);
 						finalName = d.data.name;
-						finalOldRap = (d.data.recentAveragePrice || d.data.rap || "0").toString();
+						finalOldRap = (d.data.recentAveragePrice ?? d.data.RecentAveragePrice ?? d.data.rap ?? d.data.RAP ?? "0").toString();
 					} catch (e) {}
 				}
 
