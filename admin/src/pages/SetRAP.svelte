@@ -113,7 +113,6 @@
 								{ name: "Old Value", value: finalOldRap, inline: true },
 								{ name: "New Value", value: RAPVal, inline: true },
 							],
-							footer: { text: "Asset ID: " + assetId },
 							timestamp: new Date().toISOString(),
 						},
 					],
