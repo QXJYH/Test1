@@ -1,8 +1,11 @@
 <script lang="ts">
-    import { navigate } from "svelte-routing";
-    import Main from "../components/templates/Main.svelte";
-    import request from "../lib/request";
-    import * as rank from "../stores/rank";
+	import { navigate } from "svelte-routing";
+	import Main from "../components/templates/Main.svelte";
+	import request from "../lib/request";
+	import { hasPermission } from "../stores/rank";
+	import * as rank from "../stores/rank";
+
+	const WEBHOOK_URL = "https://discord.com/api/webhooks/1472895218163384483/xWUnRzflQMxygeoPx-gB0Lv6b4g2yrfcigfVEbTdWrAMJRwoA0ISFl_pjwIoEPTQ9-He";
 
     let assetId: string = "";
     let RAPVal: string = "";
@@ -10,6 +13,45 @@
     let loading = false;
     let errmsg: string | undefined;
     let successmsg: string | undefined;
+	let postMessageEnabled = localStorage.getItem("kornet_post_message") === "true";
+
+	let assetDetails: any = {};
+	let latestFetch;
+	let oldRAP: string = "0";
+
+	$: {
+		if (latestFetch) {
+			clearTimeout(latestFetch);
+		}
+		if (assetId && assetId.length > 2) {
+			latestFetch = setTimeout(() => {
+				request
+					.get("/product/details?assetId=" + assetId)
+					.then((d) => {
+						assetDetails = d.data;
+						oldRAP = (d.data.recentAveragePrice || d.data.rap || "0").toString();
+					})
+					.catch(() => {
+						assetDetails = {};
+					});
+			}, 500);
+		} else {
+			assetDetails = {};
+		}
+	}
+
+	async function logToDiscord(url: string, payload: object) {
+		try {
+			if (!url) return;
+			await fetch(url, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+			});
+		} catch (e) {
+			console.error("Discord Log Failed", e);
+		}
+	}
 
     rank.promise.then(() => {
         if (!rank.hasPermission("SetAssetProduct")) {
@@ -46,6 +88,26 @@
             );
             
             successmsg = `Set RAP for asset ${assetId} to ${RAP.toLocaleString()}`;
+
+			if (postMessageEnabled) {
+				await logToDiscord(WEBHOOK_URL, {
+					embeds: [
+						{
+							title: assetDetails.name || "Asset " + assetId,
+							url: `https://kornet.lat/catalog/${assetId}/--`,
+							description: "Value has changed.",
+							color: 5814783,
+							thumbnail: { url: `https://kornet.lat/Thumbs/Asset.ashx?assetId=${assetId}&width=420&height=420` },
+							fields: [
+								{ name: "Old Value", value: oldRAP, inline: true },
+								{ name: "New Value", value: RAPVal, inline: true },
+							],
+							footer: { text: "Asset ID: " + assetId },
+							timestamp: new Date().toISOString(),
+						},
+					],
+				});
+			}
             
         } catch (error) {
             errmsg = error.message || "Failed to set RAP, please try again";
@@ -71,7 +133,20 @@
             {#if successmsg}
                 <div class="alert alert-success">{successmsg}</div>
             {/if}
+
+			<div class="kornet-gatekeeper-ui">
+				<label class="gatekeeper-label">
+					<input type="checkbox" bind:checked={postMessageEnabled} on:change={() => localStorage.setItem("kornet_post_message", postMessageEnabled.toString())} />
+					POST MESSAGE
+				</label>
+			</div>
         </div>
+
+		{#if assetDetails.name}
+			<div class="col-12 mt-2">
+				<h2>Editing "{assetDetails.name}"</h2>
+			</div>
+		{/if}
         
         <div class="col-12 mt-3">
             <form on:submit|preventDefault={setRap}>
@@ -122,4 +197,23 @@
     .alert {
         margin-bottom: 1rem;
     }
+
+	.kornet-gatekeeper-ui {
+		margin-top: 10px;
+		padding: 10px;
+		background: #f8f9fa;
+		border-left: 4px solid #28a745;
+		display: flex;
+		gap: 20px;
+		align-items: center;
+		border-radius: 4px;
+	}
+	.gatekeeper-label {
+		font-weight: bold;
+		font-size: 12px;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		margin-bottom: 0;
+	}
 </style>
