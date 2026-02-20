@@ -146,7 +146,7 @@ namespace Roblox.Website.Controllers
                     default: assetType = Roblox.Models.Assets.Type.Hat; break;
                 }
 
-                var uploadRoot = @"C:\PanalBlox\2016-roblox-main\public";
+                var uploadRoot = @"C:\Users\Administrator\Downloads\kornet\2016-roblox-main\public";
 
                 string filePath = null;
                 Stream stream = null;

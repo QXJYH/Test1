@@ -200,7 +200,7 @@ const RequestItem = () => {
   return (
     <div className='container'>
       <Head>
-        <title>Request Item | PanalBlox</title>
+        <title>Request item - Kornet</title>
       </Head>
       <div className={s.container}>
         <h1 className={s.header}>Request New Item</h1>
