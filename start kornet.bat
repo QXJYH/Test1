@@ -1,4 +1,5 @@
 @echo off
+git pull
 :: cd C:\Users\Administrator\Downloads\kornet
 taskkill /f /im RCCService.exe
 start /b cmd /c "cd /d 2016-roblox-main && call run.bat"

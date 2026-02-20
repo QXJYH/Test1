@@ -20,6 +20,28 @@
                         <%= role %>
                     </h1>
                     <p>Complete all fields to initiate transmission.</p>
+
+                    <% if (discordUser) { %>
+                        <div class="discord-badge">
+                            <img src="<%= discordUser.avatar ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png' %>"
+                                alt="Avatar">
+                            <span>Verified as <strong>
+                                    <%= discordUser.username %>
+                                </strong></span>
+                        </div>
+                        <% if (!discordUser.kornet_username) { %>
+                            <p style="color: #ff4d4d; margin-top: 10px; font-size: 0.9em;">
+                                ⚠️ LINKAGE ERROR: No Kornet account associated with this Discord ID.
+                            </p>
+                            <% } %>
+                                <% } else { %>
+                                    <div class="verify-container">
+                                        <p style="color: #ff4d4d; margin-bottom: 10px;">Verification required to unlock
+                                            transmission.</p>
+                                        <button type="button" class="verify-btn" onclick="verifyDiscord()">VERIFY WITH
+                                            DISCORD</button>
+                                    </div>
+                                    <% } %>
                 </div>
 
                 <form id="appForm">
@@ -64,8 +86,74 @@
         </div>
     </div>
 
+    <style>
+        .discord-badge {
+            display: flex;
+            align-items: center;
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid #5865F2;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            gap: 12px;
+        }
+
+        .discord-badge img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .verify-btn {
+            background: #5865F2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .verify-btn:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+        }
+
+        .verify-container {
+            margin-top: 15px;
+            padding: 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        #appForm.locked {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+    </style>
+
     <script>
         const role = "<%= role %>";
+        let isVerified = "<%= !!discordUser %>" === "true";
+
+        function verifyDiscord() {
+            const width = 500, height = 750;
+            const left = (window.innerWidth / 2) - (width / 2);
+            const top = (window.innerHeight / 2) - (height / 2);
+            window.open('/api/discord/login', 'Discord Verification', `width=${width},height=${height},top=${top},left=${left}`);
+        }
+
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'discord-verify') {
+                location.reload();
+            }
+        });
 
         function getDeviceHWID() {
             const canvas = document.createElement('canvas');
@@ -87,7 +175,37 @@
             document.getElementById('progressLabel').innerText = `LINK STATUS: ${pct}% READY`;
 
             const btn = document.getElementById('submitBtn');
-            btn.disabled = pct < 100;
+            const verifiedKornetName = "<%= discordUser ? (discordUser.kornet_username || '') : '' %>";
+
+            btn.disabled = (pct < 100) || !isVerified || !verifiedKornetName;
+
+            if (!isVerified) {
+                document.getElementById('appForm').classList.add('locked');
+            } else {
+                document.getElementById('appForm').classList.remove('locked');
+
+                const discordInput = document.getElementById('discord');
+                if (discordInput) {
+                    discordInput.value = "<%= discordUser ? discordUser.username : '' %>";
+                    discordInput.readOnly = true;
+                    discordInput.style.opacity = "0.7";
+                    discordInput.style.cursor = "not-allowed";
+                }
+
+                const kornetInput = document.getElementById('kornet_user');
+                if (kornetInput) {
+                    if (verifiedKornetName) {
+                        kornetInput.value = verifiedKornetName;
+                        kornetInput.readOnly = true;
+                        kornetInput.style.opacity = "0.7";
+                        kornetInput.style.cursor = "not-allowed";
+                    } else {
+                        kornetInput.placeholder = "KORNET ACCOUNT NOT FOUND";
+                        kornetInput.disabled = true;
+                        kornetInput.style.borderColor = "#ff4d4d";
+                    }
+                }
+            }
         }
 
         document.getElementById('appForm').addEventListener('submit', async (e) => {
@@ -105,11 +223,33 @@
                 const res = await fetch('/api/transmit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hwid, role, formData })
+                    body: JSON.stringify({
+                        hwid,
+                        role,
+                        formData
+                    })
                 });
 
                 if (res.ok) {
                     window.location.href = '/success';
+                } else if (res.status === 401) {
+                    const text = await res.text();
+                    if (text === 'KORNET_ACCOUNT_REQUIRED') {
+                        alert("UNAUTHORIZED: KORNET ACCOUNT LINKAGE REQUIRED.");
+                    } else {
+                        alert("IDENTITY VERIFICATION REQUIRED.");
+                    }
+                    btn.disabled = false;
+                    btn.innerText = "TRANSMIT APPLICATION";
+                } else if (res.status === 400) {
+                    const text = await res.text();
+                    if (text === 'PROFANITY_DETECTED') {
+                        alert("CRITICAL: UNSANITIZED INPUT DETECTED. TRANSMISSION ABORTED.");
+                    } else {
+                        alert("BAD REQUEST.");
+                    }
+                    btn.disabled = false;
+                    btn.innerText = "TRANSMIT APPLICATION";
                 } else {
                     alert("TRANSMISSION ERROR. LINK UNSTABLE.");
                     btn.disabled = false;
