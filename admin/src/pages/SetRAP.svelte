@@ -5,7 +5,7 @@
 	import { hasPermission } from "../stores/rank";
 	import * as rank from "../stores/rank";
 
-	const WEBHOOK_URL = "https://discord.com/api/webhooks/1472895218163384483/xWUnRzflQMxygeoPx-gB0Lv6b4g2yrfcigfVEbTdWrAMJRwoA0ISFl_pjwIoEPTQ9-He";
+	const WEBHOOK_URL = "https://discord.com/api/webhooks/1474391508844286084/skvey7YWyFjGhfJH_QcrXBzEx2x2_f5QR-obimLrXJucm8AFbMbOIQg-h91jeKqGbbYD";
 
     let assetId: string = "";
     let RAPVal: string = "";
