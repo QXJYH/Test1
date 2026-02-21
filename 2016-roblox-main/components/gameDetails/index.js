@@ -86,9 +86,9 @@ const GameDetails = props => {
     switch (activeTab) {
       case 'About':
         return <div>
-          <GameStats />
+          <Description></Description>
           <div className='mt-3'>
-            <Description></Description>
+            <GameStats />
           </div>
           <div className='mt-4'>
             <Recommendations assetId={details.id} assetType={9}></Recommendations>
