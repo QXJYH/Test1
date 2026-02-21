@@ -16,6 +16,8 @@
 	let editCreatorId = 0;
 	let editLimited = false;
 	let editStock = 0;
+	let editForSale = true;
+	let editVisible = true;
 	let submitting = false;
 
 	const loadRequests = async () => {
@@ -40,9 +42,11 @@
 		editName = req.name;
 		editRobux = req.robux_price || req.robuxPrice || 0;
 		editTix = req.tix_price || req.tixPrice || 0;
-		editCreatorId = req.submitter_id || req.submitterId || 0;
+		editCreatorId = req.type === "Roblox" ? 1 : req.submitter_id || req.submitterId || 0;
 		editLimited = req.is_limited || req.isLimited || false;
 		editStock = req.stock;
+		editForSale = true;
+		editVisible = true;
 		showModal = true;
 	};
 
@@ -66,6 +70,8 @@
 					creatorId: editCreatorId,
 					isLimited: editLimited,
 					stock: editStock,
+					forSale: editForSale,
+					visible: editVisible,
 				}),
 			});
 			if (!res.ok) throw new Error("Failed to approve");
@@ -167,8 +173,8 @@
 	</div>
 
 	{#if showModal}
-		<div class="modal-backdrop">
-			<div class="modal-content">
+		<div class="custom-modal-backdrop">
+			<div class="custom-modal-content">
 				<h3>Approve Item</h3>
 				<div class="mb-3">
 					<label class="form-label">Name</label>
@@ -188,6 +194,14 @@
 					<label class="form-label">Creator ID (User ID)</label>
 					<input type="number" class="form-control" bind:value={editCreatorId} />
 					<div class="form-text">The user who will own/create this item. Defaults to submitter.</div>
+				</div>
+				<div class="mb-3 form-check">
+					<input type="checkbox" class="form-check-input" id="editVisible" bind:checked={editVisible} />
+					<label class="form-check-label" for="editVisible">Visible</label>
+				</div>
+				<div class="mb-3 form-check">
+					<input type="checkbox" class="form-check-input" id="editForSale" bind:checked={editForSale} />
+					<label class="form-check-label" for="editForSale">For Sale</label>
 				</div>
 				<div class="mb-3 form-check">
 					<input type="checkbox" class="form-check-input" id="editLimited" bind:checked={editLimited} />
@@ -212,7 +226,7 @@
 </Main>
 
 <style>
-	.modal-backdrop {
+	.custom-modal-backdrop {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -224,7 +238,7 @@
 		align-items: center;
 		z-index: 1000;
 	}
-	.modal-content {
+	.custom-modal-content {
 		background: white;
 		padding: 20px;
 		border-radius: 5px;

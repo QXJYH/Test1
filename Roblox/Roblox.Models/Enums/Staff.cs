@@ -88,4 +88,7 @@ public enum Access
 	ManageRunningGameServers,
 	ManageVerifiedTicks,
 	ManageGames,
+	ManageAssets,
+	GetRequestedItems,
+	SetRequestedItems,
 }

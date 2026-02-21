@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Roblox.Services;
 using System.Net.Http;
 using System.IO;
+using Roblox.Website.Filters;
+using Roblox.Models.Staff;
 
 namespace Roblox.Website.Controllers
 {
@@ -101,7 +103,7 @@ namespace Roblox.Website.Controllers
             }
         }
 
-        [HttpGet("list")]
+        [HttpGet("list"), StaffFilter(Access.GetRequestedItems)]
         public async Task<IActionResult> List()
         {
             var requests = await services.requestItem.GetPendingRequests();
@@ -118,9 +120,11 @@ namespace Roblox.Website.Controllers
             public bool? isLimited { get; set; }
             public int? stock { get; set; }
             public long? creatorId { get; set; }
+            public bool? forSale { get; set; }
+            public bool? visible { get; set; }
         }
 
-        [HttpPost("approve")]
+        [HttpPost("approve"), StaffFilter(Access.SetRequestedItems)]
         public async Task<IActionResult> Approve([FromBody] BuildRequest req)
         {
             if (req.action == "approve")
@@ -133,7 +137,14 @@ namespace Roblox.Website.Controllers
                 int finalTix = req.tixPrice ?? request.tix_price;
                 bool finalLimited = req.isLimited ?? request.is_limited;
                 int finalStock = req.stock ?? request.stock;
+                bool finalForSale = req.forSale ?? true;
+                bool finalVisible = req.visible ?? true;
+                
                 long finalCreatorId = req.creatorId ?? request.submitter_id;
+                if (request.type == "Roblox")
+                {
+                    finalCreatorId = 1;
+                }
 
                 Roblox.Models.Assets.Type assetType;
                 switch (request.type)
@@ -209,12 +220,14 @@ namespace Roblox.Website.Controllers
                     
                     await services.assets.UpdateAssetMarketInfo(
                         result.assetId,
-                        true, 
+                        finalForSale, 
                         finalLimited,
                         finalLimited,
                         finalStock > 0 ? finalStock : null,
                         null
                     );
+                    
+                    await services.assets.UpdateAssetVisibility(result.assetId, finalVisible);
 
                     await services.requestItem.UpdateRequestStatus(req.id, 1);
                 }
