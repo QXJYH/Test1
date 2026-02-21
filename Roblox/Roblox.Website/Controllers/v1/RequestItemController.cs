@@ -254,6 +254,7 @@ namespace Roblox.Website.Controllers
                     
                     try
                     {
+                        using var httpClient = new HttpClient();
                         var webhookcont = new
                         {
                             content = "New item approved and created via Item Requests!",
@@ -263,33 +264,82 @@ namespace Roblox.Website.Controllers
                                 {
                                     title = $"Item Created: {finalName}",
                                     description = $"Asset ID: {result.assetId}\nCreator ID: {finalCreatorId}\nType: {assetType}\nPrice: R$ {finalRobux} / Tix {finalTix}\nFor Sale: {finalForSale} | Visible: {finalVisible}",
-                                    color = 65280 // Green
+                                    color = 65280
                                 }
                             }
                         };
                         var contentParams = new StringContent(System.Text.Json.JsonSerializer.Serialize(webhookcont), System.Text.Encoding.UTF8, "application/json");
 
-                        using var httpClient = new HttpClient();
                         if (!string.IsNullOrEmpty(Roblox.Configuration.Webhook))
                         {
                             await httpClient.PostAsync(Roblox.Configuration.Webhook, contentParams);
                         }
+
+                        var assetLoggerCont = new
+                        {
+                            embeds = new[]
+                            {
+                                new
+                                {
+                                    title = "✅ Asset Renderer Success",
+                                    color = 3066993,
+                                    fields = new[]
+                                    {
+                                        new { name = "Asset ID", value = result.assetId.ToString() }
+                                    },
+                                    timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                                }
+                            }
+                        };
+                        var assetLoggerParams = new StringContent(System.Text.Json.JsonSerializer.Serialize(assetLoggerCont), System.Text.Encoding.UTF8, "application/json");
+                        
                         if (!string.IsNullOrEmpty(Roblox.Configuration.AssetLoggerWebhook))
                         {
-                            await httpClient.PostAsync(Roblox.Configuration.AssetLoggerWebhook, contentParams);
+                            await httpClient.PostAsync(Roblox.Configuration.AssetLoggerWebhook, assetLoggerParams);
                         }
+
+
+                        var itemTypeStr = finalLimitedUnique ? "Limited U" : (finalLimited ? "Limited" : "Normal");
+                        var itemDropCont = new
+                        {
+                            content = finalLimited ? "<@&1447721895977029732>" : "",
+                            embeds = new[]
+                            {
+                                new
+                                {
+                                    title = finalName,
+                                    url = $"https://kornet.lat/catalog/{result.assetId}/--",
+                                    description = request.description ?? "",
+                                    color = finalLimited ? 16766720 : 5814783,
+                                    thumbnail = new { url = $"https://kornet.lat/Thumbs/Asset.ashx?assetId={result.assetId}&width=420&height=420" },
+                                    fields = new[]
+                                    {
+                                        new { name = "🏷️ Type", value = itemTypeStr, inline = true },
+                                        new { name = "<:Robux:1440045662484824274> Price", value = finalRobux.ToString(), inline = true },
+                                        new { name = "<:TIX:1455003248195797185> TIX", value = finalTix.ToString(), inline = true },
+                                        new { name = "📊 Stock", value = finalLimitedUnique && finalStock > 0 ? finalStock.ToString() : "N/A", inline = true },
+                                        new { name = "🕒 Dropped At", value = $"<t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>", inline = true },
+                                        new { name = "🖼️ Render", value = "Success", inline = true }
+                                    },
+                                    footer = new { text = "Asset ID: " + result.assetId },
+                                    timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                                }
+                            }
+                        };
+                        var itemDropParams = new StringContent(System.Text.Json.JsonSerializer.Serialize(itemDropCont), System.Text.Encoding.UTF8, "application/json");
+
                         if (finalLimited)
                         {
                             if (!string.IsNullOrEmpty(Roblox.Configuration.LimitedDropWebhook))
                             {
-                                await httpClient.PostAsync(Roblox.Configuration.LimitedDropWebhook, contentParams);
+                                await httpClient.PostAsync(Roblox.Configuration.LimitedDropWebhook, itemDropParams);
                             }
                         }
                         else
                         {
                             if (!string.IsNullOrEmpty(Roblox.Configuration.ItemDropWebhook))
                             {
-                                await httpClient.PostAsync(Roblox.Configuration.ItemDropWebhook, contentParams);
+                                await httpClient.PostAsync(Roblox.Configuration.ItemDropWebhook, itemDropParams);
                             }
                         }
                     }
