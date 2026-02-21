@@ -547,7 +547,7 @@ public class WebController : ControllerBase
 				var players = c.players.ToList();
 				return new
 				{
-					Guid = c.job,
+					Guid = c.id,
 					Capacity = details.maxPlayerCount,
 					Ping = random.Next(50, 106),
 					Fps = 60, // todo
