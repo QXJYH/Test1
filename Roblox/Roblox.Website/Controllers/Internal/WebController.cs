@@ -482,7 +482,7 @@ public class WebController : ControllerBase
     }
 	
 	[HttpGet("game/get-join-script")]
-	public async Task<string> GetJoinScript(long placeId)
+	public async Task<string> GetJoinScript(long placeId, string? gameId = null)
 	{
 		FeatureFlags.FeatureCheck(FeatureFlag.GameJoinEnabled);
 		
@@ -506,6 +506,10 @@ public class WebController : ControllerBase
 		int? year = await services.games.GetPlaceYear(placeId);
 		
 		string PL = $"{baselink}/game/PlaceLauncher.ashx?placeid={placeId}&ticket={ticket}";
+		if (!string.IsNullOrEmpty(gameId))
+		{
+			PL += $"&gameId={gameId}";
+		}
 		if (year.HasValue)
 		{
 			PL += $"&{year.Value}=true";
@@ -543,6 +547,7 @@ public class WebController : ControllerBase
 				var players = c.players.ToList();
 				return new
 				{
+					Guid = c.job,
 					Capacity = details.maxPlayerCount,
 					Ping = random.Next(50, 106),
 					Fps = 60, // todo

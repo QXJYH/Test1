@@ -182,7 +182,7 @@ namespace Roblox.Website.Controllers
 
 		[HttpGetBypass("/game/PlaceLauncher.ashx")]
 		[HttpPostBypass("/game/PlaceLauncher.ashx")]
-		public async Task<dynamic> PlaceLauncher(long placeId, string ticket)
+		public async Task<dynamic> PlaceLauncher(long placeId, string ticket, string? gameId = null)
 		{	
 			var PlaceYear = await services.games.GetPlaceYear(placeId);
 			string Year = PlaceYear?.ToString() ?? "2016";
@@ -245,20 +245,47 @@ namespace Roblox.Website.Controllers
 				ip = GetIP()
 			};
 
-			var Result = await services.gameServer.GetServerForPlace(placeId, Year);
+			string targetJobId;
+			JoinStatus targetStatus;
+
+			if (!string.IsNullOrEmpty(gameId))
+			{
+				var MaxPlayers = await services.games.GetMaxPlayerCount(placeId);
+				var ServerPlayers = await services.gameServer.GetGameServerPlayers(gameId);
+				if (ServerPlayers.Count() < MaxPlayers)
+				{
+					targetJobId = gameId;
+					targetStatus = JoinStatus.Joining;
+				}
+				else
+				{
+					return new
+					{
+						jobId = (string?)null,
+						status = (int)JoinStatus.Error,
+						message = "That server is full."
+					};
+				}
+			}
+			else
+			{
+				var Result = await services.gameServer.GetServerForPlace(placeId, Year);
+				targetJobId = Result.job;
+				targetStatus = Result.status;
+			}
 				
-			if (Result.status == JoinStatus.Joining)
+			if (targetStatus == JoinStatus.Joining)
 			{
 				await Roblox.Metrics.GameMetrics.ReportGameJoinPlaceLauncherReturned(details.placeId);
 
 				var TicketQ = Request.Query["ticket"].FirstOrDefault();
 				var Ticket = Uri.EscapeDataString(TicketQ);
-				var joinScriptUrl = $"{Configuration.BaseUrl}/game/join.ashx?placeid={placeId}&ticket={Ticket}&jobId={Result.job}";
+				var joinScriptUrl = $"{Configuration.BaseUrl}/game/join.ashx?placeid={placeId}&ticket={Ticket}&jobId={targetJobId}";
 				
 				return new
 				{
-					jobId = Result.job,
-					status = (int)Result.status,
+					jobId = targetJobId,
+					status = (int)targetStatus,
 					joinScriptUrl = joinScriptUrl,
 					authenticationUrl = Configuration.BaseUrl + "/Login/Negotiate.ashx",
 					authenticationTicket = Ticket,
@@ -270,7 +297,7 @@ namespace Roblox.Website.Controllers
 			return new
 			{
 				jobId = (string?)null,
-				status = (int)Result.status,
+				status = (int)targetStatus,
 				message = "Waiting for server",
 			};
 		}

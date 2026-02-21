@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { createUseStyles } from "react-jss";
-import { getServers } from "../../../services/games";
+import { getServers, launchGame } from "../../../services/games";
 import GameDetailsStore from "../stores/gameDetailsStore";
 
 const useStyles = createUseStyles({
@@ -110,7 +110,11 @@ const ServerEntry = props => {
     <div className={s.serverInfo}>
       <span className={s.playerCount}>{props.CurrentPlayers.length} of {maxPlayers} players max</span>
       <button className={s.joinBtn} onClick={() => {
-        alert('Feature is not implemented');
+        launchGame({
+          placeId: store.details.id,
+          jobId: props.Guid,
+          year: store.universeDetails?.year || 2016
+        });
       }}>Join</button>
     </div>
     <div className={s.avatarList}>
