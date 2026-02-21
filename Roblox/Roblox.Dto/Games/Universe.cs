@@ -29,6 +29,8 @@ public class MultiGetUniverseEntry
     public bool studioAccessToApisAllowed { get; set; }
     public long? price { get; set; }
     
+    public int year { get; set; }
+    
     public long id { get; set; }
     public long rootPlaceId { get; set; }
     public string name { get; set; }
