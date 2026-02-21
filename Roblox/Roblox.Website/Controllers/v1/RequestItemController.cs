@@ -35,9 +35,16 @@ namespace Roblox.Website.Controllers
                 string? rbxmPath = null;
                 string? objPath = null;
                 
+                var logPath = Path.Combine(Directory.GetCurrentDirectory(), "ugc_debug.log");
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Submit started. PublicDirectory: '{Roblox.Configuration.PublicDirectory}'\n");
                 var uploadDir = Path.Combine(Roblox.Configuration.PublicDirectory, "Data", "v1", "uploads", "requests");
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] uploadDir: '{uploadDir}'\n");
+                
                 if (!Directory.Exists(uploadDir))
+                {
+                    System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] Creating directory: '{uploadDir}'\n");
                     Directory.CreateDirectory(uploadDir);
+                }
 
                 if (rbxmFile != null)
                 {
