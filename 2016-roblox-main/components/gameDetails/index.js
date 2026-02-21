@@ -11,6 +11,7 @@ import OldVerticalTabs from "../oldVerticalTabs";
 import GameOverview from "./components/gameOverview";
 import GameServers from "./components/gameServers";
 import Description from "./components/description";
+import GameStats from "./components/gameStats";
 import GameDetailsStore from "./stores/gameDetailsStore"
 
 const useStyles = createUseStyles({
@@ -85,7 +86,10 @@ const GameDetails = props => {
     switch (activeTab) {
       case 'About':
         return <div>
-          <Description></Description>
+          <GameStats />
+          <div className='mt-3'>
+            <Description></Description>
+          </div>
           <div className='mt-4'>
             <Recommendations assetId={details.id} assetType={9}></Recommendations>
           </div>
