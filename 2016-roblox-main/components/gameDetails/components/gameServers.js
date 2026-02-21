@@ -141,7 +141,7 @@ const GameServers = props => {
     const offset = isInitial ? 0 : (store.servers && store.servers.offset || 0);
 
     if (isInitial && store.servers && store.servers.Collection) {
-      return; // Already loaded
+      return;
     }
 
     if (isInitial) {

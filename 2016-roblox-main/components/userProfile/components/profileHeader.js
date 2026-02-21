@@ -3,6 +3,7 @@ import { createUseStyles } from "react-jss";
 import { followUser, unfollowUser } from "../../../services/friends";
 import { multiGetPresence } from "../../../services/presence";
 import { getMembershipType, updateStatus, getMyInfo } from "../../../services/users";
+import { launchGame, multiGetPlaceDetails, multiGetUniverseDetails } from "../../../services/games";
 import AuthenticationStore from "../../../stores/authentication";
 import Dropdown2016 from "../../dropdown2016";
 import PlayerHeadshot from "../../playerHeadshot";
@@ -10,7 +11,7 @@ import Activity from "../../userActivity";
 import UserProfileStore from "../stores/UserProfileStore";
 import useCardStyles from "../styles/card";
 import FriendButton from "./friendButton";
-import MessageButton from "./messageButton";
+import ActionButton from "../../actionButton";
 import RelationshipStatistics from "./relationshipStatistics";
 
 const useHeaderStyles = createUseStyles({
@@ -90,7 +91,27 @@ const ProfileHeader = props => {
     if (auth.isPending) return;
 
     multiGetPresence({ userIds: [store.userId] }).then((d) => {
-      setStatus(d[0]);
+      const presence = d[0];
+      if (presence && presence.lastLocation === 'Playing' && presence.placeId) {
+        multiGetPlaceDetails({ placeIds: [presence.placeId] }).then(placeDetails => {
+          if (placeDetails[0]) {
+            multiGetUniverseDetails({ universeIds: [placeDetails[0].universeId] }).then(universeDetails => {
+              if (universeDetails[0]) {
+                setStatus({
+                  ...presence,
+                  year: universeDetails[0].year,
+                });
+              } else {
+                setStatus(presence);
+              }
+            })
+          } else {
+            setStatus(presence);
+          }
+        })
+      } else {
+        setStatus(presence);
+      }
     });
     getMembershipType({ userId: store.userId }).then(d => {
       setBcLevel(d);
@@ -149,6 +170,10 @@ const ProfileHeader = props => {
           e.preventDefault();
           window.open("/Trade/TradeWindow.aspx?TradePartnerID=" + store.userId, "_blank", "scrollbars=0, height=608, width=914");
         }
+      });
+      buttons.push({
+        name: 'Message',
+        url: '/messages/compose?recipientId=' + store.userId,
       });
     }
     if (isAdmin) {
@@ -230,7 +255,18 @@ const ProfileHeader = props => {
                 {
                   showButtons && <>
                     <div className='col-6 col-lg-2 pe-1'>
-                      <MessageButton />
+                      <ActionButton
+                        label="Join"
+                        onClick={() => {
+                          launchGame({
+                            placeId: status.placeId,
+                            jobId: status.jobId,
+                            year: status.year || 2020,
+                          })
+                        }}
+                        disabled={!status || status.lastLocation !== 'Playing'}
+                        tooltipText={(!status || status.lastLocation !== 'Playing') ? 'This user is not currently in a game.' : ''}
+                      />
                     </div>
                     <div className='col-6 col-lg-2 ps-1'>
                       <FriendButton />
