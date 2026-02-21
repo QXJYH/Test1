@@ -161,6 +161,7 @@ namespace Roblox.Website.Controllers
 
                 string filePath = null;
                 Stream stream = null;
+                long? robloxAssetId = null;
 
                 if (!string.IsNullOrEmpty(request.rbxm_path))
                 {
@@ -181,25 +182,34 @@ namespace Roblox.Website.Controllers
                     Console.WriteLine($"[Info] Processing approval for file: {filePath}");
                     stream = System.IO.File.OpenRead(filePath);
                 }
-                else if (!string.IsNullOrEmpty(request.asset_url))
+                else if (request.type == "Roblox" && !string.IsNullOrEmpty(request.asset_url))
                 {
-                     Console.WriteLine($"[Info] No file path, attempting to download from URL: {request.asset_url}");
+                     Console.WriteLine($"[Info] Attempting to copy Roblox Asset from URL: {request.asset_url}");
                      try 
                      {
-                        using var http = new HttpClient();
-                        http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-                        var bytes = await http.GetByteArrayAsync(request.asset_url);
-                        stream = new MemoryStream(bytes);
+                        var match = System.Text.RegularExpressions.Regex.Match(request.asset_url, @"(?:catalog|library)/(\d+)");
+                        long id = match.Success ? long.Parse(match.Groups[1].Value) : 0;
+                        if (id == 0) return BadRequest(new { message = "Invalid or unsupported Roblox Asset URL. Make sure it contains /catalog/ or /library/ and an ID." });
+                        
+                        robloxAssetId = id;
+                        var details = await services.robloxApi.GetProductInfo(id, true);
+                        if (details.AssetTypeId == null) return BadRequest(new { message = "Invalid Roblox Asset" });
+                        assetType = details.AssetTypeId.Value;
+                        
+                        stream = await services.robloxApi.GetAssetContent(id);
+                        var isOk = await services.assets.ValidateAssetFile(stream, assetType);
+                        if (!isOk) return BadRequest(new { message = "The asset file doesn't look correct. Please try again." });
+                        stream.Position = 0;
                      }
                      catch (Exception ex)
                      {
-                         Console.WriteLine($"[Error] Failed to download asset: {ex.Message}");
-                         return BadRequest(new { message = $"Failed to download asset from URL: {request.asset_url}. Error: {ex.Message}" });
+                         Console.WriteLine($"[Error] Failed to copy Roblox asset: {ex.Message}");
+                         return BadRequest(new { message = $"Failed to copy Roblox asset from URL: {request.asset_url}. Error: {ex.Message}" });
                      }
                 }
                 else 
                 {
-                     return BadRequest(new { message = "Database entry has no file paths AND no asset_url. This request cannot be processed." });
+                     return BadRequest(new { message = "Database entry has no file paths AND no valid asset_url. This request cannot be processed." });
                 }
 
                 using (stream)
@@ -213,7 +223,10 @@ namespace Roblox.Website.Controllers
                         stream,
                         assetType,
                         Roblox.Models.Assets.Genre.All,
-                        Roblox.Models.Assets.ModerationStatus.ReviewApproved
+                        Roblox.Models.Assets.ModerationStatus.ReviewApproved,
+                        DateTime.UtcNow,
+                        DateTime.UtcNow,
+                        robloxAssetId
                     );
 
                     await services.assets.SetItemPrice(result.assetId, finalRobux, finalTix);
