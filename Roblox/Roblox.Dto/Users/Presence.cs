@@ -14,6 +14,7 @@ public class PresenceEntry
     public long? placeId { get; set; }
     public long? rootPlaceId { get; set; }
     public long? gameId { get; set; }
+    public string? jobId { get; set; }
     public long userId { get; set; }
     public DateTime lastOnline { get; set; }
 }
@@ -24,4 +25,5 @@ public class DbPresenceEntry
     public DateTime onlineAt { get; set; }
     public long? currentPlaceId { get; set; }
     public long? currentUniverseId { get; set; }
+    public Guid? currentJobId { get; set; }
 }
