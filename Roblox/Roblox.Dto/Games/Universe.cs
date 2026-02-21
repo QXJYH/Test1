@@ -37,6 +37,7 @@ public class MultiGetUniverseEntry
     public DateTime updated { get; set; }
     public int maxPlayers { get; set; }
     public long visits { get; set; }
+    public int playing { get; set; }
     public bool createVipServersAllowed { get; set; }
     [JsonIgnore]
     public long creatorId { get; set; }

@@ -56,9 +56,21 @@ public class GamesService : ServiceBase, IService
         using var assets = ServiceProvider.GetOrCreate<AssetsService>(this);
 
         var favorites = await Task.WhenAll(result.Select(c => assets.CountFavorites(c.rootPlaceId)));
+        
+        Dictionary<long, long> currentPlayers = GameServerService.CurrentPlayersInGame;
         for (var i = 0; i < result.Count; i++)
         {
             result[i].favoritedCount = favorites[i];
+            
+            int playingCount = 0;
+            foreach (var kvp in currentPlayers)
+            {
+                if (kvp.Value == result[i].rootPlaceId)
+                {
+                    playingCount++;
+                }
+            }
+            result[i].playing = playingCount;
         }
         return result;
     }
