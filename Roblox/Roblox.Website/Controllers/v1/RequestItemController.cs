@@ -165,7 +165,7 @@ namespace Roblox.Website.Controllers
                     default: assetType = Roblox.Models.Assets.Type.Hat; break;
                 }
 
-                var uploadRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "2016-roblox-main", "public"));
+                var uploadRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 
                 string filePath = null;
                 Stream stream = null;
