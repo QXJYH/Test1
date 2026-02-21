@@ -188,6 +188,8 @@ return function(isTenFoot, isSmallTouchScreen)
 		[7210880] = "rbxassetid://134032333", -- Jeditkacheff
 		[13268404] = "rbxassetid://113059239", -- Sorcus
 		[261] = "rbxassetid://105897927", -- shedlestky
+		[3] = "rbxassetid://5787", -- unknown
+		[2] = "rbxassetid://5788", -- aaroning
 	}
 
 	LayoutValues.NeutralTeamColor = BrickColor.new("White")

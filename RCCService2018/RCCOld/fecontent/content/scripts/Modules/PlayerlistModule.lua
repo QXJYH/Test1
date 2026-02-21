@@ -139,6 +139,8 @@ local ADMINS = {	-- Admins with special icons
     ['13268404'] = 'http://www.roblox.com/asset/?id=113059239', -- Sorcus
     ['261'] = 'http://www.roblox.com/asset/?id=105897927', -- shedlestky
     ['20396599'] = 'http://www.roblox.com/asset/?id=161078086', -- Robloxsai
+	['3'] = "rbxassetid://5787", -- unknown
+	['2'] = "rbxassetid://5788", -- aaroning
 }
 
 local ABUSES = {
