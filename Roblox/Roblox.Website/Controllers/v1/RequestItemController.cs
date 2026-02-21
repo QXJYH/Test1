@@ -35,7 +35,7 @@ namespace Roblox.Website.Controllers
                 string? rbxmPath = null;
                 string? objPath = null;
                 
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "requests");
+                var uploadDir = Path.Combine(Roblox.Configuration.PublicDirectory, "Data", "v1", "uploads", "requests");
                 if (!Directory.Exists(uploadDir))
                     Directory.CreateDirectory(uploadDir);
 
@@ -47,7 +47,7 @@ namespace Roblox.Website.Controllers
                     {
                         await rbxmFile.CopyToAsync(stream);
                     }
-                    rbxmPath = $"/uploads/requests/{fileName}";
+                    rbxmPath = $"/v1/uploads/requests/{fileName}";
                 }
 
                 if (objFile != null)
@@ -58,7 +58,7 @@ namespace Roblox.Website.Controllers
                     {
                         await objFile.CopyToAsync(stream);
                     }
-                    objPath = $"/uploads/requests/{fileName}";
+                    objPath = $"/v1/uploads/requests/{fileName}";
                 }
 
                 if (request.type != "Roblox")
@@ -165,7 +165,7 @@ namespace Roblox.Website.Controllers
                     default: assetType = Roblox.Models.Assets.Type.Hat; break;
                 }
 
-                var uploadRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var uploadRoot = Path.Combine(Roblox.Configuration.PublicDirectory, "Data");
 
                 string filePath = null;
                 Stream stream = null;
