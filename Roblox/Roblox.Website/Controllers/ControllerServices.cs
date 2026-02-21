@@ -27,5 +27,6 @@ namespace Roblox.Website.Controllers
         public RobloxApi robloxApi { get; } = new();
         public ChatService chat { get; } = new();
 		public GameJoinService gameJoin { get; } = new();
+        public RequestItemService requestItem { get; } = new();
     }
 }

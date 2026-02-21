@@ -91,6 +91,12 @@
 					permission: "GetPendingModerationItems",
 				},
 				{
+					name: "Item Requests",
+					link: "/admin/item-approval",
+					icon: FilePlusIcon,
+					permission: "GetPendingModerationItems",
+				},
+				{
 					name: 'Text Moderation',
 					link: '/admin/text-posts',
 					icon: PhoneIcon,

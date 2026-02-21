@@ -7,6 +7,7 @@
 	import Players from "./pages/Players.svelte";
 	import GlobalMessage from "./pages/GlobalMessage.svelte";
 	import GlobalGiveItem from "./pages/GlobalGiveItem.svelte";
+	import ItemApproval from "./pages/ItemApproval.svelte";
 	import ManageUser from "./pages/ManageUser.svelte";
 	// other
 	import BanUser from "./pages/BanUser.svelte";
@@ -194,6 +195,9 @@
 		</Route>
 		<Route path="/admin/asset/approval">
 			<AssetApproval />
+		</Route>
+		<Route path="/admin/item-approval">
+			<ItemApproval />
 		</Route>
 		<Route path="/admin/lottery">
 			<Lottery />

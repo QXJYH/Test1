@@ -1966,7 +1966,7 @@ public class UsersService : ServiceBase, IService
         if (ids.Count == 0) return Array.Empty<PresenceEntry>();
 
         var sql = new SqlBuilder();
-        var t = sql.AddTemplate("SELECT id as userId, online_at as onlineAt, asset_server_player.asset_id as currentPlaceId, ua.universe_id as currentUniverseId FROM \"user\" LEFT JOIN asset_server_player ON asset_server_player.user_id = \"user\".id LEFT JOIN universe_asset ua on asset_server_player.asset_id = ua.asset_id /**where**/ LIMIT 1000");
+        var t = sql.AddTemplate("SELECT id as userId, online_at as onlineAt, asset_server_player.asset_id as currentPlaceId, ua.universe_id as currentUniverseId, asset_server_player.server_id as currentJobId FROM \"user\" LEFT JOIN asset_server_player ON asset_server_player.user_id = \"user\".id LEFT JOIN universe_asset ua on asset_server_player.asset_id = ua.asset_id /**where**/ LIMIT 1000");
         foreach (var item in ids)
         {
             sql.OrWhere("\"user\".id = " + item);
@@ -1980,6 +1980,7 @@ public class UsersService : ServiceBase, IService
             var isOnline = item.onlineAt >= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(5));
             var placeId = item.currentPlaceId;
             var universeId = item.currentUniverseId;
+            var jobId = item.currentJobId;
 
             var result = new PresenceEntry
             {
@@ -1989,6 +1990,7 @@ public class UsersService : ServiceBase, IService
                 lastLocation = placeId != null ? "Playing" : "Website",
                 rootPlaceId = placeId,
                 gameId = universeId,
+                jobId = jobId?.ToString(),
                 placeId = placeId,
                 lastOnline = placeId != null ? DateTime.UtcNow : item.onlineAt,
             };

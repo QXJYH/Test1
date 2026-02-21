@@ -104,6 +104,9 @@ public class FrontendProxyMiddleware
         // hubs
         "/chat",
         "/chat/negotiate",
+        // UGC and v1 APIs
+        "/v1/",
+        "/uploads/",
     };
 
 	private async Task<HttpResponseMessage> ProxyRequestAsync(string url)

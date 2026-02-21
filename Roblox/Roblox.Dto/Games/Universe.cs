@@ -29,6 +29,8 @@ public class MultiGetUniverseEntry
     public bool studioAccessToApisAllowed { get; set; }
     public long? price { get; set; }
     
+    public int year { get; set; }
+    
     public long id { get; set; }
     public long rootPlaceId { get; set; }
     public string name { get; set; }
@@ -37,6 +39,7 @@ public class MultiGetUniverseEntry
     public DateTime updated { get; set; }
     public int maxPlayers { get; set; }
     public long visits { get; set; }
+    public int playing { get; set; }
     public bool createVipServersAllowed { get; set; }
     [JsonIgnore]
     public long creatorId { get; set; }

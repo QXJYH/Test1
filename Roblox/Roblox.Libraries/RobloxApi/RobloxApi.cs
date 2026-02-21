@@ -164,7 +164,7 @@ public class RobloxApi
         // Literally all it gets is the "assetTypeId". Everything else is blank.
         using var cancel = new CancellationTokenSource();
         cancel.CancelAfter(TimeSpan.FromSeconds(30));
-        var response = await _client.GetAsync("https://assetdelivery.roblox.com/v2/asset?id=" + assetId, cancel.Token);
+        var response = await _client.GetAsync("https://assetdelivery.roblox.com/v2/asset?id=" + assetId + "&version=1", cancel.Token);
         if (!response.IsSuccessStatusCode)
         {
             throw new Exception("Unexpected status code from AssetDeliveryV2: " + response.StatusCode);
@@ -368,11 +368,11 @@ public class RobloxApi
 
 		try
 		{
-			var result = await _client.GetAsync($"https://assetdelivery.roblox.com/v1/assetId/{assetId}");
+			var result = await _client.GetAsync($"https://assetdelivery.roblox.com/v1/assetId/{assetId}?version=1");
 			if (result.StatusCode == HttpStatusCode.TooManyRequests)
 			{
 				await Task.Delay(TimeSpan.FromSeconds(2));
-				result = await _client.GetAsync($"https://assetdelivery.roblox.com/v1/assetId/{assetId}");
+				result = await _client.GetAsync($"https://assetdelivery.roblox.com/v1/assetId/{assetId}?version=1");
 			}
 
 			if (!result.IsSuccessStatusCode)

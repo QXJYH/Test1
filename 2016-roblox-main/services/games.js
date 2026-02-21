@@ -28,11 +28,13 @@ export const getGameMedia = ({ universeId }) => {
   return request('GET', getFullUrl('games', `/v2/games/${universeId}/media`)).then(d => d.data.data);
 }
 
-export const launchGame = async ({ placeId, year = 2016 }) => {
-  const result = await request('GET', getBaseUrl() + '/game/get-join-script?placeId=' + encodeURIComponent(placeId));
+export const launchGame = async ({ placeId, jobId, year = 2016 }) => {
+  let url = getBaseUrl() + '/game/get-join-script?placeId=' + encodeURIComponent(placeId);
+  if (jobId) url += '&gameId=' + encodeURIComponent(jobId);
+  const result = await request('GET', url);
 
   let launchUrl;
-  
+
   if (typeof result.data === 'string') {
     const match = result.data.match(/ticket=([^&"']+)/);
     if (match && match[1]) {
@@ -75,12 +77,12 @@ export const getServers = ({ placeId, offset }) => {
   return request('GET', getBaseUrl() + `/games/getgameinstancesjson?placeId=${placeId}&startIndex=${offset}`).then(d => d.data);
 }
 
-export const multiGetGameVotes = ({universeIds}) => {
+export const multiGetGameVotes = ({ universeIds }) => {
   return request('GET', getFullUrl('games', '/v1/games/votes?universeIds=' + encodeURIComponent(universeIds.join(',')))).then(d => d.data.data);
 }
 
-export const voteOnGame = ({universeId, isUpvote}) => {
-  return request('PATCH', getFullUrl('games', '/v1/games/'+universeId+'/user-votes'), {
+export const voteOnGame = ({ universeId, isUpvote }) => {
+  return request('PATCH', getFullUrl('games', '/v1/games/' + universeId + '/user-votes'), {
     vote: isUpvote,
   }).then(d => d.data.data);
 }

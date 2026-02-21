@@ -33,7 +33,7 @@ const useStyles = createUseStyles({
   value: {
     fontSize: '16px',
     fontWeight: '400',
-    color: '#00a2ff',
+    color: '#000',
     lineHeight: '1.2',
   },
   noGearIcon: {

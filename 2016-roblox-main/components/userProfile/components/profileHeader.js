@@ -3,6 +3,7 @@ import { createUseStyles } from "react-jss";
 import { followUser, unfollowUser } from "../../../services/friends";
 import { multiGetPresence } from "../../../services/presence";
 import { getMembershipType, updateStatus, getMyInfo } from "../../../services/users";
+import { launchGame, multiGetPlaceDetails, multiGetUniverseDetails } from "../../../services/games";
 import AuthenticationStore from "../../../stores/authentication";
 import Dropdown2016 from "../../dropdown2016";
 import PlayerHeadshot from "../../playerHeadshot";
@@ -10,7 +11,6 @@ import Activity from "../../userActivity";
 import UserProfileStore from "../stores/UserProfileStore";
 import useCardStyles from "../styles/card";
 import FriendButton from "./friendButton";
-import MessageButton from "./messageButton";
 import RelationshipStatistics from "./relationshipStatistics";
 
 const useHeaderStyles = createUseStyles({
@@ -53,6 +53,30 @@ const useHeaderStyles = createUseStyles({
     marginRight: '-10px',
     marginTop: '-18px',
   },
+  joinButton: {
+    background: '#02b757',
+    border: '1px solid #02b757',
+    color: 'white',
+    fontSize: '18px',
+    padding: '6px 0',
+    width: '100%',
+    borderRadius: '2px',
+    textAlign: 'center',
+    display: 'block',
+    cursor: 'pointer',
+    fontWeight: 500,
+    transition: 'background 0.2s ease',
+    '&:hover': {
+      background: '#3fc679',
+      borderColor: '#3fc679',
+      boxShadow: '0 1px 3px rgb(150 150 150 / 74%)',
+    },
+    '&:disabled': {
+      opacity: 0.5,
+      cursor: 'not-allowed',
+      background: '#02b757',
+    }
+  },
 });
 
 const ProfileHeader = props => {
@@ -90,7 +114,27 @@ const ProfileHeader = props => {
     if (auth.isPending) return;
 
     multiGetPresence({ userIds: [store.userId] }).then((d) => {
-      setStatus(d[0]);
+      const presence = d[0];
+      if (presence && presence.lastLocation === 'Playing' && presence.placeId) {
+        multiGetPlaceDetails({ placeIds: [presence.placeId] }).then(placeDetails => {
+          if (placeDetails[0]) {
+            multiGetUniverseDetails({ universeIds: [placeDetails[0].universeId] }).then(universeDetails => {
+              if (universeDetails[0]) {
+                setStatus({
+                  ...presence,
+                  year: universeDetails[0].year,
+                });
+              } else {
+                setStatus(presence);
+              }
+            })
+          } else {
+            setStatus(presence);
+          }
+        })
+      } else {
+        setStatus(presence);
+      }
     });
     getMembershipType({ userId: store.userId }).then(d => {
       setBcLevel(d);
@@ -149,6 +193,10 @@ const ProfileHeader = props => {
           e.preventDefault();
           window.open("/Trade/TradeWindow.aspx?TradePartnerID=" + store.userId, "_blank", "scrollbars=0, height=608, width=914");
         }
+      });
+      buttons.push({
+        name: 'Message',
+        url: '/messages/compose?recipientId=' + store.userId,
       });
     }
     if (isAdmin) {
@@ -230,7 +278,20 @@ const ProfileHeader = props => {
                 {
                   showButtons && <>
                     <div className='col-6 col-lg-2 pe-1'>
-                      <MessageButton />
+                      <button
+                        className={s.joinButton}
+                        onClick={() => {
+                          launchGame({
+                            placeId: status.placeId,
+                            jobId: status.jobId,
+                            year: status.year || 2020,
+                          })
+                        }}
+                        disabled={!status || status.lastLocation !== 'Playing'}
+                        title={(!status || status.lastLocation !== 'Playing') ? 'This user is not currently in a game.' : ''}
+                      >
+                        Join
+                      </button>
                     </div>
                     <div className='col-6 col-lg-2 ps-1'>
                       <FriendButton />

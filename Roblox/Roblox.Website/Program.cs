@@ -65,6 +65,9 @@ Roblox.Configuration.AssetUrl = configuration.GetSection("AssetUrl").Value;
 Roblox.Configuration.GSIPAddress = configuration.GetSection("GSIPAddress").Value;
 Roblox.Configuration.Webhook = configuration.GetSection("Webhook").Value;
 Roblox.Configuration.SignupWebhook = configuration.GetSection("SignupWebhook").Value;
+Roblox.Configuration.AssetLoggerWebhook = configuration.GetSection("AssetLoggerWebhook").Value;
+Roblox.Configuration.ItemDropWebhook = configuration.GetSection("ItemDropWebhook").Value;
+Roblox.Configuration.LimitedDropWebhook = configuration.GetSection("LimitedDropWebhook").Value;
 Roblox.Configuration.DiscordClientID = configuration.GetSection("DiscordClientID").Value;
 Roblox.Configuration.DiscordClientSecret = configuration.GetSection("DiscordClientSecret").Value;
 Roblox.Configuration.DiscordRedirect = configuration.GetSection("DiscordRedirect").Value;
@@ -182,14 +185,25 @@ var prepareResponseForCache = (StaticFileResponseContext ctx) =>
     ctx.Context.Response.Headers.Remove(HeaderNames.LastModified);
 };
 
-var datafolder = new PhysicalFileProvider(Roblox.Configuration.PublicDirectory + "Data");
+var publicDir = Roblox.Configuration.PublicDirectory ?? "";
+var logPath = Path.Combine(Directory.GetCurrentDirectory(), "ugc_debug.log");
+System.IO.File.AppendAllText(logPath, $"[Program Startup] PublicDirectory: '{publicDir}'\n");
+var unsecuredContentPath = Path.Combine(publicDir, "UnsecuredContent");
+var dataPath = Path.Combine(publicDir, "Data");
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Roblox.Configuration.PublicDirectory + "UnsecuredContent"),
+    FileProvider = new PhysicalFileProvider(unsecuredContentPath),
     RequestPath = "/UnsecuredContent",
     OnPrepareResponse = prepareResponseForCache,
 });
+
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".rbxm"] = "application/octet-stream";
+provider.Mappings[".rbxl"] = "application/octet-stream";
+provider.Mappings[".obj"] = "text/plain";
+
+var datafolder = new PhysicalFileProvider(dataPath);
 
 app.Use(async (context, next) =>
 {
@@ -228,7 +242,9 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = datafolder,
     RequestPath = "",
-    OnPrepareResponse = prepareResponseForCache
+    OnPrepareResponse = prepareResponseForCache,
+	ContentTypeProvider = provider,
+	ServeUnknownFileTypes = true
 });
 
 System.Net.ServicePointManager.DefaultConnectionLimit = 100;
@@ -327,7 +343,7 @@ if (string.IsNullOrWhiteSpace(Roblox.Configuration.CdnBaseUrl))
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Roblox.Configuration.PublicDirectory + "img/"),
+    FileProvider = new PhysicalFileProvider(Path.Combine(publicDir, "img")),
     RequestPath = "/img",
     OnPrepareResponse = prepareResponseForCache,
 });
