@@ -11,7 +11,6 @@ import Activity from "../../userActivity";
 import UserProfileStore from "../stores/UserProfileStore";
 import useCardStyles from "../styles/card";
 import FriendButton from "./friendButton";
-import ActionButton from "../../actionButton";
 import RelationshipStatistics from "./relationshipStatistics";
 
 const useHeaderStyles = createUseStyles({
@@ -53,6 +52,30 @@ const useHeaderStyles = createUseStyles({
     float: 'right',
     marginRight: '-10px',
     marginTop: '-18px',
+  },
+  joinButton: {
+    background: '#02b757',
+    border: '1px solid #02b757',
+    color: 'white',
+    fontSize: '18px',
+    padding: '6px 0',
+    width: '100%',
+    borderRadius: '2px',
+    textAlign: 'center',
+    display: 'block',
+    cursor: 'pointer',
+    fontWeight: 500,
+    transition: 'background 0.2s ease',
+    '&:hover': {
+      background: '#3fc679',
+      borderColor: '#3fc679',
+      boxShadow: '0 1px 3px rgb(150 150 150 / 74%)',
+    },
+    '&:disabled': {
+      opacity: 0.5,
+      cursor: 'not-allowed',
+      background: '#02b757',
+    }
   },
 });
 
@@ -255,8 +278,8 @@ const ProfileHeader = props => {
                 {
                   showButtons && <>
                     <div className='col-6 col-lg-2 pe-1'>
-                      <ActionButton
-                        label="Join"
+                      <button
+                        className={s.joinButton}
                         onClick={() => {
                           launchGame({
                             placeId: status.placeId,
@@ -265,8 +288,10 @@ const ProfileHeader = props => {
                           })
                         }}
                         disabled={!status || status.lastLocation !== 'Playing'}
-                        tooltipText={(!status || status.lastLocation !== 'Playing') ? 'This user is not currently in a game.' : ''}
-                      />
+                        title={(!status || status.lastLocation !== 'Playing') ? 'This user is not currently in a game.' : ''}
+                      >
+                        Join
+                      </button>
                     </div>
                     <div className='col-6 col-lg-2 ps-1'>
                       <FriendButton />

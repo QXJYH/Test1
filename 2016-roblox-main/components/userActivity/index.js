@@ -5,7 +5,7 @@ import Link from "../link";
 
 const Activity = props => {
   const activity = props.lastLocation;
-  const online = dayjs(props.lastOnline).isAfter(dayjs().subtract(5, 'minutes'));
+  const online = props.userPresenceType !== 0 && props.userPresenceType !== undefined;
   if (!online) return null;
   if (activity === 'Playing') {
     return <div>
@@ -14,17 +14,17 @@ const Activity = props => {
         name: '-',
       })}>
         <a>
-          <span className='avatar-status friend-status icon-game' title='Playing'/>
+          <span className='avatar-status friend-status icon-game' title='Playing' />
         </a>
       </Link>
     </div>
   } else if (activity === 'Website') {
     return <div>
-      <span className='avatar-status friend-status icon-online' title='Website'/>
+      <span className='avatar-status friend-status icon-online' title='Website' />
     </div>
   } else if (activity === 'Studio') {
     return <div>
-      <span className='avatar-status friend-status icon-studio' title='Developing'/>
+      <span className='avatar-status friend-status icon-studio' title='Developing' />
     </div>
   }
   return null;
