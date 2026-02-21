@@ -89,3 +89,4 @@ RCCService/content/*.rbxl
 /AssetDelivery/cache
 /Roblox/Roblox.Website/wwwroot/uploads
 /api/public/Data/v1/uploads
+Roblox/Roblox.Website/ugc_debug.log
