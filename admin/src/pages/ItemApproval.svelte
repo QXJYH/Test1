@@ -23,9 +23,12 @@
 	const loadRequests = async () => {
 		loading = true;
 		try {
-			const res = await fetch("/apisite/request-item/v1/list");
-			const data = await res.json();
-			requests = data;
+			const res = await request.request({
+				url: "/apisite/request-item/v1/list",
+				method: "GET",
+				baseURL: "/",
+			});
+			requests = res.data;
 		} catch (e) {
 			error = e.message;
 		} finally {
@@ -58,10 +61,11 @@
 	const handleApprove = async () => {
 		submitting = true;
 		try {
-			const res = await fetch("/apisite/request-item/v1/approve", {
+			await request.request({
+				url: "/apisite/request-item/v1/approve",
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
+				baseURL: "/",
+				data: {
 					action: "approve",
 					id: selectedRequest.id,
 					name: editName,
@@ -72,9 +76,8 @@
 					stock: editStock,
 					forSale: editForSale,
 					visible: editVisible,
-				}),
+				},
 			});
-			if (!res.ok) throw new Error("Failed to approve");
 
 			closeModal();
 			loadRequests();
@@ -89,15 +92,15 @@
 		if (!confirm(`Are you sure you want to decline "${req.name}"?`)) return;
 
 		try {
-			const res = await fetch("/apisite/request-item/v1/approve", {
+			await request.request({
+				url: "/apisite/request-item/v1/approve",
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
+				baseURL: "/",
+				data: {
 					action: "decline",
 					id: req.id,
-				}),
+				},
 			});
-			if (!res.ok) throw new Error("Failed to decline");
 
 			loadRequests();
 		} catch (e) {
