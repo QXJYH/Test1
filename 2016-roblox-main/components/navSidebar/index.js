@@ -83,7 +83,7 @@ const NavSideBar = props => {
   const [userData, setUserData] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
   const s = useNavSideBarStyles();
-  
+
   useEffect(() => {
     const menuType = localStorage.getItem('rbx_avatarmenu_type');
     if (menuType === 'Legacy' || menuType === 'R15') {
@@ -98,58 +98,58 @@ const NavSideBar = props => {
     };
 
     window.addEventListener('resize', handleResize);
-    
+
     const getStaffData = async () => {
       try {
         const response = await request('GET', getFullUrl('users', '/v1/users/authenticated'));
         setUserData(response.data);
-        
+
         if (response.data.isStaff) {
           const [pendingIcons, pendingAssets, pendingGroupIcons] = await Promise.all([
             request('GET', `/admin-api/api/icons/pending-assets`),
             request('GET', `/admin-api/api/assets/pending-assets`),
             request('GET', `/admin-api/api/groups/pending-icons`)
           ]);
-          
+
           let count = 0;
           if (pendingIcons.data) count += pendingIcons.data.length;
           if (pendingAssets.data) count += pendingAssets.data.length;
           if (pendingGroupIcons.data) count += pendingGroupIcons.data.length;
-          
+
           setPendingCount(count);
         }
       } catch (error) {
         console.error('Failed to fetch staff data:', error);
       }
     };
-    
+
     getStaffData();
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-  
+
   const paddingTop = (mainNavBarRef.current && mainNavBarRef.current.clientHeight + 'px') || 0;
 
   if (navStore.isSidebarOpen === false && dimensions.width <= 1300) {
     return null;
   }
-  
+
   const characterUrl = '/My/Avatar' //avatarMenu === 'R15' ? '/My/Avatar' : '/My/Character.aspx';
 
   return (
     <div className={s.container}>
       <div className={s.card} style={{ paddingTop: paddingTop }}>
         <a href={'/users/' + authStore.userId + '/profile'} className={s.userWrapper}>
-          <img 
-            className={s.headshot} 
-            src={`/thumbs/avatar-headshot.ashx?userId=${authStore.userId}&width=48&height=48&v=${Date.now()}`} 
+          <img
+            className={s.headshot}
+            src={`/thumbs/avatar-headshot.ashx?userId=${authStore.userId}&width=48&height=48&v=${Date.now()}`}
             alt="User"
-            onError={(e) => { 
-              e.target.onerror = null; 
-              e.target.src = "https://kornet.lat/img/placeholder.png"; 
-            }} 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://kornet.lat/img/placeholder.png";
+            }}
           />
           <p className={s.username}>{authStore.username}</p>
         </a>
@@ -163,7 +163,7 @@ const NavSideBar = props => {
         <LinkEntry name='Trade' url='/My/Trades.aspx' icon='icon-nav-trade' count={authStore.notificationCount.trades} />
         <LinkEntry name='Groups' url='/My/Groups.aspx' icon='icon-nav-group' />
         <LinkEntry name='Blog' url='/Forum/Default.aspx' icon='icon-nav-blog' />
-        <LinkEntry name='Catalog' url='/catalog' icon='icon-nav-shop' />
+        <LinkEntry name='Request Item' url='/request-item' icon='icon-nav-shop' />
         {userData?.isStaff && <LinkEntry name='Admin Panel' url='/admin' icon='icon-nav-friends' count={pendingCount} />}
         <LinkEntry name='Promocodes' url='/promocodes' icon='icon-nav-forum' />
         <a href='/BuildersClub/Upgrade.ashx'><p className={s.upgradeNowButton}>Upgrade Now</p></a>
