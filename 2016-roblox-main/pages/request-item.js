@@ -335,7 +335,7 @@ const RequestItem = () => {
           )}
 
           <button type="submit" className={s.submitBtn} disabled={loading}>
-            {loading ? 'Submitting...' : 'Submit Request'}
+            {loading ? 'Submitting...' : activeTab === 'ugc' ? 'Submit Request (-200 Robux)' : 'Submit Request'}
           </button>
         </form>
       </div>

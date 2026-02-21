@@ -14,7 +14,7 @@
 	let editRobux = 0;
 	let editTix = 0;
 	let editCreatorId = 0;
-	let editLimited = false;
+	let editItemType = "Normal";
 	let editStock = 0;
 	let editForSale = true;
 	let editVisible = true;
@@ -46,7 +46,7 @@
 		editRobux = req.robux_price || req.robuxPrice || 0;
 		editTix = req.tix_price || req.tixPrice || 0;
 		editCreatorId = req.type === "Roblox" ? 1 : req.submitter_id || req.submitterId || 0;
-		editLimited = req.is_limited || req.isLimited || false;
+		editItemType = req.is_limited || req.isLimited ? "LimitedUnique" : "Normal";
 		editStock = req.stock;
 		editForSale = true;
 		editVisible = true;
@@ -72,7 +72,7 @@
 					robuxPrice: editRobux,
 					tixPrice: editTix,
 					creatorId: editCreatorId,
-					isLimited: editLimited,
+					itemLimitedType: editItemType,
 					stock: editStock,
 					forSale: editForSale,
 					visible: editVisible,
@@ -206,11 +206,15 @@
 					<input type="checkbox" class="form-check-input" id="editForSale" bind:checked={editForSale} />
 					<label class="form-check-label" for="editForSale">For Sale</label>
 				</div>
-				<div class="mb-3 form-check">
-					<input type="checkbox" class="form-check-input" id="editLimited" bind:checked={editLimited} />
-					<label class="form-check-label" for="editLimited">Is Limited</label>
+				<div class="mb-3">
+					<label class="form-label">Item Type</label>
+					<select class="form-select" bind:value={editItemType}>
+						<option value="Normal">Normal</option>
+						<option value="Limited">Limited</option>
+						<option value="LimitedUnique">Limited Unique</option>
+					</select>
 				</div>
-				{#if editLimited}
+				{#if editItemType === "LimitedUnique"}
 					<div class="mb-3">
 						<label class="form-label">Stock</label>
 						<input type="number" class="form-control" bind:value={editStock} />

@@ -70,11 +70,11 @@ namespace Roblox.Website.Controllers
                         return BadRequest(new { message = $"Insufficient funds. You need {fee} Robux to upload a UGC item." });
                     }
                     
-                    await services.economy.IncrementCurrency(
+                    await services.economy.DecrementCurrency(
                         Roblox.Models.Assets.CreatorType.User,
                         safeUserSession.userId, 
                         Roblox.Models.Economy.CurrencyType.Robux, 
-                        -fee
+                        fee
                     );
                 }
 
@@ -117,7 +117,7 @@ namespace Roblox.Website.Controllers
             public string? name { get; set; }
             public int? robuxPrice { get; set; }
             public int? tixPrice { get; set; }
-            public bool? isLimited { get; set; }
+            public string? itemLimitedType { get; set; }
             public int? stock { get; set; }
             public long? creatorId { get; set; }
             public bool? forSale { get; set; }
@@ -135,7 +135,15 @@ namespace Roblox.Website.Controllers
                 string finalName = !string.IsNullOrEmpty(req.name) ? req.name : request.name;
                 int finalRobux = req.robuxPrice ?? request.robux_price;
                 int finalTix = req.tixPrice ?? request.tix_price;
-                bool finalLimited = req.isLimited ?? request.is_limited;
+                
+                bool finalLimited = request.is_limited;
+                bool finalLimitedUnique = request.stock > 0;
+                if (!string.IsNullOrEmpty(req.itemLimitedType))
+                {
+                    finalLimited = req.itemLimitedType != "Normal";
+                    finalLimitedUnique = req.itemLimitedType == "LimitedUnique";
+                }
+
                 int finalStock = req.stock ?? request.stock;
                 bool finalForSale = req.forSale ?? true;
                 bool finalVisible = req.visible ?? true;
@@ -235,14 +243,60 @@ namespace Roblox.Website.Controllers
                         result.assetId,
                         finalForSale, 
                         finalLimited,
-                        finalLimited,
-                        finalStock > 0 ? finalStock : null,
+                        finalLimitedUnique,
+                        finalLimitedUnique && finalStock > 0 ? finalStock : null,
                         null
                     );
                     
                     await services.assets.UpdateAssetVisibility(result.assetId, finalVisible);
 
                     await services.requestItem.UpdateRequestStatus(req.id, 1);
+                    
+                    try
+                    {
+                        var webhookcont = new
+                        {
+                            content = "New item approved and created via Item Requests!",
+                            embeds = new[]
+                            {
+                                new
+                                {
+                                    title = $"Item Created: {finalName}",
+                                    description = $"Asset ID: {result.assetId}\nCreator ID: {finalCreatorId}\nType: {assetType}\nPrice: R$ {finalRobux} / Tix {finalTix}\nFor Sale: {finalForSale} | Visible: {finalVisible}",
+                                    color = 65280 // Green
+                                }
+                            }
+                        };
+                        var contentParams = new StringContent(System.Text.Json.JsonSerializer.Serialize(webhookcont), System.Text.Encoding.UTF8, "application/json");
+
+                        using var httpClient = new HttpClient();
+                        if (!string.IsNullOrEmpty(Roblox.Configuration.Webhook))
+                        {
+                            await httpClient.PostAsync(Roblox.Configuration.Webhook, contentParams);
+                        }
+                        if (!string.IsNullOrEmpty(Roblox.Configuration.AssetLoggerWebhook))
+                        {
+                            await httpClient.PostAsync(Roblox.Configuration.AssetLoggerWebhook, contentParams);
+                        }
+                        if (finalLimited)
+                        {
+                            if (!string.IsNullOrEmpty(Roblox.Configuration.LimitedDropWebhook))
+                            {
+                                await httpClient.PostAsync(Roblox.Configuration.LimitedDropWebhook, contentParams);
+                            }
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(Roblox.Configuration.ItemDropWebhook))
+                            {
+                                await httpClient.PostAsync(Roblox.Configuration.ItemDropWebhook, contentParams);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Webhook Error] Failed to send webhook notifications for Item Approval: {ex.Message}");
+                    }
                 }
             } 
             else if (req.action == "decline")

@@ -26,6 +26,9 @@ public static class Configuration
 	public static string GSIPAddress { get; set; }
 	public static string Webhook { get; set; }
 	public static string SignupWebhook { get; set; }
+	public static string AssetLoggerWebhook { get; set; }
+	public static string ItemDropWebhook { get; set; }
+	public static string LimitedDropWebhook { get; set; }
 	public static string DiscordClientID { get; set; }
 	public static string DiscordClientSecret { get; set; }
 	public static string DiscordRedirect { get; set; }
