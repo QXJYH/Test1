@@ -59,6 +59,7 @@ Roblox.Configuration.RccService2015Path = configuration.GetSection("Directories:
 Roblox.Configuration.RccService2017Path = configuration.GetSection("Directories:RccService2017Path").Value;
 Roblox.Configuration.RccService2018Path = configuration.GetSection("Directories:RccService2018Path").Value;
 Roblox.Configuration.RccService2020Path = configuration.GetSection("Directories:RccService2020Path").Value;
+Roblox.Configuration.RccService2021Path = configuration.GetSection("Directories:RccService2021Path").Value;
 Roblox.Configuration.LuaScriptPath = configuration.GetSection("Directories:LuaScripts").Value;
 Roblox.Configuration.BaseUrl = configuration.GetSection("BaseUrl").Value;
 Roblox.Configuration.AssetUrl = configuration.GetSection("AssetUrl").Value;
