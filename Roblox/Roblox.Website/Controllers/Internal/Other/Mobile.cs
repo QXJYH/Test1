@@ -33,8 +33,8 @@ namespace Roblox.Website.Controllers
     [MVC.Route("/")]
     public class MobileShitTesting : ControllerBase 
     {
-		[HttpGetBypass("/mobileapi/check-app-version")]
-        [HttpPostBypass("/mobileapi/check-app-version")]
+		[HttpGetBypass("/mobile/check-app-version")]
+        [HttpPostBypass("/mobile/check-app-version")]
 		public MVC.IActionResult MobileCheckAppVer()
 		{
 			return Ok(new
@@ -74,7 +74,7 @@ namespace Roblox.Website.Controllers
 			public string password { get; set; }
 		}
 		
-		[HttpPostBypass("/mobileapi/login")]
+		[HttpPostBypass("/mobile/login")]
         public async Task<dynamic> MobileLogin([FromBody] MobileLoginReq request)
         {
             FeatureFlags.FeatureCheck(FeatureFlag.LoginEnabled);
