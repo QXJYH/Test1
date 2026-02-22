@@ -49,7 +49,8 @@ namespace Roblox.Website.Controllers
         {
             List<string> allowedList = new List<string>()
             {
-				"97e93df61c3357531585cebb22d2edff"
+				"97e93df61c3357531585cebb22d2edff",
+				"053974fb1131dda3fc75534b08576b67"
             };
 
             return new { data = allowedList };
@@ -60,6 +61,7 @@ namespace Roblox.Website.Controllers
         {
             List<string> allowedList = new List<string>()
             {  
+				"0.463.0pcplayer",
 				"0.285.0pcplayer",
 				"0.283.0pcplayer",
 				"0.275.0pcplayer"
