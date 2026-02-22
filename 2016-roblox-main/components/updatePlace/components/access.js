@@ -1,8 +1,8 @@
 import updatePlaceStore from "../stores/updatePlaceStore";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import ActionButton from "../../actionButton";
 import useButtonStyles from "../../../styles/buttonStyles";
-import {setUniverseMaxPlayers, setPlaceYear, setRigType} from "../../../services/develop";
+import { setUniverseMaxPlayers, setPlaceYear, setRigType } from "../../../services/develop";
 
 const Access = props => {
   const s = useButtonStyles();
@@ -15,7 +15,7 @@ const Access = props => {
   const resetForm = () => {
     setFeedback(null);
     setMaxPlayers(store.details.maxPlayerCount);
-	setRigTypeValue(store.details.rigType || "playerChoice");
+    setRigTypeValue(store.details.rigType || "playerChoice");
     setYear(store.details.year || 2016);
   }
 
@@ -27,10 +27,10 @@ const Access = props => {
         universeId: store.details.universeId,
         maxPlayers: maxPlayers,
       }),
-	  setRigType({
-		  universeId: store.details.universeId,
-		  rigType: rigTypeValue,
-	  }),
+      setRigType({
+        universeId: store.details.universeId,
+        rigType: rigTypeValue,
+      }),
       setPlaceYear({
         universeId: store.details.universeId,
         year: year,
@@ -59,7 +59,7 @@ const Access = props => {
           setMaxPlayers(parseInt(v.currentTarget.value, 10));
         }}>
           {[... new Array(30)].map((_, i) => {
-            return <option value={i+1} key={i}>{i+1}</option>
+            return <option value={i + 1} key={i}>{i + 1}</option>
           })}
         </select>
       </div>
@@ -69,31 +69,32 @@ const Access = props => {
         <select value={year} className='br-none border-1 border-secondary pe-2' onChange={v => {
           setYear(parseInt(v.currentTarget.value, 10));
         }}>
-          <option value={2016}>2016 - 2017</option>
-      <option value={2016}>SOON..</option>
-		  <option value={2018}>2018 - 2020</option>
-		  <option value={2020}>2021 - 2023</option>
+          <option value={2016}>2014 (soon)</option>
+          <option value={2016}>2016</option>
+          <option value={2018}>2018</option>
+          <option value={2020}>2020</option>
+          <option value={2021}>2021</option>
         </select>
       </div>
-	  
-	  <div className='mt-3'>
+
+      <div className='mt-3'>
         <p className='fw-bold'>Rig Type :</p>
         <select value={rigTypeValue} className='br-none border-1 border-secondary pe-2' onChange={v => {
           setRigTypeValue(v.currentTarget.value);
         }}>
           <option value="playerChoice">Player Choice</option>
-		  <option value="MorphToR6">R6</option>
-		  <option value="MorphToR15">R15</option>
+          <option value="MorphToR6">R6</option>
+          <option value="MorphToR15">R15</option>
         </select>
       </div>
 
-      	  <div className='mt-3'>
+      <div className='mt-3'>
         <p className='fw-bold'>Collision Type : (WIP) :</p>
         <select value={rigTypeValue} className='br-none border-1 border-secondary pe-2' onChange={v => {
           setRigTypeValue(v.currentTarget.value);
         }}>
           <option value="playerChoice">Off</option>
-           <option value="playerChoice">On</option>
+          <option value="playerChoice">On</option>
         </select>
       </div>
 
