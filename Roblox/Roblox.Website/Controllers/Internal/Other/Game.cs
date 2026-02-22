@@ -216,6 +216,16 @@ namespace Roblox.Website.Controllers
 						{
 							return StatusCode(400, "Invalid user ID/ticket");
 						}
+
+						if (userInfo.accountStatus is AccountStatus.Suppressed or AccountStatus.Poisoned or AccountStatus.Deleted or AccountStatus.Forgotten)
+						{
+							return BadRequest(new 
+							{
+								jobId = (string?)null,
+								status = (int)JoinStatus.Error,
+								message = "ay gng nice try but u are banned."
+							});
+						}
 					}
 					else
 					{
@@ -329,6 +339,11 @@ namespace Roblox.Website.Controllers
 							if (userInfo == null)
 							{
 								return StatusCode(400, "Invalid user ID");
+							}
+
+							if (userInfo.accountStatus is AccountStatus.Suppressed or AccountStatus.Poisoned or AccountStatus.Deleted or AccountStatus.Forgotten)
+							{
+								return StatusCode(400, "banned");
 							}
 						}
 						else
