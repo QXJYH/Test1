@@ -128,7 +128,7 @@ namespace Roblox.Website.Controllers
 					case "PCDesktopClient":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "PCDesktopClient.json");
 						break;
-						
+
 					case "StudioApp":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "StudioApp.json");
 						break;
@@ -140,6 +140,29 @@ namespace Roblox.Website.Controllers
 						
 					case "GD5Z5gO1n0gYX1P":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "PCDesktopClient.json");
+						break;
+				}
+			}
+
+			if (!System.IO.File.Exists(json))
+			{
+				return NotFound("{}");
+			}
+
+			string content = await System.IO.File.ReadAllTextAsync(json);
+			return Content(content, "text/plain");
+		}
+
+		[HttpGetBypass("/v2/settings/application")]
+		public async Task<MVC.IActionResult> RCCNewApplicationV2(string applicationName)
+		{
+			string json = "PCDesktopClient2021";
+			if (!string.IsNullOrEmpty(applicationName))
+			{
+				switch (applicationName)
+				{
+					case "PCDesktopClient2021":
+						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "PCDesktopClient2021.json");
 						break;
 				}
 			}
