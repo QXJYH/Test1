@@ -37,6 +37,7 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("/mobile/check-app-version")]
 		public MVC.IActionResult MobileCheckAppVer()
 		{
+            Console.WriteLine("[POST] /mobile/check-app-version");
 			return Ok(new
 			{
 				data = new
@@ -50,6 +51,7 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("/device/initialize")]
         public MVC.IActionResult InitDevice()
         {
+            Console.WriteLine("[POST] /device/initialize");
             return Ok(new
             {
                 browserTrackerId = 1,
@@ -77,6 +79,7 @@ namespace Roblox.Website.Controllers
 		[HttpPostBypass("/mobile/login")]
         public async Task<dynamic> MobileLogin([FromBody] MobileLoginReq request)
         {
+            Console.WriteLine("[POST] /mobile/login");
             FeatureFlags.FeatureCheck(FeatureFlag.LoginEnabled);
             await RateLimitCheck();
 
@@ -113,9 +116,10 @@ namespace Roblox.Website.Controllers
             };
         }
 
-		[HttpPostBypass("/login/v1")]
+		[HttpPostBypass("/Login/v1")]
         public async Task<dynamic> MobileLoginV1([FromBody] MobileLoginReq request)
         {
+            Console.WriteLine("[POST] /Login/v1");
             FeatureFlags.FeatureCheck(FeatureFlag.LoginEnabled);
             await RateLimitCheck();
 
@@ -186,7 +190,7 @@ namespace Roblox.Website.Controllers
 
 			HttpContext.Response.Cookies.Append(Middleware.SessionMiddleware.CookieName, sessionCookie, new CookieOptions()
 			{
-				Domain = ".{Configuration.BaseUrl}",
+				Domain = ".kornet.lat",
 				Secure = false,
 				Expires = DateTimeOffset.Now.Add(TimeSpan.FromDays(364)),
 				IsEssential = true,
