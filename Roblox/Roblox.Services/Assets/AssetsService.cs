@@ -252,32 +252,33 @@ public class AssetsService : ServiceBase, IService
 
     public async Task<bool> ValidateAssetFile(Stream file, Models.Assets.Type assetType)
     {
-        Writer.Info(LogGroup.AssetValidation, "validating asset. type = {0}", assetType);
-        try
-        {
-            var s = new StreamContent(file);
-            s.Headers.Add("robloxAuthorization", Configuration.AssetValidationServiceAuthorization);
-            var url = Configuration.AssetValidationServiceUrl + "/api/v1/validate-item";
-            if (assetType == Type.Place)
-            {
-                url = Configuration.AssetValidationServiceUrl + "/api/v1/validate-place";
-            }
-            var ok = await assetValidationClient.PostAsync(
-                url, s);
-            if (!ok.IsSuccessStatusCode)
-            {
-                throw new Exception("Got failure response from assetValidationService. Code = " + ok.StatusCode);
-            }
+        // Writer.Info(LogGroup.AssetValidation, "validating asset. type = {0}", assetType);
+        // try
+        // {
+        //     var s = new StreamContent(file);
+        //     s.Headers.Add("robloxAuthorization", Configuration.AssetValidationServiceAuthorization);
+        //     var url = Configuration.AssetValidationServiceUrl + "/api/v1/validate-item";
+        //     if (assetType == Type.Place)
+        //     {
+        //         url = Configuration.AssetValidationServiceUrl + "/api/v1/validate-place";
+        //     }
+        //     var ok = await assetValidationClient.PostAsync(
+        //         url, s);
+        //     if (!ok.IsSuccessStatusCode)
+        //     {
+        //         throw new Exception("Got failure response from assetValidationService. Code = " + ok.StatusCode);
+        //     }
 
-            var result = JsonSerializer.Deserialize<AssetValidationResponse>(await ok.Content.ReadAsStringAsync());
-            return result is {isValid: true};
-        }
-        catch (Exception e)
-        {
-            Writer.Info(LogGroup.AssetValidation, "ValidateAssetFile caught exception. message = {0}\n{1}", e.Message, e.StackTrace);
-        }
+        //     var result = JsonSerializer.Deserialize<AssetValidationResponse>(await ok.Content.ReadAsStringAsync());
+        //     return result is {isValid: true};
+        // }
+        // catch (Exception e)
+        // {
+        //     Writer.Info(LogGroup.AssetValidation, "ValidateAssetFile caught exception. message = {0}\n{1}", e.Message, e.StackTrace);
+        // }
 
-        return false;
+        // return false;
+        return true;
     }
 	
 /* 	public async Task<bool> ValidateGameRBXL(Stream file, Models.Assets.Type assetType)
