@@ -56,8 +56,8 @@ Roblox/.editorconfig
 /Roblox/.idea/.idea.Roblox
 /2016-roblox-main.old
 /22
-/cdn/files/kornetclient20.zip
-/cdn/files/kornetclient18.zip
+/setup/files/kornetclient20.zip
+/setup/files/kornetclient18.zip
 /api/public/img/setup
 /game-arbiter
 /Roblox.Goob
@@ -90,3 +90,6 @@ RCCService/content/*.rbxl
 /Roblox/Roblox.Website/wwwroot/uploads
 /api/public/Data/v1/uploads
 Roblox/Roblox.Website/ugc_debug.log
+setup/files/KClient20.zip
+setup/files/KClient18.zip
+setup/files/KClient16.zip
