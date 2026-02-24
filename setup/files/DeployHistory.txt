@@ -1,0 +1,4 @@
+New KornetPlayer2016 version-a882e5c8e8c989bcc3084660cb60edcc at 2/23/2026 04:20 PM... Done
+New KornetPlayer2018 version-4ed47f26a148682f8075c6986b4a4b4b at 2/23/2026 04:22 PM... Done
+New KornetPlayer2020 version-33d6c91b239b51900ff4b736c7af6fcc at 2/23/2026 04:22 PM... Done
+New KornetPlayerLauncher version-9e469e48fa8b429b1106742822d8496f at 2/23/2026 04:54 PM... Done 
