@@ -6,6 +6,9 @@ import { getCollectibleInventory } from "../../../services/inventory";
 import { getUserGames } from "../../../services/games";
 import { getUserGroups } from "../../../services/groups";
 import { getPreviousUsernames, getUserInfo, getUserStatus } from "../../../services/users";
+import { multiGetUserThumbnails3D } from "../../../services/thumbnails";
+import { Stopwatch, wait } from "../../../lib/utils";
+import request from "../../../lib/request";
 
 const UserProfileStore = createContainer(() => {
   const [userId, setUserId] = useState(null);
@@ -24,6 +27,35 @@ const UserProfileStore = createContainer(() => {
   const [isFollowing, setIsFollowing] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
   const [totalRap, setTotalRap] = useState(null);
+  const [userAv3D, setUserAv3D] = useState(null);
+
+  async function GetUserThumb3D(userId) {
+    await setUserAv3D(null);
+    let attempts = 0;
+    let stopwatch = new Stopwatch();
+    stopwatch.Start();
+    while (attempts <= 10 && userAv3D === null) {
+      let thumbnail = await multiGetUserThumbnails3D({ userIds: [userId] })
+        .then(result => result[0]);
+      if (thumbnail.state === "Completed" && typeof thumbnail.imageUrl === "string") {
+        let thumb = (await request("GET", thumbnail.imageUrl)).data;
+        if (thumb?.textures?.length && thumb.textures.length > 0) {
+          setUserAv3D(thumb);
+          break;
+        }
+      } else {
+        console.warn("User thumbnail 3D has not completed rendering yet.");
+      }
+      attempts++;
+      await wait(1);
+    }
+    stopwatch.Stop();
+    if (attempts > 10 && userAv3D == null) {
+      console.error("Could not get this user's 3D avatar render.");
+    } else {
+      console.log(`Got 3D avatar render in ${stopwatch.ElapsedMilliseconds()}ms, in ${attempts} attempts.`);
+    }
+  }
 
   useEffect(() => {
     if (!userId) return;
@@ -52,7 +84,20 @@ const UserProfileStore = createContainer(() => {
     }).catch(e => {
       console.error('[error] failed to fetch rap', e);
     });
+    GetUserThumb3D(userId);
   }, [userId]);
+
+  useEffect(() => {
+    if (userAv3D === null && userId !== null) {
+      GetUserThumb3D(userId);
+    }
+  }, [userAv3D]);
+
+  useEffect(() => {
+    return () => {
+      setUserAv3D({});
+    };
+  }, []);
 
   return {
     userId,
@@ -94,6 +139,7 @@ const UserProfileStore = createContainer(() => {
 
     isVerified,
     totalRap,
+    userAv3D,
 
     getFriendStatus: (authenticatedUserId) => {
       getFriendStatus({ authenticatedUserId, userId }).then(setFriendStatus);
