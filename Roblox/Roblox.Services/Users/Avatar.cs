@@ -906,6 +906,41 @@ public class AvatarService : ServiceBase, IService
 		await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
 	}
 
+    public async Task Update3DRenderModified(long userId, string avatarHash)
+    {
+        var thumbnail3DUrl = $"/images/thumbnails/{avatarHash}_thumbnail3d.json";
+        try {
+            var thumbnail3DJson = await File.ReadAllTextAsync(Configuration.PublicDirectory + thumbnail3DUrl);
+            var thumbJson = System.Text.Json.JsonSerializer.Deserialize<Roblox.Dto.Assets.Thumbnail3DRendered>(thumbnail3DJson);
+            if (thumbJson is null)
+                throw new Exception("Renderer returned incorrect 3D thumbnail.");
+
+            var objPath = Configuration.ThumbnailsDirectory + thumbJson.obj.Replace("/images/thumbnails/", "");
+            if (File.Exists(objPath)) {
+                File.SetLastWriteTime(objPath, DateTime.Now);
+            }
+
+            var mtlPath = Configuration.ThumbnailsDirectory + thumbJson.mtl.Replace("/images/thumbnails/", "");
+            if (File.Exists(mtlPath)) {
+                File.SetLastWriteTime(mtlPath, DateTime.Now);
+            }
+
+            foreach (var filePath2 in thumbJson.textures) {
+                var filePath = Configuration.ThumbnailsDirectory + filePath2.Replace("/images/thumbnails/", "");
+                if (File.Exists(filePath)) {
+                    File.SetLastWriteTime(filePath, DateTime.Now);
+                }
+            }
+        }
+        catch (Exception e) {
+            Console.WriteLine($"[AvatarService] Couldn't set last updated for 3D Render for AvatarHash {avatarHash}. Error: {e.Message}");
+            if (e.Message.StartsWith("Could not find file")) {
+                Console.WriteLine("[AvatarService] Redrawing avatar due to missing 3D render files...");
+                await RedrawAvatar(userId);
+            }
+        }
+    }
+
     public bool IsThreadSafe()
     {
         return true;

@@ -101,6 +101,26 @@ public class ThumbnailsService : ServiceBase, IService
             return c;
         });
     }
+
+    public async Task<IEnumerable<ThumbnailEntry>> GetUserThumbnails3D(IEnumerable<long> userIds)
+    {
+        var ids = userIds.Distinct().ToList();
+        if (ids.Count == 0) return new ThumbnailEntry[] { };
+        var q = await db.QueryAsync<ThumbnailEntry>(@"
+                SELECT 
+                    user_id as targetId,
+                    thumbnail_3d_url as imageUrl
+                FROM user_avatar WHERE user_id = ANY(:userIds)
+            ", new { userIds = ids.ToList() });
+
+        return q.Select(c =>
+        {
+            c.state = c.imageUrl == null ? ThumbnailState.Pending : ThumbnailState.Completed;
+            if (c.imageUrl != null)
+                c.imageUrl = Roblox.Configuration.CdnBaseUrl + c.imageUrl;
+            return c;
+        });
+    }
 	
 	public async Task<IEnumerable<ThumbnailEntry>> GetAssetThumbnails(IEnumerable<long> assetIds)
 	{

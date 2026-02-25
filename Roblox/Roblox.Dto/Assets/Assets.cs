@@ -310,4 +310,48 @@ namespace Roblox.Dto.Assets
         public string comment { get; set; }
         public DateTime createdAt { get; set; }
     }
+
+    public class Vector3
+    {
+        public double x { get; set; }
+        public double y { get; set; }
+        public double z { get; set; }
+    }
+
+    public class Camera
+    {
+        public Vector3 position { get; set; }
+        public Vector3 direction { get; set; }
+        public double fov { get; set; }
+    }
+
+    public class AABB
+    {
+        public Vector3 min { get; set; }
+        public Vector3 max { get; set; }
+    }
+
+    public class FileContent
+    {
+        public string content { get; set; }
+    }
+
+    public class Thumbnail3DRender
+    {
+        public Camera camera { get; set; }
+        public AABB AABB { get; set; }
+
+        [JsonPropertyName("files")]
+        public Dictionary<string, FileContent> files { get; set; }
+    }
+    
+    public class Thumbnail3DRendered
+    {
+        public Camera camera { get; set; }
+        public AABB aabb { get; set; }
+
+        public string mtl { get; set; }
+        public string obj { get; set; }
+        public string[] textures { get; set; }
+    }
 }

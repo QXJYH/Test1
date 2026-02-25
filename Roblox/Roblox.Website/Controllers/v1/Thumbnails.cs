@@ -295,4 +295,29 @@ public class ThumbnailsControllerV1 : ControllerBase
 			data = result
 		};
 	}
+
+	[HttpGet("users/avatar-3d")]
+	public async Task<RobloxCollection<ThumbnailEntry>> GetUserThumbnails3D(string userIds)
+	{
+		var parsed = userIds.Split(",").Select(long.Parse).Distinct().ToList();
+		if (parsed.Count is > 200 or < 0) throw new BadRequestException();
+		var result = (await services.thumbnails.GetUserThumbnails3D(parsed)).ToList();
+		_ = Task.WhenAll(result
+			.Where(v => v.imageUrl != null)
+			.Select(async v =>
+				await services.avatar.Update3DRenderModified(v.targetId,
+					Path.GetFileNameWithoutExtension(v.imageUrl!).Replace("_thumbnail3d", "")
+					))
+		);
+		foreach (var v in parsed.Except(result.Select(e => e.targetId)).ToList())
+		{
+			_ = Task.Run(async () => {
+				await services.avatar.RedrawAvatar(v);
+			});
+		}
+		return new()
+		{
+			data = result
+		};
+	}
 }
