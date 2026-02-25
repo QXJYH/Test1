@@ -109,15 +109,18 @@ public class ThumbnailsService : ServiceBase, IService
         var q = await db.QueryAsync<ThumbnailEntry>(@"
                 SELECT 
                     user_id as targetId,
-                    thumbnail_3d_url as imageUrl
+                    thumbnail_url as imageUrl
                 FROM user_avatar WHERE user_id = ANY(:userIds)
             ", new { userIds = ids.ToList() });
 
         return q.Select(c =>
         {
-            c.state = c.imageUrl == null ? ThumbnailState.Pending : ThumbnailState.Completed;
             if (c.imageUrl != null)
+            {
+                c.imageUrl = c.imageUrl.Replace("_thumbnail.png", "_thumbnail3d.json", StringComparison.OrdinalIgnoreCase);
                 c.imageUrl = Roblox.Configuration.CdnBaseUrl + c.imageUrl;
+            }
+            c.state = c.imageUrl == null ? ThumbnailState.Pending : ThumbnailState.Completed;
             return c;
         });
     }
