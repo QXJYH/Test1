@@ -60,7 +60,6 @@ const CreatePlacePage = () => {
                                 <p>Welcome to the place creation menu. Places are where games happen, and you need a place to make a game. By clicking "Create Place" below, you agree to create a place for use in a future game.</p>
                                 <p>Requirements:</p>
                                 <ul>
-                                    <li>You must have Bukkit Studio installed on your computer.</li>
                                     <li>You must follow the Terms of Use and Community Guidelines.</li>
                                 </ul>
                                 {error && <p className={classes.errorText}>{error}</p>}

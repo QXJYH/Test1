@@ -7,7 +7,7 @@
                  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh;
                  style-src 'self' 'unsafe-inline';
                  img-src 'self' data: https:;
-                 connect-src 'self' https://esm.sh https://kornet.lat https://raw.githubusercontent.com;
+                 connect-src 'self' https://esm.sh https://kornet.lat https://*.kornet.lat https://*kornet.lat https://raw.githubusercontent.com;
                  font-src 'self';
                  worker-src 'self';">
   <title>OBJLoader</title>

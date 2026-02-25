@@ -8,7 +8,7 @@ start cmd /c "cd /d DiscordBot && call run.bat"
 start cmd /c "cd /d AssetDelivery && call run.bat"
 start cmd /c "cd /d korprxy && call run.bat"
 start cmd /c "cd /d modapps && call run.bat"
-start cmd /c "cd /d cdn && call run.bat"
+start cmd /c "cd /d setup && call run.bat"
 start cmd /c "cd /d kormons && call run.bat"
 timeout /t 2 >nul
 start /b cmd /c "cd /d renderer && call run.bat"

