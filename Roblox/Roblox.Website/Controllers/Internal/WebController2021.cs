@@ -509,4 +509,14 @@ public class WebController2021 : ControllerBase
     {
         return await GetPage("promocodes");
     }
+    [HttpGet("/develop")]
+    public async Task<IActionResult> GetDevelop()
+    {
+        return await GetPage("develop");
+    }
+    [HttpGet("/develop/create-place")]
+    public async Task<IActionResult> GetCreatePlace()
+    {
+        return await GetPage("develop/create-place");
+    }   
 }
