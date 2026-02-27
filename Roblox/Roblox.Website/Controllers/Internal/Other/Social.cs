@@ -435,24 +435,19 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("users/account-info")]
         public async Task<dynamic> accountInfo()
         {
-            var user = await services.users.GetUserById(safeUserSession.userId);
-            var balance = await services.economy.GetUserBalance(safeUserSession.userId);
+            var userBalance = await services.economy.GetUserBalance(userSession.userId);
 
-            var roles = new List<string>();
-            if (await StaffFilter.IsStaff(user.userId))
-            {
-                roles.Add("Staff");
-            }
+            var roles = new string[] { };
 
             var jsonData = new
             {
-                UserId = user.userId,
-                Username = user.username,
-                DisplayName = user.username,
+                UserId = userSession.userId,
+                Username = userSession.username,
+                DisplayName = userSession.username,
                 HasPasswordSet = true,
                 Email = "", 
                 MembershipType = 0,
-                RobuxBalance = balance.robux,
+                RobuxBalance = userBalance.robux,
                 AgeBracket = 0,
                 Roles = roles.ToArray(),
                 EmailNotificationEnabled = false,
