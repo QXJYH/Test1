@@ -1231,7 +1231,7 @@ public class GameServerService : ServiceBase
 			return "BAD";
 		}
 		Console.WriteLine($"sending server lua rn");
-		await ModifyServerLua2018(Path.Combine(Configuration.RccService2020Path, "ExtraContent", "scripts", "CoreScripts", "ServerStarterScript.lua"));
+		await ModifyServerLua2018(Path.Combine(Configuration.RccService2021Path, "ExtraContent", "scripts", "CoreScripts", "ServerStarterScript.lua"));
 		
 		await db.ExecuteAsync(
 			"INSERT INTO asset_server (id, asset_id, ip, port, RCCConnection) VALUES (:id::uuid, :asset_id, :ip, :port, :RCCConnection)",
@@ -1249,7 +1249,7 @@ public class GameServerService : ServiceBase
 		Process rccServer = new Process();
 		rccServer.StartInfo.CreateNoWindow = false;
 		rccServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-		rccServer.StartInfo.FileName = $"{Configuration.RccService2020Path}RCCService.exe";
+		rccServer.StartInfo.FileName = $"{Configuration.RccService2021Path}RCCService.exe";
 		rccServer.StartInfo.Arguments = string.Format($@"-console -verbose -port {RCCPort}");
 		rccServer.StartInfo.RedirectStandardError = false;
 		rccServer.StartInfo.RedirectStandardOutput = false;
