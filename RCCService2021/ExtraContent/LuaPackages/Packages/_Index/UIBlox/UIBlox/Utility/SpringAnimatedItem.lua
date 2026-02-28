@@ -133,17 +133,11 @@ function SpringAnimatedItem.wrap(component)
 		-- If the animatedValues changed, set new goals for the motor so they animate.
 		if self.props.animatedValues ~= oldProps.animatedValues then
 			local goals = {}
-			local needsMotorUpdate = false
 			for key, newValue in pairs(self.props.animatedValues) do
 				local springOptions = self.props.springOptions -- nil means default
 				goals[key] = Otter.spring(newValue, springOptions)
-				if newValue ~= oldProps.animatedValues[key] then
-					needsMotorUpdate = true
-				end
 			end
-			if needsMotorUpdate then
-				self.motor:setGoal(goals)
-			end
+			self.motor:setGoal(goals)
 		end
 	end
 

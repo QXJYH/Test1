@@ -8,6 +8,7 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 local function split(str, delim)
     local results = {}

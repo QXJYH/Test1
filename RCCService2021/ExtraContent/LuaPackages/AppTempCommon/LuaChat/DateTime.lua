@@ -2,6 +2,8 @@ local LocalizationService = game:GetService("LocalizationService")
 local CorePackages = game:GetService("CorePackages")
 local GetFFlagUseDateTimeType = require(CorePackages.AppTempCommon.LuaApp.Flags.GetFFlagUseDateTimeType)
 
+local FFlagChinaLicensingApp = settings():GetFFlag("ChinaLicensingApp")
+
 --[[
 	This is a Lua implementation of the DateTime API proposal. It'll eventually
 	be implemented in C++ and merged into the rest of the codebase if this model
@@ -105,10 +107,18 @@ local tokens = {
 		return tostring(values.Seconds)
 	end},
 	{"A", function(values)
-		return values.Hour >= 12 and "PM" or "AM"
+		if FFlagChinaLicensingApp then
+			return values.Hour >= 12 and "下午" or "上午"
+		else
+			return values.Hour >= 12 and "PM" or "AM"
+		end
 	end},
 	{"a", function(values)
-		return values.Hour >= 12 and "pm" or "am"
+		if FFlagChinaLicensingApp then
+			return values.Hour >= 12 and "下午" or "上午"
+		else
+			return values.Hour >= 12 and "pm" or "am"
+		end
 	end}
 }
 
@@ -546,14 +556,26 @@ function LuaDateTime:GetLongRelativeTime(epoch, timezone, localeId)
 	timezone = timezone or TimeZone.Current
 	epoch = epoch or LuaDateTime.now()
 
-	if self:IsSame(epoch, TimeUnit.Days, timezone) then
-		return self:Format("h:mm A", timezone)
-	elseif self:IsSame(epoch, TimeUnit.Weeks, timezone) then
-		return self:Format("DDD | h:mm A", timezone)
-	elseif self:IsSame(epoch, TimeUnit.Years, timezone) then
-		return self:Format("MMM D | h:mm A", timezone)
+	if FFlagChinaLicensingApp then
+		if self:IsSame(epoch, TimeUnit.Days, timezone) then
+			return self:Format("HH:mm A", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Weeks, timezone) then
+			return self:Format("M月D日 | HH:mm A", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Years, timezone) then
+			return self:Format("M月D日 | HH:mm A", timezone)
+		else
+			return self:Format("YYYY年M月D日 | HH:mm A", timezone)
+		end
 	else
-		return self:Format("MMM D, YYYY | h:mm A", timezone)
+		if self:IsSame(epoch, TimeUnit.Days, timezone) then
+			return self:Format("h:mm A", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Weeks, timezone) then
+			return self:Format("DDD | h:mm A", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Years, timezone) then
+			return self:Format("MMM D | h:mm A", timezone)
+		else
+			return self:Format("MMM D, YYYY | h:mm A", timezone)
+		end
 	end
 end
 
@@ -571,14 +593,26 @@ function LuaDateTime:GetShortRelativeTime(epoch, timezone, localeId)
 
 	epoch = epoch or LuaDateTime.now()
 
-	if self:IsSame(epoch, TimeUnit.Days, timezone) then
-		return self:Format("h:mm A", timezone)
-	elseif self:IsSame(epoch, TimeUnit.Weeks, timezone) then
-		return self:Format("DDD", timezone)
-	elseif self:IsSame(epoch, TimeUnit.Years, timezone) then
-		return self:Format("MMM D", timezone)
+	if FFlagChinaLicensingApp then
+		if self:IsSame(epoch, TimeUnit.Days, timezone) then
+			return self:Format("HH:mm A", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Weeks, timezone) then
+			return self:Format("M月D日", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Years, timezone) then
+			return self:Format("M月D日", timezone)
+		else
+			return self:Format("YYYY年M月D日", timezone)
+		end
 	else
-		return self:Format("MMM D, YYYY", timezone)
+		if self:IsSame(epoch, TimeUnit.Days, timezone) then
+			return self:Format("h:mm A", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Weeks, timezone) then
+			return self:Format("DDD", timezone)
+		elseif self:IsSame(epoch, TimeUnit.Years, timezone) then
+			return self:Format("MMM D", timezone)
+		else
+			return self:Format("MMM D, YYYY", timezone)
+		end
 	end
 end
 

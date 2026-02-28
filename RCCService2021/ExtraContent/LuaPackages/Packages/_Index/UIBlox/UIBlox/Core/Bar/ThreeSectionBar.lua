@@ -13,7 +13,8 @@ local PADDING_BETWEEN_SIDE_AND_CENTER = 8
 
 local ThreeSectionBar = Roact.PureComponent:extend("ThreeSectionBar")
 ThreeSectionBar.validateProps = t.strictInterface({
-	BackgroundColor3 = t.optional(t.Color3),
+	BackgroundColor3 = t.Color3,
+
 	BackgroundTransparency = t.optional(t.union(t.number, bindingValidator(t.number))),
 	barHeight = t.optional(t.number),
 	contentPaddingLeft = t.optional(t.UDim),
@@ -84,26 +85,18 @@ function ThreeSectionBar:init()
 	end
 end
 
-function ThreeSectionBar:didUpdate()
-	-- When we update the props to set renderLeft or renderRight to nil,
-	-- corresponding bindings should be reset
-	if not self.props.renderLeft then
-		self.updateLeftWidth(0)
-	end
-	if not self.props.renderRight then
-		self.updateRightWidth(0)
-	end
-end
-
 function ThreeSectionBar:render()
-	local centerAnchor = Vector2.new(0.5, 0.5)
+	local centerAnchor
 	local centerPosition
 
 	if not self.props.renderLeft and self.props.renderRight then
+		centerAnchor = Vector2.new(0, 0.5)
 		centerPosition = UDim2.fromScale(0, 0.5)
 	elseif self.props.renderLeft and not self.props.renderRight then
+		centerAnchor = Vector2.new(1, 0.5)
 		centerPosition = UDim2.fromScale(1, 0.5)
 	else
+		centerAnchor = Vector2.new(0.5, 0.5)
 		centerPosition = UDim2.fromScale(0.5, 0.5)
 	end
 
@@ -161,7 +154,7 @@ function ThreeSectionBar:render()
 			Position = Roact.joinBindings({self.leftWidth, self.rightWidth, self.fullWidth}):map(function(widths)
 				local centeredSize = self.computeCenteredSize(widths)
 
-				if math.abs(centeredSize.X.Offset) <= self.props.estimatedCenterWidth then
+				if centeredSize.X.Offset <= self.props.estimatedCenterWidth then
 					return self.computeBumpedPosition(widths)
 				else
 					return centerPosition
@@ -170,17 +163,13 @@ function ThreeSectionBar:render()
 			Size = Roact.joinBindings({self.leftWidth, self.rightWidth, self.fullWidth}):map(function(widths)
 				local centeredSize = self.computeCenteredSize(widths)
 
-				if math.abs(centeredSize.X.Offset) <= self.props.estimatedCenterWidth then
+				if centeredSize.X.Offset <= self.props.estimatedCenterWidth then
 					return self.computeBumpedSize(widths)
 				else
 					return centeredSize
 				end
 			end),
 		}, {
-			UIPadding = Roact.createElement("UIPadding", {
-				PaddingLeft = self.props.renderLeft and UDim.new(0, 0) or UDim.new(0, self.props.marginLeft),
-				PaddingRight = self.props.renderRight and UDim.new(0, 0) or UDim.new(0, self.props.marginRight),
-			}),
 			["$layout"] = Roact.createElement("UIListLayout", {
 				HorizontalAlignment = Enum.HorizontalAlignment.Center,
 				VerticalAlignment = Enum.VerticalAlignment.Center,

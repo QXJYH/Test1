@@ -20,6 +20,7 @@ end
 
 pcall(function() game:GetService('ContentProvider'):SetBaseUrl(baseUrl) end)
 game:GetService('ScriptContext').ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 local objects = game:GetObjects(assetUrl)
 ThumbnailGenerator:AddProfilingCheckpoint("BodyPartLoaded")

@@ -50,7 +50,6 @@ local GAMEPAD_ZOOM_STEP_3 = 20
 
 local PAN_SENSITIVITY = 20
 local ZOOM_SENSITIVITY_CURVATURE = 0.5
-local FIRST_PERSON_DISTANCE_MIN = 0.5
 
 local abs = math.abs
 local sign = math.sign
@@ -71,7 +70,7 @@ end
 
 local FFlagUserCameraInputRefactor do
 	local success, result = pcall(function()
-		return UserSettings():IsUserFeatureEnabled("UserCameraInputRefactor3")
+		return UserSettings():IsUserFeatureEnabled("UserCameraInputRefactor2")
 	end)
 	FFlagUserCameraInputRefactor = success and result
 end
@@ -116,8 +115,7 @@ function BaseCamera.new()
 
 	-- Subject and position on last update call
 	self.lastSubject = nil
-	self.lastSubjectPosition = Vector3.new(0, 5, 0)
-	self.lastSubjectCFrame = CFrame.new(self.lastSubjectPosition)
+	self.lastSubjectPosition = Vector3.new(0,5,0)
 
 	-- These subject distance members refer to the nominal camera-to-subject follow distance that the camera
 	-- is trying to maintain, not the actual measured value.
@@ -317,159 +315,6 @@ function BaseCamera:GetBodyPartToFollow(humanoid, isDead)
 	end
 
 	return humanoid.RootPart
-end
-
-function BaseCamera:GetSubjectCFrame()
-	local result = self.lastSubjectCFrame
-	local camera = workspace.CurrentCamera
-	local cameraSubject = camera and camera.CameraSubject
-
-	if not cameraSubject then
-		return result
-	end
-
-	if cameraSubject:IsA("Humanoid") then
-		local humanoid = cameraSubject
-		local humanoidIsDead = humanoid:GetState() == Enum.HumanoidStateType.Dead
-
-		if VRService.VREnabled and humanoidIsDead and humanoid == self.lastSubject then
-			result = self.lastSubjectCFrame
-		else
-			local bodyPartToFollow = humanoid.RootPart
-
-			-- If the humanoid is dead, prefer their head part as a follow target, if it exists
-			if humanoidIsDead then
-				if humanoid.Parent and humanoid.Parent:IsA("Model") then
-					bodyPartToFollow = humanoid.Parent:FindFirstChild("Head") or bodyPartToFollow
-				end
-			end
-
-			if bodyPartToFollow and bodyPartToFollow:IsA("BasePart") then
-				local heightOffset
-				if humanoid.RigType == Enum.HumanoidRigType.R15 then
-					if humanoid.AutomaticScalingEnabled then
-						heightOffset = R15_HEAD_OFFSET
-
-						local rootPart = humanoid.RootPart
-						if bodyPartToFollow == rootPart then
-							local rootPartSizeOffset = (rootPart.Size.Y - HUMANOID_ROOT_PART_SIZE.Y)/2
-							heightOffset = heightOffset + Vector3.new(0, rootPartSizeOffset, 0)
-						end
-					else
-						heightOffset = R15_HEAD_OFFSET_NO_SCALING
-					end
-				else
-					heightOffset = HEAD_OFFSET
-				end
-
-				if humanoidIsDead then
-					heightOffset = ZERO_VECTOR3
-				end
-
-				result = bodyPartToFollow.CFrame*CFrame.new(heightOffset + humanoid.CameraOffset)
-			end
-		end
-
-	elseif cameraSubject:IsA("BasePart") then
-		result = cameraSubject.CFrame
-
-	elseif cameraSubject:IsA("Model") then
-		-- Model subjects are expected to have a PrimaryPart to determine orientation
-		if cameraSubject.PrimaryPart then
-			result = cameraSubject:GetPrimaryPartCFrame()
-		else
-			result = CFrame.new()
-		end
-	end
-
-	if result then
-		self.lastSubjectCFrame = result
-	end
-
-	return result
-end
-
-function BaseCamera:GetSubjectVelocity()
-	local camera = workspace.CurrentCamera
-	local cameraSubject = camera and camera.CameraSubject
-
-	if not cameraSubject then
-		return ZERO_VECTOR3
-	end
-
-	if cameraSubject:IsA("BasePart") then
-		return cameraSubject.Velocity
-
-	elseif cameraSubject:IsA("Humanoid") then
-		local rootPart = cameraSubject.RootPart
-
-		if rootPart then
-			return rootPart.Velocity
-		end
-
-	elseif cameraSubject:IsA("Model") then
-		local primaryPart = cameraSubject.PrimaryPart
-
-		if primaryPart then
-			return primaryPart.Velocity
-		end
-	end
-
-	return ZERO_VECTOR3
-end
-
-function BaseCamera:GetSubjectRotVelocity()
-	local camera = workspace.CurrentCamera
-	local cameraSubject = camera and camera.CameraSubject
-
-	if not cameraSubject then
-		return ZERO_VECTOR3
-	end
-
-	if cameraSubject:IsA("BasePart") then
-		return cameraSubject.RotVelocity
-
-	elseif cameraSubject:IsA("Humanoid") then
-		local rootPart = cameraSubject.RootPart
-
-		if rootPart then
-			return rootPart.RotVelocity
-		end
-
-	elseif cameraSubject:IsA("Model") then
-		local primaryPart = cameraSubject.PrimaryPart
-
-		if primaryPart then
-			return primaryPart.RotVelocity
-		end
-	end
-
-	return ZERO_VECTOR3
-end
-
-function BaseCamera:StepZoom()
-	local zoom = self.currentSubjectDistance
-	local zoomDelta = CameraInput.getZoomDelta()
-
-	if math.abs(zoomDelta) > 0 then
-		local newZoom
-
-		if zoomDelta > 0 then
-			newZoom = zoom + zoomDelta*(1 + zoom*ZOOM_SENSITIVITY_CURVATURE)
-			newZoom = math.max(newZoom, self.FIRST_PERSON_DISTANCE_THRESHOLD)
-		else
-			newZoom = (zoom + zoomDelta)/(1 - zoomDelta*ZOOM_SENSITIVITY_CURVATURE)
-			newZoom = math.max(newZoom, FIRST_PERSON_DISTANCE_MIN)
-		end
-
-		if newZoom < self.FIRST_PERSON_DISTANCE_THRESHOLD then
-			newZoom = FIRST_PERSON_DISTANCE_MIN
-		end
-
-		self:SetCameraToSubjectDistance(newZoom)
-	end
-	
-	return ZoomController.GetZoomRadius()
 end
 
 function BaseCamera:GetSubjectPosition()

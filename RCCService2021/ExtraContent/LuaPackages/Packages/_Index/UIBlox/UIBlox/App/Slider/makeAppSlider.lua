@@ -120,23 +120,14 @@ local function makeAppSlider(trackFillThemeKey, isTwoKnobs)
 		self.pressedMotorUpper:onStep(setPressedProgressUpper)
 
 		self.onDragStartLower = function()
-			if self.props.onDragStartLower then
-				self.props.onDragStartLower()
-			end
 			self.pressedMotorLower:setGoal(Otter.spring(1, SPRING_PARAMETERS))
 		end
 
 		self.onDragStartUpper = function()
-			if self.props.onDragStartUpper then
-				self.props.onDragStartUpper()
-			end
 			self.pressedMotorUpper:setGoal(Otter.spring(1, SPRING_PARAMETERS))
 		end
 
 		self.onDragEnd = function()
-			if self.props.onDragEnd then
-				self.props.onDragEnd()
-			end
 			self.pressedMotorLower:setGoal(Otter.spring(0, SPRING_PARAMETERS))
 			self.pressedMotorUpper:setGoal(Otter.spring(0, SPRING_PARAMETERS))
 		end
@@ -179,11 +170,6 @@ local function makeAppSlider(trackFillThemeKey, isTwoKnobs)
 			knobShadowImage = Images["component_assets/dropshadow_28"],
 			knobShadowTransparencyLower = self.knobShadowTransparencyLower,
 			knobShadowTransparencyUpper = self.knobShadowTransparencyUpper,
-
-			[Roact.Ref] = props[Roact.Ref],
-			NextSelectionUp = props.NextSelectionUp,
-			NextSelectionDown = props.NextSelectionDown,
-			focusController = props.focusController,
 		}
 
 		if isTwoKnobs then

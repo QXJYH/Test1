@@ -18,7 +18,6 @@ local ToastFrame = Roact.PureComponent:extend("ToastFrame")
 local validateProps = t.strictInterface({
 	anchorPoint = t.optional(t.Vector2),
 	iconProps = t.optional(validateToastIcon),
-	iconChildren = t.optional(t.table),
 	layoutOrder = t.optional(t.integer),
 	padding = t.numberMin(0),
 	position = t.optional(t.UDim2),
@@ -64,7 +63,7 @@ function ToastFrame:render()
 		}),
 		ToastIcon = iconProps and Roact.createElement(ToastIcon, Cryo.Dictionary.join(iconProps, {
 			LayoutOrder = 1,
-		}), self.props.iconChildren),
+		})),
 		ToastTextFrame = Roact.createElement("Frame", {
 			BackgroundTransparency = 1,
 			LayoutOrder = 2,

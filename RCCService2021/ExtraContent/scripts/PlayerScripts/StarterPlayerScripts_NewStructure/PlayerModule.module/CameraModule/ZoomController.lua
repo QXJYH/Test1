@@ -117,10 +117,6 @@ local Zoom = {} do
 
 		return zoomSpring:Step(renderDt)
 	end
-	
-	function Zoom.GetZoomRadius()
-		return zoomSpring.x
-	end
 
 	function Zoom.SetZoomParameters(targetZoom, newZoomDelta)
 		zoomSpring.goal = targetZoom

@@ -10,6 +10,7 @@ if universeId ~= nil then
 	pcall(function() game:SetUniverseId(universeId) end)
 end
 
+game:GetService("UserInputService").MouseIconEnabled = false
 game:GetService("ScriptContext").ScriptsDisabled = true
 game:GetService("StarterGui").ShowDevelopmentGui = false
 

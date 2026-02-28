@@ -14,13 +14,9 @@ return function()
 			end
 			local updateMemStorageService = Instance.new("BindableEvent")
 			mockMemStorageService.BindAndFire = function(_, _, func)
-				local initialValue = mockMemStorageService.GetItem()
-				local connection = updateMemStorageService.Event:Connect(function(value, a)
+				return updateMemStorageService.Event:Connect(function(value, a)
 					func(value)
 				end)
-
-				func(initialValue)
-				return connection
 			end
 			local mockHttpService = MagicMock.new()
 			mockHttpService.JSONDecode = function()
@@ -67,13 +63,10 @@ return function()
 
 				updateMemStorageService:Fire("foo")
 				updateMemStorageService:Fire("foo")
-				updateMemStorageService:Fire("foo")
-				updateMemStorageService:Fire("foo")
 
 				result:Disconnect()
 
-				-- Once for initial value and then once for foo
-				expect(timesEverCalled).to.equal(2)
+				expect(timesEverCalled).to.equal(1)
 			end)
 
 			it("SHOULD NOT invoke passed in function with JSONDecode results "..
@@ -90,31 +83,7 @@ return function()
 
 				result:Disconnect()
 
-				-- Once for initial value and then once for bar
-				expect(timesEverCalled).to.equal(2)
-			end)
-
-			it("SHOULD invoke multiple listeners when updateMemStorageService is fired", function()
-				local listenerACalled = 0
-				local connA = fromMemStorageServiceInstance.onPolicyChanged(function(value)
-					listenerACalled = listenerACalled + 1
-					expect(value).to.equal("decodedExternalPolicy")
-				end)
-
-				local listenerBCalled = 0
-				local connB = fromMemStorageServiceInstance.onPolicyChanged(function(value)
-					listenerBCalled = listenerBCalled + 1
-					expect(value).to.equal("decodedExternalPolicy")
-				end)
-
-				updateMemStorageService:Fire("baz")
-
-				connA:Disconnect()
-				connB:Disconnect()
-
-				-- Once for initial value and then once for baz
-				expect(listenerACalled).to.equal(2)
-				expect(listenerBCalled).to.equal(2)
+				expect(timesEverCalled).to.equal(1)
 			end)
 		end)
 
@@ -292,7 +261,7 @@ return function()
 					fromMemStorageServiceInstance.onPolicyChanged(function()
 						numberOfTimesCalled = numberOfTimesCalled + 1
 					end)
-					local _ = fromMemStorageServiceInstance.read()
+					local result = fromMemStorageServiceInstance.read()
 					-- intentionally fire the same value that we read
 					updateMemStorageService:Fire(validJson)
 

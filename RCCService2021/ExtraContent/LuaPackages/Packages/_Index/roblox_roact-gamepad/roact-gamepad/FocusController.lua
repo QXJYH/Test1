@@ -212,7 +212,6 @@ function FocusControllerInternal:updateInputBindings()
 			self.boundInputs[binding.keyCode] = binding.meta or {}
 		end
 	end
-	self.boundInputsChangedSignal:fire(self.boundInputs)
 end
 
 function FocusControllerInternal:initialize(engineInterface)
@@ -274,6 +273,7 @@ function FocusControllerInternal:initialize(engineInterface)
 
 			-- Update input connections here
 			self:updateInputBindings()
+			self.boundInputsChangedSignal:fire(self.boundInputs)
 		end
 	end)
 
@@ -346,10 +346,6 @@ function FocusControllerInternal.createPublicApiWrapper()
 		end,
 		releaseFocus = function()
 			focusControllerInternal:releaseFocus()
-		end,
-		getCurrentFocus = function()
-			local focusedLeaf = focusControllerInternal.focusedLeaf
-			return focusedLeaf and focusedLeaf.ref or nil
 		end,
 		getBoundInputs = function()
 			return focusControllerInternal.boundInputs

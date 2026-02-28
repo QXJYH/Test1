@@ -8,6 +8,7 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService('ScriptContext').ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 local decal = game:GetObjects(assetUrl)[1]
 ThumbnailGenerator:AddProfilingCheckpoint("DecalLoaded")

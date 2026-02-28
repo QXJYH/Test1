@@ -27,27 +27,7 @@ return function(dependencies)
 			return "GUAC:" .. userId .. ":" .. behavior
 		end
 
-		local connectionStoreKey
-		local memStorageConnection
 		local previouslyReadValue
-
-		local onPolicyChangedEvent = Instance.new("BindableEvent")
-
-		local function onPolicyUpdated(newPolicyData)
-			-- MemStorageService will not de-duplicate the same item from storage
-			if newPolicyData ~= previouslyReadValue then
-				if newPolicyData and #newPolicyData > 0 then
-					local success, decodedExternalPolicy = pcall(function()
-						return HttpService:JSONDecode(newPolicyData)
-					end)
-					if success then
-						-- never store garbage
-						previouslyReadValue = newPolicyData
-						onPolicyChangedEvent:Fire(decodedExternalPolicy)
-					end
-				end
-			end
-		end
 
 		return {
 			read = function()
@@ -69,29 +49,25 @@ return function(dependencies)
 
 			onPolicyChanged = function(func)
 				local storeKey = getStoreKey()
-
-				local connection = onPolicyChangedEvent.Event:Connect(func)
-
-				if memStorageConnection and connectionStoreKey == storeKey  then
-					-- Fire listener with existing value
-					if previouslyReadValue then
-						local success, policy = pcall(function()
-							return HttpService:JSONDecode(previouslyReadValue)
-						end)
-
-						if success then
-							func(policy)
+				local memStorageConnection = MemStorageService:BindAndFire(storeKey, function(newPolicyData)
+					-- MemStorageService will not du-duplicate the same item from storage
+					if newPolicyData ~= previouslyReadValue then
+						if newPolicyData and #newPolicyData > 0 then
+							local success, decodedExternalPolicy = pcall(function()
+								return HttpService:JSONDecode(newPolicyData)
+							end)
+							if success then
+								-- never store garbage
+								previouslyReadValue = newPolicyData
+								if func then
+									func(decodedExternalPolicy)
+								end
+							end
 						end
 					end
-				else
-					if memStorageConnection then
-						memStorageConnection:Disconnect()
-					end
-					connectionStoreKey = storeKey
-					memStorageConnection = MemStorageService:BindAndFire(storeKey, onPolicyUpdated)
-				end
+				end)
 
-				return connection
+				return memStorageConnection
 			end,
 		}
 	end

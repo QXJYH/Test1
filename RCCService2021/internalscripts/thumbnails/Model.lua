@@ -7,6 +7,7 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 for _, object in pairs(game:GetObjects(assetUrl)) do
 	if object:IsA("Sky") then
@@ -19,7 +20,7 @@ for _, object in pairs(game:GetObjects(assetUrl)) do
 			return ThumbnailGenerator:Click(fileExtension, x, y, --[[hideSky = ]] false)
 		end
 	elseif object:IsA("LuaSourceContainer") then
-		return ThumbnailGenerator:ClickTexture(baseUrl.. "Thumbs/Script.png", fileExtension, x, y)
+		return ThumbnailGenerator:ClickTexture(baseUrl.. "/static/img/LuaThumbnail.png", fileExtension, x, y)
 	elseif object:IsA("SpecialMesh") then
 		local part = Instance.new("Part")
 		part.Parent = workspace

@@ -7,6 +7,7 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 local player = game:GetService("Players"):CreateLocalPlayer(0)
 player.CharacterAppearance = characterAppearanceUrl
@@ -14,7 +15,7 @@ player:LoadCharacterBlocking()
 
 ThumbnailGenerator:AddProfilingCheckpoint("PlayerCharacterLoaded")
 
-local poseAnimationId = "http://www.roblox.com/asset/?id=532421348"
+local poseAnimationId = "http://bbblox.org/asset/?id=532421348"
 
 local function getJointBetween(part0, part1)
     for _, obj in pairs(part1:GetChildren()) do
@@ -26,19 +27,29 @@ end
 
 local function applyKeyframe(character, poseKeyframe)
     local function recurApplyPoses(parentPose, poseObject)
-        if parentPose then
-            local joint = getJointBetween(character[parentPose.Name], character[poseObject.Name])
-            if joint and poseObject.Weight ~= 0 then
-                joint.C1 = poseObject.CFrame:inverse() + joint.C1.p
+        if poseObject:IsA("Pose") then
+            if parentPose then
+                local parentPart = character:FindFirstChild(parentPose.Name)
+                local childPart = character:FindFirstChild(poseObject.Name)
+
+                if parentPart and childPart and parentPart:IsA("BasePart") and childPart:IsA("BasePart") then
+                    local joint = getJointBetween(parentPart, childPart)
+                    if joint and poseObject.Weight ~= 0 then
+                        joint.C1 = poseObject.CFrame:inverse() + joint.C1.p
+                    end
+                end
             end
-        end
-        for _, subPose in pairs(poseObject:GetSubPoses()) do
-            recurApplyPoses(poseObject, subPose)
+
+            for _, subPose in pairs(poseObject:GetSubPoses()) do
+                recurApplyPoses(poseObject, subPose)
+            end
         end
     end
 
     for _, poseObj in pairs(poseKeyframe:GetPoses()) do
-        recurApplyPoses(nil, poseObj)
+        if poseObj:IsA("Pose") then
+            recurApplyPoses(nil, poseObj)
+        end
     end
 end
 

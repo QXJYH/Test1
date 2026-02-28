@@ -92,8 +92,7 @@ function GroupMotor.prototype:step(dt)
 
 	-- Check self.__allComplete as the motor may have been restarted in the onStep callback
 	-- even if allComplete is true.
-	-- Check self.__running in case the motor was stopped by onStep
-	if self.__allComplete and not wasAllComplete and self.__running then
+	if self.__allComplete and not wasAllComplete then
 		self:stop()
 		self.__onComplete:fire(values)
 	end

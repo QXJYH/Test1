@@ -10,6 +10,7 @@ local BundleLoader = require(ThumbnailGenerator:GetThumbnailModule("BundleLoader
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 local emoteAnim = game:GetObjects(assetUrl)[1]
 

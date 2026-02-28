@@ -105,15 +105,7 @@ local function newEnvironment(currentNode, extraEnvironment)
 	env.fdescribe = env.describeFOCUS
 	env.xdescribe = env.describeSKIP
 
-	env.expect = setmetatable({
-		extend = function(...)
-			error("Cannot call \"expect.extend\" from within a \"describe\" node.")
-		end,
-	}, {
-		__call = function(_self, ...)
-			return Expectation.new(...)
-		end,
-	})
+	env.expect = Expectation.new
 
 	return env
 end
@@ -194,14 +186,9 @@ function TestNode:expand()
 	for key, value in pairs(self.environment) do
 		callbackEnv[key] = value
 	end
-	-- Copy 'script' directly to new env to make Studio debugger happy.
-	-- Studio debugger does not look into __index, because of security reasons
-	callbackEnv.script = originalEnv.script
 	setfenv(self.callback, callbackEnv)
 
-	local success, result = xpcall(self.callback, function(message)
-		return debug.traceback(tostring(message), 2)
-	end)
+	local success, result = xpcall(self.callback, debug.traceback)
 
 	if not success then
 		self.loadError = result

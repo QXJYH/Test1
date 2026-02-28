@@ -5,9 +5,9 @@ local GuiService = game:GetService("GuiService")
 
 -- fallback spritesheet image to use if CorePackages is unavailable
 local FALLBACK_IMAGES = {
-	["img_set_1x_1"] = "http://www.roblox.com/asset/?id=6074324731",
-	["img_set_1x_2"] = "http://www.roblox.com/asset/?id=6074325323",
-	["img_set_1x_3"] = "http://www.roblox.com/asset/?id=6074325723",
+	["img_set_1x_1"] = "http://www.roblox.com/asset/?id=5585783844",
+	["img_set_1x_2"] = "http://www.roblox.com/asset/?id=5585784274",
+	--["./img_set_1x_3"] = "",
 }
 
 local CorePackages = script:FindFirstAncestor("CorePackages")

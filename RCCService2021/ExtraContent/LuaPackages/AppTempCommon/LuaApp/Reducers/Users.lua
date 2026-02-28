@@ -10,7 +10,6 @@ local SetUserIsFriend = require(CorePackages.AppTempCommon.LuaApp.Actions.SetUse
 local SetUserMembershipType = require(CorePackages.AppTempCommon.LuaApp.Actions.SetUserMembershipType)
 local SetUserPresence = require(CorePackages.AppTempCommon.LuaApp.Actions.SetUserPresence)
 local SetUserThumbnail = require(CorePackages.AppTempCommon.LuaApp.Actions.SetUserThumbnail)
-local ReceivedDisplayName = require(CorePackages.AppTempCommon.LuaApp.Actions.ReceivedDisplayName)
 
 return function(state, action)
 	state = state or {}
@@ -93,15 +92,7 @@ return function(state, action)
 		if state[action.userId] then
 			state = Immutable.RemoveFromDictionary(state, action.userId)
 		end
-	elseif action.type == ReceivedDisplayName.name then
-		local user = state[action.userId]
-		if user then
-			state = Immutable.JoinDictionaries(state, {
-				[action.userId] = Immutable.JoinDictionaries(user, {
-					displayName = action.displayName,
-				}),
-			})
-		end
 	end
+
 	return state
 end

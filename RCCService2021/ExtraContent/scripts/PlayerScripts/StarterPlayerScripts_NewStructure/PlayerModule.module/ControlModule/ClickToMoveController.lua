@@ -32,6 +32,9 @@ local movementKeys = {
 	[Enum.KeyCode.Down] = true;
 }
 
+local FFlagUserNavigationClickToMoveSkipPassedWaypointsSuccess, FFlagUserNavigationClickToMoveSkipPassedWaypointsResult = pcall(function() return UserSettings():IsUserFeatureEnabled("UserNavigationClickToMoveSkipPassedWaypoints") end)
+local FFlagUserNavigationClickToMoveSkipPassedWaypoints = FFlagUserNavigationClickToMoveSkipPassedWaypointsSuccess and FFlagUserNavigationClickToMoveSkipPassedWaypointsResult
+
 local Player = Players.LocalPlayer
 
 local ClickToMoveDisplay = require(script.Parent:WaitForChild("ClickToMoveDisplay"))
@@ -483,7 +486,19 @@ local function Pather(endPoint, surfaceNormal, overrideUseDirectPath)
 				end
 
 				-- Move to the next point
-				this:MoveToNextWayPoint(currentWaypoint, nextWaypoint, nextWaypointIdx)
+				if FFlagUserNavigationClickToMoveSkipPassedWaypoints then
+					this:MoveToNextWayPoint(currentWaypoint, nextWaypoint, nextWaypointIdx)
+				else
+					if this.setPointFunc then
+						this.setPointFunc(nextWaypointIdx)
+					end
+					if nextWaypoint.Action == Enum.PathWaypointAction.Jump then
+						this.Humanoid.Jump = true
+					end
+					this.Humanoid:MoveTo(nextWaypoint.Position)
+
+					this.CurrentPoint = nextWaypointIdx
+				end
 			end
 		else
 			this.PathFailed:Fire()

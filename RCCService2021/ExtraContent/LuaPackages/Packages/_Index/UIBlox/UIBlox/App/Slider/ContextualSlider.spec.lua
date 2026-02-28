@@ -30,8 +30,6 @@ return function()
 				max = 100,
 				stepInterval = 1,
 				onValueChanged = function() end,
-				onDragStart = function() end,
-				onDragEnd = function() end,
 				isDisabled = false,
 				textInputEnabled = true,
 

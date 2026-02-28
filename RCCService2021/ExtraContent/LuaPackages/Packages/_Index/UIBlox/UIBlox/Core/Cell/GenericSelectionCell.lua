@@ -104,16 +104,12 @@ GenericSelectionCell.validateProps = t.strictInterface({
 	-- If this cell is disabled
 	isDisabled = t.optional(t.boolean),
 
-	-- If this cell should use the default control state
-	useDefaultControlState = t.optional(t.boolean),
-
 	-- optional parameters for RoactGamepad
 	[Roact.Ref] = t.optional(t.table),
 	NextSelectionLeft = t.optional(t.table),
 	NextSelectionRight = t.optional(t.table),
 	NextSelectionUp = t.optional(t.table),
 	NextSelectionDown = t.optional(t.table),
-	SelectionImageObject = t.optional(t.table),
 })
 
 GenericSelectionCell.defaultProps = {
@@ -139,12 +135,10 @@ function GenericSelectionCell:render()
 		local font = stylePalette.Font
 		local theme = stylePalette.Theme
 
-		local controlState = self.props.useDefaultControlState and ControlState.Default or self.state.controlState
-
-		local iconStyle = getIconStyle(ICON_STATE_COLOR, controlState, stylePalette)
-		local colorStyle = getCellStyle(CELL_STATE_COLOR, controlState, stylePalette)
-		local textStyle = getTextStyle(theme.TextEmphasis, controlState)
-		local subtitleTextStyle = getTextStyle(theme.TextDefault, controlState)
+		local iconStyle = getIconStyle(ICON_STATE_COLOR, self.state.controlState, stylePalette)
+		local colorStyle = getCellStyle(CELL_STATE_COLOR, self.state.controlState, stylePalette)
+		local textStyle = getTextStyle(theme.TextEmphasis, self.state.controlState)
+		local subtitleTextStyle = getTextStyle(theme.TextDefault, self.state.controlState)
 		local dividerStyle = theme.Divider
 
 		return Roact.createElement(GenericCell, {
@@ -164,7 +158,6 @@ function GenericSelectionCell:render()
 			NextSelectionDown = self.props.NextSelectionDown,
 			NextSelectionLeft = self.props.NextSelectionLeft,
 			NextSelectionRight = self.props.NextSelectionRight,
-			SelectionImageObject = self.props.SelectionImageObject,
 			renderRightContent = function()
 				return Roact.createElement("Frame", {
 					BackgroundTransparency = 1,

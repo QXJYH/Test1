@@ -7,8 +7,9 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
-local mannequin = game:GetObjects(baseUrl.. "asset/?id=" .. tostring(mannequinId))[1]
+local mannequin = game:GetObjects(baseUrl.. "/asset/?id=" .. tostring(mannequinId))[1]
 mannequin.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 mannequin.Parent = workspace
 

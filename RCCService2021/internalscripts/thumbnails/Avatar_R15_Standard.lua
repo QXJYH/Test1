@@ -1,11 +1,5 @@
 -- Avatar_R15_Standard v1.0.2
 -- Pose R6 characters in the normal way.  For R15, have them in the same pose, and raise their arm up if they have gear.
--- Sample params:
---	baseUrl: "http://www.roblox.com/"
---	characterAppearanceUrl: "http://www.roblox.com/Asset/AvatarAccoutrements.ashx?AvatarHash=98925edb8aa60e39ba8a4f0bf8b71d6f&AssetIDs=3372792,9255011,20418682,68258723,158066137,232503325,244097060,248286896,264611665,376530220,376531012,376531300,376531703,376532000,624157131&ResolvedAvatarType=R15&Height=1&Width=0.75&Head=0.95&Depth=0.88"
---	fileExtension: "Png"
--- 	x: 1260
---	y: 1260
 
 local baseUrl, characterAppearanceUrl, fileExtension, x, y = ...
 
@@ -14,6 +8,7 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
 local player = game:GetService("Players"):CreateLocalPlayer(0)
 player.CharacterAppearance = characterAppearanceUrl

@@ -7,6 +7,7 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 game:DefineFastFlag("OnlyAllowMeshParts", false)
 
 for _, object in pairs(game:GetObjects(assetUrl)) do

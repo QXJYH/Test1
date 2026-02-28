@@ -81,18 +81,9 @@ localeInfos["zh-cn"] = {
 	{ 1e8, "亿", },
 }
 
-localeInfos["zh-cjv"] = {
-	[DECIMAL_SEPARATOR] = ".",
-	[GROUP_DELIMITER] = ",",
-	{ 1, "", },
-	{ 1e3, "千", },
-	{ 1e4, "万", },
-	{ 1e8, "亿", },
-}
-
 localeInfos["zh-tw"] = {
 	[DECIMAL_SEPARATOR] = ".",
-	[GROUP_DELIMITER] = ",",
+	[GROUP_DELIMITER] = ",", -- Chinese commonly uses 3 digit groupings, despite 10000s rule
 	{ 1, "", },
 	{ 1e3, "千", },
 	{ 1e4, "萬", },

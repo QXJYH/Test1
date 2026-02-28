@@ -6,14 +6,13 @@ local ThumbnailGenerator = game:GetService("ThumbnailGenerator")
 ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 local DFFlagHeadThumbnailMannequins = settings():GetFFlag("HeadThumbnailMannequins")
-local FFlagMeshPartHeadOption = settings():GetFFlag("MeshPartHeadOption")
 
 -- Modules
 local CreateExtentsMinMax
 local MannequinUtility
 local ScaleUtility
 
-if DFFlagHeadThumbnailMannequins or FFlagMeshPartHeadOption then
+if DFFlagHeadThumbnailMannequins then
 	CreateExtentsMinMax = require(ThumbnailGenerator:GetThumbnailModule("CreateExtentsMinMax"))
 	MannequinUtility = require(ThumbnailGenerator:GetThumbnailModule("MannequinUtility"))
 	ScaleUtility = require(ThumbnailGenerator:GetThumbnailModule("ScaleUtility"))
@@ -21,41 +20,19 @@ end
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
+game:GetService("UserInputService").MouseIconEnabled = false
 
-local objects = {}
+local objects = game:GetObjects(assetUrl)
+ThumbnailGenerator:AddProfilingCheckpoint("ObjectsLoaded")
+
 local headScaleType
 local mannequin
-
-if FFlagMeshPartHeadOption then
-	local HeadMannequin = MannequinUtility.LoadMannequinForScaleType("Classic")
-	HeadMannequin.Parent = workspace
-	local mcd = HeadMannequin.Humanoid:GetAppliedDescription()
-	
-	if mcd then
-		local HeadId = assetUrl:match("*?id=(%d+)")
-		mcd.Head = HeadId
-		
-		local gray = BrickColor.Gray()
-		mcd.HeadColor = Color3.new(gray.r, gray.g, gray.b)
-		HeadMannequin.Humanoid:ApplyDescriptionBlocking(mcd)
-		if HeadMannequin.Head:IsA("MeshPart") then
-			objects[1] = HeadMannequin.Head
-		else
-			objects[1] = HeadMannequin.Head.Mesh
-		end
-	end	
-	HeadMannequin.Parent = nil
-else
-	objects = game:GetObjects(assetUrl)
-end
-
-ThumbnailGenerator:AddProfilingCheckpoint("ObjectsLoaded")
 
 if DFFlagHeadThumbnailMannequins then
 	headScaleType = ScaleUtility.GetObjectsScaleType(objects)
 	mannequin = MannequinUtility.LoadMannequinForScaleType(headScaleType)
 else
-	mannequin = game:GetObjects(baseUrl.. "asset/?id=" .. tostring(mannequinId))[1]
+	mannequin = game:GetObjects(baseUrl.. "/asset/?id=" .. tostring(mannequinId))[1]
 	mannequin.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	mannequin.Parent = workspace
 end
@@ -116,7 +93,6 @@ local function replaceMannequinHeadWithMeshHead()
 end
 
 local headObject = objects[1]
-
 if headObject:IsA("Folder") then
 	replaceMannequinHeadWithMeshHead()
 else
@@ -125,23 +101,13 @@ else
 			replaceMannequinMeshPartHead(mannequin.Head, headObject)
 		end
 	else
-		if headObject:IsA("MeshPart") then
-			replaceMannequinMeshPartHead(mannequin.Head, headObject)
-		else
-			mannequin.Head.BrickColor = BrickColor.Gray()
-		end
+		mannequin.Head.BrickColor = BrickColor.Gray()
 	end
 
-	if not headObject:IsA("MeshPart") then
-		if mannequin.Head:FindFirstChild("Mesh") then
-			mannequin.Head.Mesh:Destroy()
-		end
-		headObject.Parent = mannequin.Head
-	else
-		addFaceDecal(headObject)
-		mannequin.Head:Destroy()
-		headObject.Parent = mannequin
+	if mannequin.Head:FindFirstChild("Mesh") then
+		mannequin.Head.Mesh:Destroy()
 	end
+	headObject.Parent = mannequin.Head
 end
 
 if DFFlagHeadThumbnailMannequins then

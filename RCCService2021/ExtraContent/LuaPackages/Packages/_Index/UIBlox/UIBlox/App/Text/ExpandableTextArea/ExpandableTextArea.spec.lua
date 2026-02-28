@@ -9,6 +9,9 @@ return function()
 	local mockStyleComponent = require(UIBlox.Utility.mockStyleComponent)
 	local ExpandableTextArea = require(ExpandableTextAreaFolder.ExpandableTextArea)
 
+	local UIBloxConfig = require(UIBlox.UIBloxConfig)
+	local expandableTextAutomaticResizeConfig = UIBloxConfig.expandableTextAutomaticResizeConfig
+
 	local descriptionText = [[
 		This golden crown was awarded as a prize in the June 2007 Domino Rally Building Contest.
 		Perhaps its most unique characteristic is its ability to inspire viewers with awe
@@ -20,6 +23,7 @@ return function()
 			local element = mockStyleComponent({
 				Image = Roact.createElement(ExpandableTextArea, {
 					Text = descriptionText,
+					width = not expandableTextAutomaticResizeConfig and UDim.new(0, 200) or nil,
 				})
 			})
 

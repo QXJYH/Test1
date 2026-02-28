@@ -3,7 +3,6 @@ local Core = ImageSet.Parent
 local UIBlox = Core.Parent
 local Packages = UIBlox.Parent
 local Roact = require(Packages.Roact)
-local scaleSliceToResolution = require(UIBlox.App.ImageSet.scaleSliceToResolution)
 
 return function(innerComponent, resolutionScale)
 	assert(resolutionScale > 0)
@@ -34,8 +33,11 @@ return function(innerComponent, resolutionScale)
 			end
 		end
 
-		if usesImageSet then
-			fullProps = scaleSliceToResolution(fullProps, resolutionScale)
+		if usesImageSet and fullProps.SliceCenter then
+			local min = fullProps.SliceCenter.Min * resolutionScale
+			local max = fullProps.SliceCenter.Max * resolutionScale
+			fullProps.SliceCenter = Rect.new(min, max)
+			fullProps.SliceScale = (fullProps.SliceScale or 1) / resolutionScale
 		end
 
 		return Roact.createElement(innerComponent, fullProps)

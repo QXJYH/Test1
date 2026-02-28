@@ -78,7 +78,7 @@ Alert.defaultProps = {
 function Alert:init()
 	self.contentSize, self.changeContentSize = Roact.createBinding(Vector2.new(0, 0))
 
-	if UIBloxConfig.enableExperimentalGamepadSupport then
+	if UIBloxConfig.enableExperimentalGamepadSupport and self.props.isMiddleContentFocusable then
 		self.middleContentRef = Roact.createRef()
 	end
 	self.buttonStackRef = Roact.createRef()
@@ -125,7 +125,7 @@ function Alert:render()
 		if UIBloxConfig.enableExperimentalGamepadSupport and buttonStackInfo then
 			buttonStackInfo = Cryo.Dictionary.join(buttonStackInfo, {
 				[Roact.Ref] = self.buttonStackRef,
-				NextSelectionUp = isMiddleContentFocusable and self.middleContentRef or nil,
+				NextSelectionUp = self.middleContentRef,
 			})
 		end
 
@@ -190,13 +190,13 @@ function Alert:render()
 						TextXAlignment = Enum.TextXAlignment.Center,
 						Size = UDim2.new(1, 0, 0, fullTextHeight),
 					}),
-					MiddleContent = self.props.middleContent and Roact.createElement(UIBloxConfig.enableExperimentalGamepadSupport and
+					MiddleContent = self.props.middleContent and Roact.createElement(isMiddleContentFocusable and
 						RoactGamepad.Focusable[FitFrameOnAxis] or FitFrameOnAxis, {
 						BackgroundTransparency = 1,
 						LayoutOrder = 2,
 						minimumSize = UDim2.new(1, 0, 0, 0),
 
-						[Roact.Ref] = self.middleContentRef,
+						[Roact.Ref] = isMiddleContentFocusable and self.middleContentRef or nil,
 						NextSelectionDown = isMiddleContentFocusable and self.buttonStackRef or nil,
 					},
 						{

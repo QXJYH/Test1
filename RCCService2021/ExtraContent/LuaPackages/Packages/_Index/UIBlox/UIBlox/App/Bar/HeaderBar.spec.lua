@@ -20,6 +20,7 @@ return function()
 			local element = mockStyleComponent({
 				bar = Roact.createElement(HeaderBar, {
 					title = "Header Bar",
+					onBack = function() end,
 				}),
 			})
 
@@ -28,40 +29,8 @@ return function()
 		end)
 	end)
 
-	describe("renderCenter", function()
-		it("should mount things correctly", function()
-			local frame = Instance.new("Frame")
-			local element = mockStyleComponent({
-				barFrame = Roact.createElement("Frame", {
-					Size = UDim2.new(0, 0, 0, 0),
-				}, {
-					bar = Roact.createElement(HeaderBar, {
-						title = "Header Bar",
-						renderCenter = function()
-							return Roact.createElement("TextBox", {
-								Size = UDim2.fromOffset(200, 36),
-								Position = UDim2.fromScale(0.5, 0.5),
-								AnchorPoint = Vector2.new(0.5, 0.5),
-								Text = "Search Box Text",
-							})
-						end,
-					}),
-				})
-			})
-
-			local instance = Roact.mount(element, frame, "Frame")
-			local barFrame = frame:FindFirstChild("barFrame", true)
-			local bar = barFrame:FindFirstChild("bar")
-			local centerFrame = bar:FindFirstChild("centerFrame", true)
-			local centerContent = centerFrame:FindFirstChild("centerContent")
-			expect(centerContent.Text).to.equal("Search Box Text")
-
-			Roact.unmount(instance)
-		end)
-	end)
-
 	describe("margin logic", function()
-		it("should have correct left margin on different sized screens with renderLeft", function()
+		it("should have margin of 12 on small screens", function()
 			local frame = Instance.new("Frame")
 			local element = mockStyleComponent({
 				barFrame = Roact.createElement("Frame", {
@@ -69,7 +38,7 @@ return function()
 				}, {
 					bar = Roact.createElement(HeaderBar, {
 						title = "Header Bar",
-						isRootTitle = true,
+						onBack = function() end,
 					}),
 				})
 			})
@@ -85,18 +54,10 @@ return function()
 			local _ = bar.AbsoluteSize -- need to reference AbsoluteSize to trigger [Roact.Change.AbsoluteSize]
 			expect(margin.PaddingLeft.Offset).to.equal(MARGIN_SMALL)
 
-			barFrame.Size = BARSIZE_MEDIUM
-			local _ = bar.AbsoluteSize -- need to reference AbsoluteSize to trigger [Roact.Change.AbsoluteSize]
-			expect(margin.PaddingLeft.Offset).to.equal(MARGIN_MEDIUM)
-
-			barFrame.Size = BARSIZE_LARGE
-			local _ = bar.AbsoluteSize -- need to reference AbsoluteSize to trigger [Roact.Change.AbsoluteSize]
-			expect(margin.PaddingLeft.Offset).to.equal(MARGIN_LARGE)
-
 			Roact.unmount(instance)
 		end)
 
-		it("should have correct left margin on different sized screens without renderLeft", function()
+		it("should have margin of 24 on medium screens", function()
 			local frame = Instance.new("Frame")
 			local element = mockStyleComponent({
 				barFrame = Roact.createElement("Frame", {
@@ -104,7 +65,7 @@ return function()
 				}, {
 					bar = Roact.createElement(HeaderBar, {
 						title = "Header Bar",
-						isRootTitle = false,
+						onBack = function() end,
 					}),
 				})
 			})
@@ -112,21 +73,40 @@ return function()
 			local instance = Roact.mount(element, frame, "Frame")
 			local barFrame = frame:FindFirstChild("barFrame", true)
 			local bar = barFrame:FindFirstChild("bar")
-			local centerFrame = bar:FindFirstChild("centerFrame", true)
-			local UIPadding = centerFrame:FindFirstChild("UIPadding", true)
-			expect(UIPadding).to.be.ok()
-
-			barFrame.Size = BARSIZE_SMALL
-			local _ = bar.AbsoluteSize -- need to reference AbsoluteSize to trigger [Roact.Change.AbsoluteSize]
-			expect(UIPadding.PaddingLeft.Offset).to.equal(MARGIN_SMALL)
+			local leftFrame = bar:FindFirstChild("leftFrame", true)
+			local margin = leftFrame:FindFirstChild("$margin", true)
+			expect(margin).to.be.ok()
 
 			barFrame.Size = BARSIZE_MEDIUM
 			local _ = bar.AbsoluteSize -- need to reference AbsoluteSize to trigger [Roact.Change.AbsoluteSize]
-			expect(UIPadding.PaddingLeft.Offset).to.equal(MARGIN_MEDIUM)
+			expect(margin.PaddingLeft.Offset).to.equal(MARGIN_MEDIUM)
+
+			Roact.unmount(instance)
+		end)
+
+		it("should have margin of 48 on large screens", function()
+			local frame = Instance.new("Frame")
+			local element = mockStyleComponent({
+				barFrame = Roact.createElement("Frame", {
+					Size = UDim2.new(0, 0, 0, 0),
+				}, {
+					bar = Roact.createElement(HeaderBar, {
+						title = "Header Bar",
+						onBack = function() end,
+					}),
+				})
+			})
+
+			local instance = Roact.mount(element, frame, "Frame")
+			local barFrame = frame:FindFirstChild("barFrame", true)
+			local bar = barFrame:FindFirstChild("bar")
+			local leftFrame = bar:FindFirstChild("leftFrame", true)
+			local margin = leftFrame:FindFirstChild("$margin", true)
+			expect(margin).to.be.ok()
 
 			barFrame.Size = BARSIZE_LARGE
 			local _ = bar.AbsoluteSize -- need to reference AbsoluteSize to trigger [Roact.Change.AbsoluteSize]
-			expect(UIPadding.PaddingLeft.Offset).to.equal(MARGIN_LARGE)
+			expect(margin.PaddingLeft.Offset).to.equal(MARGIN_LARGE)
 
 			Roact.unmount(instance)
 		end)

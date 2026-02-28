@@ -35,21 +35,12 @@ local function makeAppTwoKnobSlider(trackFillThemeKey)
 		max = t.number,
 		stepInterval = t.optional(t.numberPositive),
 		onValueChanged = t.callback,
-		onDragStartLower = t.optional(t.callback),
-		onDragStartUpper = t.optional(t.callback),
-		onDragEnd = t.optional(t.callback),
 		isDisabled = t.optional(t.boolean),
 
 		width = t.optional(t.UDim),
 		position = t.optional(t.UDim2),
 		anchorPoint = t.optional(t.Vector2),
 		layoutOrder = t.optional(t.integer),
-
-		[Roact.Ref] = t.optional(t.table),
-		NextSelectionUp = t.optional(t.table),
-		NextSelectionDown = t.optional(t.table),
-		focusController = t.optional(t.table),
-
 		--Internal Only - Don't Pass In
 		style = validateStyle
 	})

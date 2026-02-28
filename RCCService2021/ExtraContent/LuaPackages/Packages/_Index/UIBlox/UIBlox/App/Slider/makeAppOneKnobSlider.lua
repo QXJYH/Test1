@@ -32,8 +32,6 @@ local function makeAppOneKnobSlider(trackFillThemeKey)
 		min = t.number,
 		max = t.number,
 		onValueChanged = t.callback,
-		onDragStart = t.optional(t.callback),
-		onDragEnd = t.optional(t.callback),
 		stepInterval = t.optional(t.numberPositive),
 		textInputEnabled = t.optional(t.boolean),
 		isDisabled = t.optional(t.boolean),
@@ -42,10 +40,6 @@ local function makeAppOneKnobSlider(trackFillThemeKey)
 		position = t.optional(t.UDim2),
 		anchorPoint = t.optional(t.Vector2),
 		layoutOrder = t.optional(t.integer),
-
-		[Roact.Ref] = t.optional(t.table),
-		NextSelectionUp = t.optional(t.table),
-		NextSelectionDown = t.optional(t.table),
 		--Internal Only - Don't Pass In
 		style = validateStyle
 	})
@@ -66,12 +60,7 @@ local function makeAppOneKnobSlider(trackFillThemeKey)
 			stepInterval = props.stepInterval,
 			isDisabled = props.isDisabled,
 			onValueChanged = props.onValueChanged,
-			onDragStartLower = props.onDragStart,
-			onDragEnd = props.onDragEnd,
-			style = props.style,
-			[Roact.Ref] = props[Roact.Ref],
-			NextSelectionUp = props.NextSelectionUp,
-			NextSelectionDown = props.NextSelectionDown,
+			style = props.style
 		}
 
 		if not props.textInputEnabled then

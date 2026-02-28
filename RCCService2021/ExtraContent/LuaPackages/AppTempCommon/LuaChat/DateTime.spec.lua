@@ -1,5 +1,6 @@
 local CorePackages = game:GetService("CorePackages")
 local GetFFlagUseDateTimeType = require(CorePackages.AppTempCommon.LuaApp.Flags.GetFFlagUseDateTimeType)
+local FFlagChinaLicensingApp = settings():GetFFlag("ChinaLicensingApp")
 
 return function()
 	local LuaDateTime = require(script.Parent.DateTime)
@@ -292,8 +293,13 @@ return function()
 			else
 				expect(format("MMM")).to.equal("Jan")
 				expect(format("MMMM")).to.equal("January")
-				expect(format("A")).to.equal("PM")
-				expect(format("a")).to.equal("pm")
+				if FFlagChinaLicensingApp then
+					expect(format("A")).to.equal("下午")
+					expect(format("a")).to.equal("下午")
+				else
+					expect(format("A")).to.equal("PM")
+					expect(format("a")).to.equal("pm")
+				end
 			end
 		end)
 
@@ -311,7 +317,11 @@ return function()
 				expect(date:Format("A", TimeZone.UTC, "zh-cn")).to.equal("凌晨")
 				expect(date:Format("a", TimeZone.UTC, "zh-cn")).to.equal("凌晨")
 			else
-				expect(date:Format("a", TimeZone.UTC)).to.equal("am")
+				if FFlagChinaLicensingApp then
+					expect(date:Format("a", TimeZone.UTC)).to.equal("上午")
+				else
+					expect(date:Format("a", TimeZone.UTC)).to.equal("am")
+				end
 			end
 
 		end)
@@ -330,7 +340,11 @@ return function()
 				expect(date:Format("A", TimeZone.UTC, "zh-cn")).to.equal("中午")
 				expect(date:Format("a", TimeZone.UTC, "zh-cn")).to.equal("中午")
 			else
-				expect(date:Format("a", TimeZone.UTC)).to.equal("pm")
+				if FFlagChinaLicensingApp then
+					expect(date:Format("a", TimeZone.UTC)).to.equal("下午")
+				else
+					expect(date:Format("a", TimeZone.UTC)).to.equal("pm")
+				end
 			end
 		end)
 
@@ -455,34 +469,65 @@ return function()
 					end
 				end
 			else
-				expected = {
-					"2017-09-13 12:00:00 am",
-					"2017-09-13 01:00:00 am",
-					"2017-09-13 02:00:00 am",
-					"2017-09-13 03:00:00 am",
-					"2017-09-13 04:00:00 am",
-					"2017-09-13 05:00:00 am",
-					"2017-09-13 06:00:00 am",
-					"2017-09-13 07:00:00 am",
-					"2017-09-13 08:00:00 am",
-					"2017-09-13 09:00:00 am",
-					"2017-09-13 10:00:00 am",
-					"2017-09-13 11:00:00 am",
-					"2017-09-13 12:00:00 pm",
-					"2017-09-13 01:00:00 pm",
-					"2017-09-13 02:00:00 pm",
-					"2017-09-13 03:00:00 pm",
-					"2017-09-13 04:00:00 pm",
-					"2017-09-13 05:00:00 pm",
-					"2017-09-13 06:00:00 pm",
-					"2017-09-13 07:00:00 pm",
-					"2017-09-13 08:00:00 pm",
-					"2017-09-13 09:00:00 pm",
-					"2017-09-13 10:00:00 pm",
-					"2017-09-13 11:00:00 pm",
-					"2017-09-14 12:00:00 am",
-					"2017-09-14 01:00:00 am",
-				}
+				if FFlagChinaLicensingApp then
+					expected = {
+						"2017-09-13 12:00:00 上午",
+						"2017-09-13 01:00:00 上午",
+						"2017-09-13 02:00:00 上午",
+						"2017-09-13 03:00:00 上午",
+						"2017-09-13 04:00:00 上午",
+						"2017-09-13 05:00:00 上午",
+						"2017-09-13 06:00:00 上午",
+						"2017-09-13 07:00:00 上午",
+						"2017-09-13 08:00:00 上午",
+						"2017-09-13 09:00:00 上午",
+						"2017-09-13 10:00:00 上午",
+						"2017-09-13 11:00:00 上午",
+						"2017-09-13 12:00:00 下午",
+						"2017-09-13 01:00:00 下午",
+						"2017-09-13 02:00:00 下午",
+						"2017-09-13 03:00:00 下午",
+						"2017-09-13 04:00:00 下午",
+						"2017-09-13 05:00:00 下午",
+						"2017-09-13 06:00:00 下午",
+						"2017-09-13 07:00:00 下午",
+						"2017-09-13 08:00:00 下午",
+						"2017-09-13 09:00:00 下午",
+						"2017-09-13 10:00:00 下午",
+						"2017-09-13 11:00:00 下午",
+						"2017-09-14 12:00:00 上午",
+						"2017-09-14 01:00:00 上午",
+					}
+				else
+					expected = {
+						"2017-09-13 12:00:00 am",
+						"2017-09-13 01:00:00 am",
+						"2017-09-13 02:00:00 am",
+						"2017-09-13 03:00:00 am",
+						"2017-09-13 04:00:00 am",
+						"2017-09-13 05:00:00 am",
+						"2017-09-13 06:00:00 am",
+						"2017-09-13 07:00:00 am",
+						"2017-09-13 08:00:00 am",
+						"2017-09-13 09:00:00 am",
+						"2017-09-13 10:00:00 am",
+						"2017-09-13 11:00:00 am",
+						"2017-09-13 12:00:00 pm",
+						"2017-09-13 01:00:00 pm",
+						"2017-09-13 02:00:00 pm",
+						"2017-09-13 03:00:00 pm",
+						"2017-09-13 04:00:00 pm",
+						"2017-09-13 05:00:00 pm",
+						"2017-09-13 06:00:00 pm",
+						"2017-09-13 07:00:00 pm",
+						"2017-09-13 08:00:00 pm",
+						"2017-09-13 09:00:00 pm",
+						"2017-09-13 10:00:00 pm",
+						"2017-09-13 11:00:00 pm",
+						"2017-09-14 12:00:00 am",
+						"2017-09-14 01:00:00 am",
+					}
+				end
 
 				for i = 1, #expected do
 					local result = date:Format(formatString, TimeZone.UTC)
@@ -515,25 +560,42 @@ return function()
 				it("SHOULD handle same day case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2015, 4, 20, 13, 0, 0)
-					expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("1:00 PM")
+
+					if FFlagChinaLicensingApp then
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("13:00 下午")
+					else
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("1:00 PM")
+					end
 				end)
 
 				it("SHOULD handle same week case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2015, 4, 19, 13, 0, 0)
-					expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("Sun | 1:00 PM")
+					if FFlagChinaLicensingApp then
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("4月19日 | 13:00 下午")
+					else
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("Sun | 1:00 PM")
+					end
 				end)
 
 				it("SHOULD handle same year case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2015, 1, 20, 13, 0, 0)
-					expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20 | 1:00 PM")
+					if FFlagChinaLicensingApp then
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("1月20日 | 13:00 下午")
+					else
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20 | 1:00 PM")
+					end
 				end)
 
 				it("SHOULD handle different year case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2010, 1, 20, 13, 0, 0)
-					expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20, 2010 | 1:00 PM")
+					if FFlagChinaLicensingApp then
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("2010年1月20日 | 13:00 下午")
+					else
+						expect(date:GetLongRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20, 2010 | 1:00 PM")
+					end
 				end)
 			end
 		end)
@@ -559,25 +621,41 @@ return function()
 				it("SHOULD handle same day case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2015, 4, 20, 13, 0, 0)
-					expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("1:00 PM")
+					if FFlagChinaLicensingApp then
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("13:00 下午")
+					else
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("1:00 PM")
+					end
 				end)
 
 				it("SHOULD handle same week case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2015, 4, 19, 13, 0, 0)
-					expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("Sun")
+					if FFlagChinaLicensingApp then
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("4月19日")
+					else
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("Sun")
+					end
 				end)
 
 				it("SHOULD handle same year case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2015, 1, 20, 13, 0, 0)
-					expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20")
+					if FFlagChinaLicensingApp then
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("1月20日")
+					else
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20")
+					end
 				end)
 
 				it("SHOULD handle different year case", function()
 					local now = LuaDateTime.new(2015, 4, 20, 0, 0, 0)
 					local date = LuaDateTime.new(2010, 1, 20, 13, 0, 0)
-					expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20, 2010")
+					if FFlagChinaLicensingApp then
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("2010年1月20日")
+					else
+						expect(date:GetShortRelativeTime(now, TimeZone.UTC)).to.equal("Jan 20, 2010")
+					end
 				end)
 			end
 		end)
