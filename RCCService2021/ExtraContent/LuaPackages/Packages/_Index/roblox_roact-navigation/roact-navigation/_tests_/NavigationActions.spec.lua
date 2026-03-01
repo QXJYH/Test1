@@ -1,80 +1,75 @@
+-- upstream https://github.com/react-navigation/react-navigation/blob/72e8160537954af40f1b070aa91ef45fc02bba69/packages/core/src/__tests__/NavigationActions.test.js
+
 return function()
 	local NavigationActions = require(script.Parent.Parent.NavigationActions)
 
-	describe("NavigationActions token tests", function()
-		it("should return same object for each token for multiple calls", function()
-			expect(NavigationActions.Back).to.equal(NavigationActions.Back)
-			expect(NavigationActions.Init).to.equal(NavigationActions.Init)
-			expect(NavigationActions.Navigate).to.equal(NavigationActions.Navigate)
-			expect(NavigationActions.SetParams).to.equal(NavigationActions.SetParams)
-			expect(NavigationActions.CompleteTransition).to.equal(NavigationActions.CompleteTransition)
+	local expectDeepEqual = require(script.Parent.Parent.utils.expectDeepEqual)
+
+	describe("generic navigation actions", function()
+		local params = { foo = "bar" }
+		local navigateAction = NavigationActions.navigate({ routeName = "another" })
+
+		it("exports back action and type", function()
+			expectDeepEqual(NavigationActions.back(), { type = NavigationActions.Back })
+			expectDeepEqual(
+				NavigationActions.back({ key = "test" }),
+				{
+					type = NavigationActions.Back,
+					key = "test",
+				}
+			)
 		end)
 
-		it("should return matching string names for symbols", function()
-			expect(tostring(NavigationActions.Back)).to.equal("BACK")
-			expect(tostring(NavigationActions.Init)).to.equal("INIT")
-			expect(tostring(NavigationActions.Navigate)).to.equal("NAVIGATE")
-			expect(tostring(NavigationActions.SetParams)).to.equal("SET_PARAMS")
-			expect(tostring(NavigationActions.CompleteTransition)).to.equal("COMPLETE_TRANSITION")
-		end)
-	end)
-
-	describe("NavigationActions function tests", function()
-		it("should return a back action with matching data for a call to back()", function()
-			local backTable = NavigationActions.back({
-				key = "the_key",
-				immediate = true,
-			})
-
-			expect(backTable.type).to.equal(NavigationActions.Back)
-			expect(backTable.key).to.equal("the_key")
-			expect(backTable.immediate).to.equal(true)
+		it("exports init action and type", function()
+			expectDeepEqual(NavigationActions.init(), { type = NavigationActions.Init })
+			expectDeepEqual(
+				NavigationActions.init({ params = params }),
+				{
+					type = NavigationActions.Init,
+					params = params,
+				}
+			)
 		end)
 
-		it("should return an init action with matching data for call to init()", function()
-			local initTable = NavigationActions.init({
-				params = "foo",
-			})
-
-			expect(initTable.type).to.equal(NavigationActions.Init)
-			expect(initTable.params).to.equal("foo")
+		it("exports navigate action and type", function()
+			expectDeepEqual(
+				NavigationActions.navigate({ routeName = "test" }),
+				{
+					type = NavigationActions.Navigate,
+					routeName = "test",
+				}
+			)
+			expectDeepEqual(
+				NavigationActions.navigate({
+					routeName = "test",
+					params = params,
+					action = navigateAction,
+				}),
+				{
+					type = NavigationActions.Navigate,
+					routeName = "test",
+					params = params,
+					action = {
+						type = NavigationActions.Navigate,
+						routeName = "another",
+					},
+				}
+			)
 		end)
 
-		it("should return a navigate action with matching data for call to navigate()", function()
-			local navigateTable = NavigationActions.navigate({
-				routeName = "routeName",
-				params = "foo",
-				action = "action",
-				key = "key",
-			})
-
-			expect(navigateTable.type).to.equal(NavigationActions.Navigate)
-			expect(navigateTable.routeName).to.equal("routeName")
-			expect(navigateTable.params).to.equal("foo")
-			expect(navigateTable.action).to.equal("action")
-			expect(navigateTable.key).to.equal("key")
-		end)
-
-		it("should return a set params action with matching data for call to setParams()", function()
-			local setParamsTable = NavigationActions.setParams({
-				key = "key",
-				params = "foo",
-			})
-
-			expect(setParamsTable.type).to.equal(NavigationActions.SetParams)
-			expect(setParamsTable.key).to.equal("key")
-			expect(setParamsTable.params).to.equal("foo")
-		end)
-
-		it("should return a complete transition action with matching data for call to completeTransition()", function()
-			local completeTransitionTable = NavigationActions.completeTransition({
-				key = "key",
-				toChildKey = "toChildKey",
-			})
-
-			expect(completeTransitionTable.type).to.equal(NavigationActions.CompleteTransition)
-			expect(completeTransitionTable.key).to.equal("key")
-			expect(completeTransitionTable.toChildKey).to.equal("toChildKey")
+		it("exports setParams action and type", function()
+			expectDeepEqual(
+				NavigationActions.setParams({
+					key = "test",
+					params = params,
+				}),
+				{
+					type = NavigationActions.SetParams,
+					key = "test",
+					preserveFocus = true,
+					params = params,
+				}
+			)
 		end)
 	end)
 end

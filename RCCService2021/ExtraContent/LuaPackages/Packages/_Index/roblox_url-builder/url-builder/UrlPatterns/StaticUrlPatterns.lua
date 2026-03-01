@@ -16,6 +16,10 @@ return function(UrlBuilder)
 		develop = UrlBuilder.fromString("www:develop/landing"),
 		blog = UrlBuilder.fromString("blog:"),
 		help = UrlBuilder.fromString(isQQ() and "corp:faq" or "www:help"),
+		email = {
+			getSetEmail = UrlBuilder.fromString("accountSettings:v1/email"),
+			sendVerificationEmail = UrlBuilder.fromString("accountSettings:v1/email/verify")
+		},
 		about = {
 			us = UrlBuilder.fromString("corp:"),
 			careers = UrlBuilder.fromString(isQQ() and "corp:careers.html" or "corp:careers"),
@@ -43,7 +47,9 @@ return function(UrlBuilder)
 			notifications = UrlBuilder.fromString("www:my/account#!/notifications"),
 		},
 		tencent = {
-			reputationInfo = UrlBuilder.fromString("https://gamecredit.qq.com/static/games/index.htm")
-		}
+			childrenPrivacyGuide = UrlBuilder.fromString("https://game.qq.com/privacy_guide_children.shtml"),
+			luobuRiderTerms = UrlBuilder.fromString("https://roblox.qq.com/web201904/newsdetail.html?newsid=12429812"),
+			reputationInfo = UrlBuilder.fromString("https://gamecredit.qq.com/static/games/index.htm"),
+		},
 	}
 end

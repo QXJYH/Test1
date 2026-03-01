@@ -1,14 +1,9 @@
 local LuaChatDeps = script.Parent
 
--- initialize UIBlox once here, there should be no other
--- consumers of this instance of UIBlox
-local UIBloxConfig = require(script.config.UIBlox)
-local UIBlox = require(LuaChatDeps.UIBlox)
-UIBlox.init(UIBloxConfig)
-
 return {
 	InfiniteScroll = require(LuaChatDeps.InfiniteScroller),
+	InfiniteScroll71 = require(LuaChatDeps.InfiniteScroller71),
 	RoduxNetworking = require(LuaChatDeps.RoduxNetworking),
-	UIBlox = UIBlox,
+	UIBlox = require(LuaChatDeps.UIBlox),
 	AssetCard = require(LuaChatDeps.AssetCard),
 }

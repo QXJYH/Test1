@@ -3,23 +3,24 @@
 -- Variable name: RoactNavigation
 -- Repo name: roact-navigation
 
+local NavigationContext = require(script.views.NavigationContext)
+
 return {
 	-- Navigation container construction
 	createAppContainer = require(script.createAppContainer),
 	getNavigation = require(script.getNavigation),
 
 	-- Context Access
-	Context = require(script.views.AppNavigationContext),
-	Provider = require(script.views.AppNavigationContext).Provider,
-	Consumer = require(script.views.AppNavigationContext).Consumer,
-	connect = require(script.views.AppNavigationContext).connect,
+	Context = NavigationContext,
+	Provider = NavigationContext.Provider,
+	Consumer = NavigationContext.Consumer,
 
 	withNavigation = require(script.views.withNavigation),
 	withNavigationFocus = require(script.views.withNavigationFocus),
 
 	-- Navigators
-	createStackNavigator = require(script.navigators.createStackNavigator),
-	createSwitchNavigator = require(script.navigators.createSwitchNavigator),
+	createRobloxStackNavigator = require(script.navigators.createRobloxStackNavigator),
+	createRobloxSwitchNavigator = require(script.navigators.createRobloxSwitchNavigator),
 	createNavigator = require(script.navigators.createNavigator),
 
 	-- Routers
@@ -29,21 +30,21 @@ return {
 
 	-- Navigation Actions
 	Actions = require(script.NavigationActions),
-	StackActions = require(script.StackActions),
+	StackActions = require(script.routers.StackActions),
+	SwitchActions = require(script.routers.SwitchActions),
 	BackBehavior = require(script.BackBehavior),
 
 	-- Navigation Events
-	Events = require(script.NavigationEvents),
-	EventsAdapter = require(script.views.NavigationEventsAdapter),
+	Events = require(script.Events),
+	NavigationEvents = require(script.views.NavigationEvents),
 
 	-- Additional Types
-	StackPresentationStyle = require(script.views.StackView.StackPresentationStyle),
-	None = require(script.NoneSymbol),
+	StackPresentationStyle = require(script.views.RobloxStackView.StackPresentationStyle),
 
 	-- Screen Views
 	SceneView = require(script.views.SceneView),
-	SwitchView = require(script.views.SwitchView),
-	StackView = require(script.views.StackView.StackView),
+	RobloxSwitchView = require(script.views.RobloxSwitchView),
+	RobloxStackView = require(script.views.RobloxStackView.StackView),
 
 	-- Utilities
 	createConfigGetter = require(script.routers.createConfigGetter),

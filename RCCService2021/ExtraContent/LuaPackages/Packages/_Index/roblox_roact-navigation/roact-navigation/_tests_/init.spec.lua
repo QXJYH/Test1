@@ -1,12 +1,9 @@
 return function()
-	local RoactNavigation = require(script.Parent.Parent)
-	local Roact = require(script.Parent.Parent.Parent.Roact)
-	local StackPresentationStyle = require(script.Parent.Parent.views.StackView.StackPresentationStyle)
-	local NoneSymbol = require(script.Parent.Parent.NoneSymbol)
-
-	it("should load", function()
-		require(script.Parent.Parent)
-	end)
+	local root = script.Parent.Parent
+	local Packages = root.Parent
+	local RoactNavigation = require(root)
+	local Roact = require(Packages.Roact)
+	local StackPresentationStyle = require(root.views.RobloxStackView.StackPresentationStyle)
 
 	it("should return a function for createAppContainer", function()
 		expect(type(RoactNavigation.createAppContainer)).to.equal("function")
@@ -20,19 +17,14 @@ return function()
 		expect(type(RoactNavigation.Context)).to.equal("table")
 		expect(type(RoactNavigation.Context.Provider)).to.equal("table")
 		expect(type(RoactNavigation.Context.Consumer)).to.equal("table")
-		expect(type(RoactNavigation.Context.connect)).to.equal("function")
 	end)
 
-	it("should return a table for Provider", function()
+	it("should return a Component for Provider", function()
 		expect(type(RoactNavigation.Provider)).to.equal("table")
 	end)
 
-	it("should return a table for Consumer", function()
+	it("should return a Component for Consumer", function()
 		expect(type(RoactNavigation.Consumer)).to.equal("table")
-	end)
-
-	it("should return a function for connect", function()
-		expect(type(RoactNavigation.connect)).to.equal("function")
 	end)
 
 	it("should return a function for withNavigation", function()
@@ -43,12 +35,12 @@ return function()
 		expect(type(RoactNavigation.withNavigationFocus)).to.equal("function")
 	end)
 
-	it("should return a function for createSwitchNavigator", function()
-		expect(type(RoactNavigation.createSwitchNavigator)).to.equal("function")
+	it("should return a function for createRobloxSwitchNavigator", function()
+		expect(type(RoactNavigation.createRobloxSwitchNavigator)).to.equal("function")
 	end)
 
-	it("should return a function for createStackNavigator", function()
-		expect(type(RoactNavigation.createStackNavigator)).to.equal("function")
+	it("should return a function for createRobloxStackNavigator", function()
+		expect(type(RoactNavigation.createRobloxStackNavigator)).to.equal("function")
 	end)
 
 	it("should return a function for createNavigator", function()
@@ -75,6 +67,10 @@ return function()
 		expect(type(RoactNavigation.StackActions)).to.equal("table")
 	end)
 
+	it("should return a table for SwitchActions", function()
+		expect(type(RoactNavigation.SwitchActions)).to.equal("table")
+	end)
+
 	it("should return a table for BackBehavior", function()
 		expect(type(RoactNavigation.BackBehavior)).to.equal("table")
 	end)
@@ -83,24 +79,21 @@ return function()
 		expect(type(RoactNavigation.Events)).to.equal("table")
 	end)
 
-	it("should return a valid component for EventsAdapter", function()
-		expect(RoactNavigation.EventsAdapter.render).never.to.equal(nil)
-		local instance = Roact.mount(Roact.createElement(RoactNavigation.EventsAdapter, {
-			navigation = {
+	it("should return a valid component for NavigationEvents", function()
+		local instance = Roact.mount(Roact.createElement(RoactNavigation.Provider, {
+			value = {
 				addListener = function()
-					return { disconnect = function() end }
+					return { remove = function() end }
 				end
 			}
+		}, {
+			Events = Roact.createElement(RoactNavigation.NavigationEvents),
 		}))
 		Roact.unmount(instance)
 	end)
 
 	it("should return StackPresentationStyle", function()
 		expect(RoactNavigation.StackPresentationStyle).to.equal(StackPresentationStyle)
-	end)
-
-	it("should return NoneSymbol", function()
-		expect(RoactNavigation.None).to.equal(NoneSymbol)
 	end)
 
 	it("should return a valid component for SceneView", function()
@@ -112,9 +105,7 @@ return function()
 		Roact.unmount(instance)
 	end)
 
-	it("should return a valid component for SwitchView", function()
-		expect(RoactNavigation.SwitchView.render).never.to.equal(nil)
-
+	it("should return a valid component for RobloxSwitchView", function()
 		local testNavigation = {
 			state = {
 				routes = {
@@ -124,7 +115,7 @@ return function()
 			}
 		}
 
-		local instance = Roact.mount(Roact.createElement(RoactNavigation.SwitchView, {
+		local instance = Roact.mount(Roact.createElement(RoactNavigation.RobloxSwitchView, {
 			descriptors = {
 				Foo = {
 					getComponent = function()

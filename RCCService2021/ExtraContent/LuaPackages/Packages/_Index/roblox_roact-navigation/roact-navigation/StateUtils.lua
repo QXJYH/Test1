@@ -1,3 +1,5 @@
+-- upstream https://github.com/react-navigation/react-navigation/blob/62da341b672a83786b9c3a80c8a38f929964d7cc/packages/core/src/StateUtils.js
+
 local Cryo = require(script.Parent.Parent.Cryo)
 
 --[[
@@ -21,7 +23,6 @@ local Cryo = require(script.Parent.Parent.Cryo)
 	parameters. Different kinds of routers can treat the data in their own way.
 ]]
 local StateUtils = {}
-StateUtils.__index = StateUtils
 
 -- Get the route matching the given key. Returns nil if no match is found.
 function StateUtils.get(state, key)
@@ -37,27 +38,6 @@ function StateUtils.get(state, key)
 	return nil
 end
 
--- Get the route at the given index. Returns nil if no match is found.
-function StateUtils.getAtIndex(state, index)
-	assert(type(state) == "table", "state must be a table")
-	assert(type(index) == "number", "index must be a number")
-	assert(index >= 0, "index must be non-negative")
-
-	return state.routes[index]
-end
-
--- Get the active route from state. Returns nil if no routes.
-function StateUtils.getActiveRoute(state)
-	assert(type(state) == "table", "state must be a table")
-
-	local index = state.index
-	if index <= 0 then
-		return nil
-	end
-
-	return state.routes[index]
-end
-
 -- Get the index of the route matching the given key. Returns nil if no match is found.
 function StateUtils.indexOf(state, key)
 	assert(type(state) == "table", "state must be a table")
@@ -69,6 +49,7 @@ function StateUtils.indexOf(state, key)
 		end
 	end
 
+	-- deviation: returning nil instead of -1
 	return nil
 end
 
@@ -92,7 +73,7 @@ function StateUtils.push(state, route)
 	assert(type(route) == "table", "route must be a table")
 
 	assert(StateUtils.indexOf(state, route.key) == nil,
-		string.format("route with key '%s' already exists", route.key))
+		("should not push route with duplicated key %s"):format(route.key))
 
 	local routes = Cryo.List.join(state.routes, { route })
 	return Cryo.Dictionary.join(state, {
@@ -106,8 +87,8 @@ end
 function StateUtils.pop(state)
 	assert(type(state) == "table", "state must be a table")
 
-	if #state.routes == 0 then
-		-- NOTE: Popping empty state is a no-op
+	if state.index <= 1 then
+		-- [Note]: Over-popping does not throw error. Instead, it will be no-op.
 		return state
 	end
 
@@ -127,8 +108,7 @@ function StateUtils.jumpToIndex(state, index)
 		return state
 	end
 
-	assert(state.routes[index] ~= nil,
-		string.format("cannot jump to out-of-range index '%d'", index))
+	assert(state.routes[index] ~= nil, ("invalid index %d to jump to"):format(index))
 
 	return Cryo.Dictionary.join(state, {
 		index = index,
@@ -141,6 +121,8 @@ function StateUtils.jumpTo(state, key)
 	assert(type(key) == "string", "key must be a string")
 
 	local index = StateUtils.indexOf(state, key)
+	assert(index ~= nil, ('attempt to jump to unknown key "%s"'):format(key))
+
 	return StateUtils.jumpToIndex(state, index)
 end
 
@@ -208,7 +190,7 @@ function StateUtils.replaceAtIndex(state, index, route)
 	assert(type(route) == "table", "route must be a table")
 
 	assert(state.routes[index] ~= nil,
-		string.format("index '%d' does not exist in route '%s'", index, route.key))
+		("invalid index %d for replacing route %s"):format(index, route.key))
 
 	if state.routes[index] == route and index == state.index then
 		return state
@@ -228,10 +210,8 @@ end
 -- sets the active route to the last one in the list.
 function StateUtils.reset(state, routes, index)
 	assert(type(state) == "table", "state must be a table")
-	assert(type(routes) == "table" and #routes > 0,
-		"routes must be a list with at least one element")
-	assert(index == nil or type(index) == "number",
-		"index must be a number or nil")
+	assert(type(routes) == "table" and #routes > 0, "invalid routes to replace")
+	assert(index == nil or type(index) == "number", "index must be a number or nil")
 
 	local nextIndex = not index and #routes or index
 
@@ -250,8 +230,7 @@ function StateUtils.reset(state, routes, index)
 		end
 	end
 
-	assert(routes[nextIndex] ~= nil,
-		string.format("cannot reset index '%d' that does not exist", nextIndex))
+	assert(routes[nextIndex] ~= nil, ("invalid index %d to reset"):format(nextIndex))
 
 	return Cryo.Dictionary.join(state, {
 		index = nextIndex,

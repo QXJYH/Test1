@@ -37,6 +37,8 @@ TextButton.validateProps = t.strictInterface({
 	fontStyle = t.optional(t.string),
 	colorStyleDefault = t.optional(t.string),
 	colorStyleHover = t.optional(t.string),
+	hoverBackgroundEnabled = t.optional(t.boolean),
+	richText = t.optional(t.boolean),
 
 	--A Boolean value that determines whether user events are ignored and sink input
 	userInteractionEnabled = t.optional(t.boolean),
@@ -67,6 +69,8 @@ TextButton.defaultProps = {
 	fontStyle = "Header2",
 	colorStyleDefault = "SystemPrimaryDefault",
 	colorStyleHover = "SystemPrimaryDefault",
+	hoverBackgroundEnabled = true,
+	richText = false,
 
 	isDisabled = false,
 	userInteractionEnabled = true,
@@ -130,8 +134,10 @@ function TextButton:render()
 				Text = self.props.text,
 				fontStyle = fontStyle,
 				colorStyle = textStyle,
+				RichText = self.props.richText,
 			}),
-			background = currentState == ControlState.Hover and Roact.createElement(HoverButtonBackground)
+			background = self.props.hoverBackgroundEnabled and currentState == ControlState.Hover
+				and Roact.createElement(HoverButtonBackground)
 		})
 	end)
 end

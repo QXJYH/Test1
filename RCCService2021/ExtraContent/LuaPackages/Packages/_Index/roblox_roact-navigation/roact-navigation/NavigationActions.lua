@@ -1,10 +1,11 @@
+-- upstream https://github.com/react-navigation/react-navigation/blob/62da341b672a83786b9c3a80c8a38f929964d7cc/packages/core/src/NavigationActions.ts
+
 local NavigationSymbol = require(script.Parent.NavigationSymbol)
 
 local BACK_TOKEN = NavigationSymbol("BACK")
 local INIT_TOKEN = NavigationSymbol("INIT")
 local NAVIGATE_TOKEN = NavigationSymbol("NAVIGATE")
 local SET_PARAMS_TOKEN = NavigationSymbol("SET_PARAMS")
-local COMPLETE_TRANSITION_TOKEN = NavigationSymbol("COMPLETE_TRANSITION")
 
 --[[
 	NavigationActions provides shared constants and methods to construct
@@ -15,10 +16,15 @@ local NavigationActions = {
 	Init = INIT_TOKEN,
 	Navigate = NAVIGATE_TOKEN,
 	SetParams = SET_PARAMS_TOKEN,
-	CompleteTransition = COMPLETE_TRANSITION_TOKEN,
 }
 
-NavigationActions.__index = NavigationActions
+-- deviation: we using this metatable to error when NavigationActions is indexed
+-- with an unexpected key.
+setmetatable(NavigationActions, {
+	__index = function(self, key)
+		error(("%q is not a valid member of NavigationActions"):format(tostring(key)), 2)
+	end,
+})
 
 -- Navigate back in the history (temporally).
 function NavigationActions.back(payload)
@@ -56,20 +62,9 @@ function NavigationActions.setParams(payload)
 	local data = payload or {}
 	return {
 		type = SET_PARAMS_TOKEN,
+		preserveFocus = true,
 		key = data.key,
 		params = data.params,
-	}
-end
-
--- For internal use. Triggers completion of a transition animation, if needed by the router.
--- This would be sent on e.g. didMount of the new page, so the router knows that the new screen
--- is ready to be displayed before it animates it in place.
-function NavigationActions.completeTransition(payload)
-	local data = payload or {}
-	return {
-		type = COMPLETE_TRANSITION_TOKEN,
-		key = data.key,
-		toChildKey = data.toChildKey,
 	}
 end
 

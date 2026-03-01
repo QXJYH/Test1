@@ -1,13 +1,10 @@
+-- upstream https://github.com/react-navigation/react-navigation/blob/72e8160537954af40f1b070aa91ef45fc02bba69/packages/core/src/routers/__tests__/createConfigGetter.test.js
+
 return function()
 	local createConfigGetter = require(script.Parent.Parent.createConfigGetter)
 	local Roact = require(script.Parent.Parent.Parent.Parent.Roact)
 
-	it("should return a function", function()
-		local result = createConfigGetter({}, {})
-		expect(type(result)).to.equal("function")
-	end)
-
-	it("should return a screen config when called", function()
+	it("should get config for screen", function()
 		local HomeScreen = Roact.Component:extend("HomeScreen")
 		HomeScreen.navigationOptions = function(props)
 			local username = props.navigation.state.params and
@@ -59,57 +56,47 @@ return function()
 			{ key = "E", routeName = "Notifications", params = { fullscreen = true } },
 		}
 
-		expect(getScreenOptions({ state = routes[1] }, {}).title
-			).to.equal("Welcome anonymous")
+		expect(getScreenOptions({ state = routes[1] }, {}).title)
+			.to.equal("Welcome anonymous")
 
-		expect(getScreenOptions({ state = routes[2] }, {}).title
-			).to.equal("Welcome jane")
+		expect(getScreenOptions({ state = routes[2] }, {}).title)
+			.to.equal("Welcome jane")
 
-		expect(getScreenOptions({ state = routes[1] }, {}).gesturesEnabled
-			).to.equal(true)
+		expect(getScreenOptions({ state = routes[1] }, {}).gesturesEnabled)
+			.to.equal(true)
 
-		expect(getScreenOptions({ state = routes[3] }, {}).title
-			).to.equal("Settings!!!")
+		expect(getScreenOptions({ state = routes[3] }, {}).title)
+			.to.equal("Settings!!!")
 
-		expect(getScreenOptions({ state = routes[3] }, {}).gesturesEnabled
-			).to.equal(false)
+		expect(getScreenOptions({ state = routes[3] }, {}).gesturesEnabled)
+			.to.equal(false)
 
-		expect(getScreenOptions({ state = routes[4] }, {}).title
-			).to.equal("10 new notifications")
+		expect(getScreenOptions({ state = routes[4] }, {}).title)
+			.to.equal("10 new notifications")
 
-		expect(getScreenOptions({ state = routes[4] }, {}).gesturesEnabled
-			).to.equal(true)
+		expect(getScreenOptions({ state = routes[4] }, {}).gesturesEnabled)
+			.to.equal(true)
 
-		expect(getScreenOptions({ state = routes[5] }, {}).gesturesEnabled
-			).to.equal(false)
+		expect(getScreenOptions({ state = routes[5] }, {}).gesturesEnabled)
+			.to.equal(false)
 	end)
 
-	it("should override default config with component-specific config", function()
+	it("should throw if the route does not exist", function()
+		local HomeScreen = Roact.Component:extend("HomeScreen")
+
+		HomeScreen.navigationOptions = {
+			title = "Home screen",
+			gesturesEnabled = true,
+		}
+
 		local getScreenOptions = createConfigGetter({
-			Home = {
-				screen = {
-					render = function() end,
-					navigationOptions = { title = "ComponentHome" },
-				},
-			},
-			defaultNavigationOptions = { title = "DefaultTitle" },
+			Home = { screen = HomeScreen },
 		})
 
-		expect(getScreenOptions({ state = { routeName = "Home" } }).title).to.equal("ComponentHome")
-	end)
+		local routes = {{ key = "B", routeName = "Settings" }}
 
-	it("should override component-specific config with route-specific config", function()
-		local getScreenOptions = createConfigGetter({
-			Home = {
-				screen = {
-					render = function() end,
-					navigationOptions = { title = "ComponentHome" },
-				},
-				navigationOptions = { title = "RouteHome" },
-			},
-			defaultNavigationOptions = { title = "DefaultTitle" },
-		})
-
-		expect(getScreenOptions({ state = { routeName = "Home" } }).title).to.equal("RouteHome")
+		expect(function()
+			getScreenOptions({ state = routes[1] }, {})
+		end).to.throw("There is no route defined for key Settings.\nMust be one of: 'Home'")
 	end)
 end

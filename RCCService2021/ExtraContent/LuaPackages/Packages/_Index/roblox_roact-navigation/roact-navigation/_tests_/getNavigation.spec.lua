@@ -1,94 +1,131 @@
+-- upstream https://github.com/react-navigation/react-navigation/blob/20e2625f351f90fadadbf98890270e43e744225b/packages/core/src/__tests__/getNavigation.test.js
+
 return function()
-	local NavigationEvents = require(script.Parent.Parent.NavigationEvents)
-	local getNavigation = require(script.Parent.Parent.getNavigation)
+	local root = script.Parent.Parent
+	local getNavigation = require(root.getNavigation)
+	local NavigationActions = require(root.NavigationActions)
 
-	local function makeTestBundle(testState)
-		testState = testState or {
-			routes = {
-				{ key = "a" }
-			},
-			index = 1,
+	local createSpy = require(root.utils.createSpy)
+
+	it("getNavigation provides default action helpers", function()
+		local router = {
+			getActionCreators = function()
+				return {}
+			end,
+			getStateForAction = function(action, lastState)
+				return lastState or {}
+			end,
 		}
 
-		local testActions = {}
-		local bundle = {
-			testActions = testActions,
-			testState = testState,
-			testRouter = {
-				getActionCreators = function()
-					return testActions
-				end
-			},
-			testDispatch = function() end,
-			testActionSubscribers = {},
-			testGetScreenProps = function() end,
-		}
+		local dispatchSpy = createSpy()
 
-		function bundle.testGetCurrentNavigation()
-			return bundle.navigation
-		end
-
-		bundle.navigation = getNavigation(
-			bundle.testRouter,
-			bundle.testState,
-			bundle.testDispatch,
-			bundle.testActionSubscribers,
-			bundle.testGetScreenProps,
-			bundle.testGetCurrentNavigation
+		local topNav = getNavigation(
+			router,
+			{},
+			dispatchSpy.value,
+			{},
+			function()
+				return {}
+			end,
+			function() end
 		)
 
-		return bundle
-	end
+		topNav.navigate("GreatRoute")
 
-	it("should build out correct public props", function()
-		local bundle = makeTestBundle()
-
-		expect(bundle.navigation.actions).to.equal(bundle.testActions)
-		expect(bundle.navigation.router).to.equal(bundle.testRouter)
-		expect(bundle.navigation.state).to.equal(bundle.testState)
-		expect(bundle.navigation.dispatch).to.equal(bundle.testDispatch)
-		expect(bundle.navigation.getScreenProps).to.equal(bundle.testGetScreenProps)
-		expect(#bundle.navigation._childrenNavigation).to.equal(0)
+		expect(dispatchSpy.callCount).to.equal(1)
+		expect(dispatchSpy.values[1].type).to.equal(NavigationActions.Navigate)
+		expect(dispatchSpy.values[1].routeName).to.equal("GreatRoute")
 	end)
 
-	describe("isFocused tests", function()
-		it("should return focused=true for child key matching index", function()
-			local bundle = makeTestBundle()
-			expect(bundle.navigation.isFocused("a")).to.equal(true)
-		end)
+	it("getNavigation provides router action helpers", function()
+		local router = {
+			getActionCreators = function()
+				return {
+					foo = function(bar)
+						return { type = "FooBarAction", bar = bar }
+					end,
+				}
+			end,
+			getStateForAction = function(action, lastState)
+				return lastState or {}
+			end,
+		}
 
-		it("should return focused=false for child key not matching index", function()
-			local bundle = makeTestBundle({
-				routes = {
-					{ key = "a" },
-					{ key = "b" },
+		local dispatchSpy = createSpy()
+
+		local topNav = nil
+		topNav = getNavigation(
+			router,
+			{},
+			dispatchSpy.value,
+			{},
+			function()
+				return {}
+			end,
+			function()
+				return topNav
+			end
+		)
+
+		topNav.foo("Great")
+
+		expect(dispatchSpy.callCount).to.equal(1)
+		expect(dispatchSpy.values[1].type).to.equal("FooBarAction")
+		expect(dispatchSpy.values[1].bar).to.equal("Great")
+	end)
+
+	it("getNavigation get child navigation with router", function()
+		local actionSubscribers = {}
+		local navigation = nil
+
+		local routerA = {
+			getActionCreators = function()
+				return {}
+			end,
+			getStateForAction = function(action, lastState)
+				return lastState or {}
+			end,
+		}
+		local router = {
+			childRouters = {
+			RouteA = routerA,
+			},
+			getActionCreators = function()
+				return {}
+			end,
+			getStateForAction = function(action, lastState)
+				return lastState or {}
+			end,
+		}
+
+		local initState = {
+			index = 0,
+			routes = {
+				{
+					key = "a",
+					routeName = "RouteA",
+					routes = {{ key = "c", routeName = "RouteC" }},
+					index = 0,
 				},
-				index = 2,
-			})
-			expect(bundle.navigation.isFocused("a")).to.equal(false)
-		end)
+				{ key = "b", routeName = "RouteB" },
+			},
+		}
 
-		it("should return focused=true if no child key provided (parent always focused)", function()
-			local bundle = makeTestBundle()
-			expect(bundle.navigation.isFocused()).to.equal(true)
-		end)
-	end)
+		local topNav = getNavigation(
+			router,
+			initState,
+			function() end,
+			actionSubscribers,
+			function()
+				return {}
+			end,
+			function()
+				return navigation
+			end
+		)
 
-	describe("addListener tests", function()
-		it("should short-circuit subscriptions for non-Action events", function()
-			local bundle = makeTestBundle()
+		local childNavA = topNav.getChildNavigation("a")
 
-			local testHandler = function() end
-			bundle.navigation.addListener(NavigationEvents.WillFocus, testHandler)
-			expect(bundle.testActionSubscribers[testHandler]).to.equal(nil)
-		end)
-
-		it("should add Action event handlers to actionSubscribers set", function()
-			local bundle = makeTestBundle()
-
-			local testHandler = function() end
-			bundle.navigation.addListener(NavigationEvents.Action, testHandler)
-			expect(bundle.testActionSubscribers[testHandler]).to.equal(true)
-		end)
+		expect(childNavA.router).to.equal(routerA)
 	end)
 end

@@ -6,7 +6,6 @@
 	state is contained inside a TestSession object.
 ]]
 
-local Expectation = require(script.Parent.Expectation)
 local TestEnum = require(script.Parent.TestEnum)
 local TestSession = require(script.Parent.TestSession)
 local LifecycleHooks = require(script.Parent.LifecycleHooks)
@@ -17,8 +16,16 @@ local TestRunner = {
 	environment = {}
 }
 
-function TestRunner.environment.expect(...)
-	return Expectation.new(...)
+local function wrapExpectContextWithPublicApi(expectationContext)
+	return setmetatable({
+		extend = function(...)
+			expectationContext:extend(...)
+		end,
+	}, {
+		__call = function(_self, ...)
+			return expectationContext:startExpectationChain(...)
+		end,
+	})
 end
 
 --[[
@@ -67,8 +74,10 @@ function TestRunner.runPlanNode(session, planNode, lifecycleHooks)
 			end
 
 			success = false
-			errorMessage = messagePrefix .. message .. "\n" .. debug.traceback()
+			errorMessage = messagePrefix .. debug.traceback(tostring(message), 2)
 		end
+
+		testEnvironment.expect = wrapExpectContextWithPublicApi(session:getExpectationContext())
 
 		local context = session:getContext()
 
@@ -77,7 +86,7 @@ function TestRunner.runPlanNode(session, planNode, lifecycleHooks)
 				callback(context)
 			end,
 			function(message)
-				return messagePrefix .. message .. "\n" .. debug.traceback()
+				return messagePrefix .. debug.traceback(tostring(message), 2)
 			end
 		)
 
@@ -134,9 +143,8 @@ function TestRunner.runPlanNode(session, planNode, lifecycleHooks)
 
 	if not halt then
 		for _, childPlanNode in ipairs(planNode.children) do
-			session:pushNode(childPlanNode)
-
 			if childPlanNode.type == TestEnum.NodeType.It then
+				session:pushNode(childPlanNode)
 				if session:shouldSkip() then
 					session:setSkipped()
 				else
@@ -148,7 +156,9 @@ function TestRunner.runPlanNode(session, planNode, lifecycleHooks)
 						session:setError(errorMessage)
 					end
 				end
+				session:popNode()
 			elseif childPlanNode.type == TestEnum.NodeType.Describe then
+				session:pushNode(childPlanNode)
 				TestRunner.runPlanNode(session, childPlanNode, lifecycleHooks)
 
 				-- Did we have an error trying build a test plan?
@@ -158,9 +168,8 @@ function TestRunner.runPlanNode(session, planNode, lifecycleHooks)
 				else
 					session:setStatusFromChildren()
 				end
+				session:popNode()
 			end
-
-			session:popNode()
 		end
 	end
 
