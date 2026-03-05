@@ -96,41 +96,46 @@ const GameRow = props => {
 
   const remainingGames = props.games.length - (offset - offsetComp);
   const showForward = remainingGames >= limit;
-  return <div className={props.ads ? 'col-12 col-lg-9' : 'col-12'} style={{ position: 'relative' }} ref={rowRef}>
-    <h3 className={s.title}>{props.title}</h3>
-    <div className={`${s.goBack} ${s.pagerButton} ${offset === 0 ? 'opacity-25' : ''}`} onClick={() => {
-      if (offset === 0) return;
-      setOffset((offset - limit));
-    }} style={{ height: rowHeight }}>
-      <p className={s.pagerCaret}><span className={s.caretLeft}>(</span></p>
+  return <div className='container-list'>
+    <div className='col-xs-12 container-header'>
+      <h3>{props.title}</h3>
+      <a className="btn-more">See All</a>
     </div>
+    <div className={props.ads ? 'col-12 col-lg-9' : 'col-12'} style={{ position: 'relative' }} ref={rowRef}>
+      <div className={`${s.goBack} ${s.pagerButton} ${offset === 0 ? 'opacity-25' : ''}`} onClick={() => {
+        if (offset === 0) return;
+        setOffset((offset - limit));
+      }} style={{ height: rowHeight }}>
+        <p className={s.pagerCaret}><span className="info-label icon-games-carousel-left"></span></p>
+      </div>
 
-    {showForward ? <div className={`${s.goForward} ${s.pagerButton}`} onClick={() => {
-      let newOffset = ((offset) + (limit));
-      setOffset(newOffset);
-    }} style={{ height: rowHeight }}>
-      <p className={s.pagerCaret}><span className={s.caretRight}>(</span></p>
-    </div> : null}
+      {showForward ? <div className={`${s.goForward} ${s.pagerButton}`} onClick={() => {
+        let newOffset = ((offset) + (limit));
+        setOffset(newOffset);
+      }} style={{ height: rowHeight }}>
+        <p className={s.pagerCaret}><span className="info-label icon-games-carousel-right"></span></p>
+      </div> : null}
 
-    <ul className='hlist game-cards' ref={gameRowRef}>
-      {
-        props.games.slice(offset, offset + 100).map((v, i) => {
-          return <SmallGameCard
-            key={i}
-            placeId={v.placeId}
-            creatorId={v.creatorId}
-            creatorType={v.creatorType}
-            creatorName={v.creatorName}
-            iconUrl={props.icons[v.universeId]}
-            likes={v.totalUpVotes}
-            dislikes={v.totalDownVotes}
-            name={v.name}
-            playerCount={v.playerCount}
-            year={v.year}
-          />
-        })
-      }
-    </ul>
+      <ul className='hlist game-cards' ref={gameRowRef}>
+        {
+          props.games.slice(offset, offset + 100).map((v, i) => {
+            return <SmallGameCard
+              key={i}
+              placeId={v.placeId}
+              creatorId={v.creatorId}
+              creatorType={v.creatorType}
+              creatorName={v.creatorName}
+              iconUrl={props.icons[v.universeId]}
+              likes={v.totalUpVotes}
+              dislikes={v.totalDownVotes}
+              name={v.name}
+              playerCount={v.playerCount}
+              year={v.year}
+            />
+          })
+        }
+      </ul>
+    </div>
     {props.ads ? <div className='col-12 col-lg-3'><UserAdvertisement type={3} /></div> : null}
   </div>
 }
