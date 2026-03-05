@@ -15,39 +15,32 @@ export const useStyles = createUseStyles({
   pagerButton: {
     border: '1px solid #c3c3c3',
     width: '40px',
-    height: 'calc(100% - 34px)',
-    background: 'rgba(255,255,255,1)',
-    position: 'relative',
+    background: 'rgba(255,255,255,0.8)',
+    position: 'absolute',
+    top: 0,
+    zIndex: 10,
     cursor: 'pointer',
     color: '#666',
     boxShadow: '0 0 3px 0 #ccc',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     '&:hover': {
       color: 'black',
+      background: 'rgba(255,255,255,1)',
     },
   },
   goBack: {
-    float: 'left',
-    marginLeft: '10px',
+    left: 0,
   },
   goForward: {
-    float: 'right',
-    marginLeft: '10px',
+    right: 0,
   },
   pagerCaret: {
     textAlign: 'center',
-    marginTop: '240%',
     userSelect: 'none',
     fontSize: '40px',
-  },
-  caretLeft: {
-    display: 'block',
-    transform: 'rotate(90deg)',
-    marginRight: '10px',
-  },
-  caretRight: {
-    display: 'block',
-    transform: 'rotate(-90deg)',
-    marginLeft: '10px',
+    margin: 0,
   },
 });
 
@@ -70,10 +63,9 @@ const GameRow = props => {
       return
     }
     // width = 170px
-    // sub 80 for pagination buttons
+    // sub 80 for pagination buttons (if we want to offset content)
     let windowWidth = rowRef.current.clientWidth;
-    // breakpoints: 992, 1300 for side nav
-    let offsetNotRounded = (windowWidth - 80) / 170;
+    let offsetNotRounded = (windowWidth) / 164;
     let newLimit = Math.floor(offsetNotRounded);
 
     setLimit(newLimit);
@@ -87,7 +79,7 @@ const GameRow = props => {
   useEffect(() => {
     if (!gameRowRef.current)
       return;
-    const newHeight = Math.max(236, gameRowRef.current.clientHeight);
+    const newHeight = Math.max(240, gameRowRef.current.clientHeight);
     if (newHeight === rowHeight) return;
 
     setRowHeight(newHeight);
@@ -101,42 +93,44 @@ const GameRow = props => {
       <h3>{props.title}</h3>
       <a className="btn-more">See All</a>
     </div>
-    <div className={props.ads ? 'col-12 col-lg-9' : 'col-12'} style={{ position: 'relative' }} ref={rowRef}>
-      <div className={`${s.goBack} ${s.pagerButton} ${offset === 0 ? 'opacity-25' : ''}`} onClick={() => {
-        if (offset === 0) return;
-        setOffset((offset - limit));
-      }} style={{ height: rowHeight }}>
-        <p className={s.pagerCaret}><span className="info-label icon-games-carousel-left"></span></p>
+    <div className='row'>
+      <div className={props.ads ? 'col-12 col-lg-9' : 'col-12'} style={{ position: 'relative' }} ref={rowRef}>
+        <div className={`${s.goBack} ${s.pagerButton} ${offset === 0 ? 'd-none' : ''}`} onClick={() => {
+          if (offset === 0) return;
+          setOffset((offset - limit));
+        }} style={{ height: rowHeight }}>
+          <p className={s.pagerCaret}><span className="info-label icon-games-carousel-left"></span></p>
+        </div>
+
+        {showForward ? <div className={`${s.goForward} ${s.pagerButton}`} onClick={() => {
+          let newOffset = ((offset) + (limit));
+          setOffset(newOffset);
+        }} style={{ height: rowHeight }}>
+          <p className={s.pagerCaret}><span className="info-label icon-games-carousel-right"></span></p>
+        </div> : null}
+
+        <ul className='hlist game-cards' ref={gameRowRef} style={{ overflow: 'hidden' }}>
+          {
+            props.games.slice(offset, offset + 100).map((v, i) => {
+              return <SmallGameCard
+                key={i}
+                placeId={v.placeId}
+                creatorId={v.creatorId}
+                creatorType={v.creatorType}
+                creatorName={v.creatorName}
+                iconUrl={props.icons[v.universeId]}
+                likes={v.totalUpVotes}
+                dislikes={v.totalDownVotes}
+                name={v.name}
+                playerCount={v.playerCount}
+                year={v.year}
+              />
+            })
+          }
+        </ul>
       </div>
-
-      {showForward ? <div className={`${s.goForward} ${s.pagerButton}`} onClick={() => {
-        let newOffset = ((offset) + (limit));
-        setOffset(newOffset);
-      }} style={{ height: rowHeight }}>
-        <p className={s.pagerCaret}><span className="info-label icon-games-carousel-right"></span></p>
-      </div> : null}
-
-      <ul className='hlist game-cards' ref={gameRowRef}>
-        {
-          props.games.slice(offset, offset + 100).map((v, i) => {
-            return <SmallGameCard
-              key={i}
-              placeId={v.placeId}
-              creatorId={v.creatorId}
-              creatorType={v.creatorType}
-              creatorName={v.creatorName}
-              iconUrl={props.icons[v.universeId]}
-              likes={v.totalUpVotes}
-              dislikes={v.totalDownVotes}
-              name={v.name}
-              playerCount={v.playerCount}
-              year={v.year}
-            />
-          })
-        }
-      </ul>
+      {props.ads ? <div className='col-12 col-lg-3'><UserAdvertisement type={3} /></div> : null}
     </div>
-    {props.ads ? <div className='col-12 col-lg-3'><UserAdvertisement type={3} /></div> : null}
   </div>
 }
 
