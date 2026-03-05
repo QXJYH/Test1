@@ -56,9 +56,9 @@ function RobloxApp({ Component, pageProps }) {
 
   return <div>
     <Head>
-      <link rel="preload" href="/fonts/38e00f7de6f417aa3a458560a15e2b8a-GothamSSm-Light.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      <link rel="preload" href="/fonts/6eafc48312528e2515d622428b6b95cc-GothamSSm-Book.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      <link rel="preload" href="/fonts/66d562e3299ee732a53db150038c026e-GothamSSm-Medium.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      <link rel="preload" href="/img/GothamSSm-Light.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      <link rel="preload" href="/img/GothamSSm-Book.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      <link rel="preload" href="/img/GothamSSm-Medium.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin={''} />
       <title>{pageProps.title || 'Kornet'}</title>
