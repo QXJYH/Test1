@@ -247,27 +247,6 @@ html {
     text-decoration: none !important;
 }
 
-.icon-games-carousel-left,
-.icon-games-carousel-right {
-    background-image: url(/img/games.svg) !important;
-    background-repeat: no-repeat;
-    display: inline-block;
-}
-
-.icon-games-carousel-left {
-    background-position: 0 -980px;
-    background-size: 56px auto;
-    width: 28px;
-    height: 28px;
-}
-
-.icon-games-carousel-right {
-    background-position: 0 -952px;
-    background-size: 56px auto;
-    width: 28px;
-    height: 28px;
-}
-
 .sponsored-game {
     display: inline-block;
 }
