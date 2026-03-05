@@ -1,29 +1,29 @@
 @font-face {
     font-family: 'HCo Gotham SSm';
-    src: url('/fonts/38e00f7de6f417aa3a458560a15e2b8a-GothamSSm-Light.woff2') format('woff2'),
-        url('/fonts/5c779fadf28d7893108d5b896e092e0d-GothamSSm-Light.woff') format('woff');
+    src: url('/img/GothamSSm-Light.woff2') format('woff2'),
+        url('/img/GothamSSm-Light.woff') format('woff');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'HCo Gotham SSm';
-    src: url('/fonts/6eafc48312528e2515d622428b6b95cc-GothamSSm-Book.woff2') format('woff2'),
-        url('/fonts/713e0b3a604ff4e44f55f9d1c100e8b5-GothamSSm-Book.woff') format('woff');
+    src: url('/img/GothamSSm-Book.woff2') format('woff2'),
+        url('/img/GothamSSm-Book.woff') format('woff');
     font-weight: 400;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'HCo Gotham SSm';
-    src: url('/fonts/66d562e3299ee732a53db150038c026e-GothamSSm-Medium.woff2') format('woff2');
+    src: url('/img/GothamSSm-Medium.woff2') format('woff2');
     font-weight: 500;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'HCo Gotham SSm';
-    src: url('/fonts/3c102ace52ea35b16da4383819acfa38-GothamSSm-Bold.woff2') format('woff2');
+    src: url('/img/GothamSSm-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
 }
