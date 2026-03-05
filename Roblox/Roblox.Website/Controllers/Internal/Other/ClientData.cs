@@ -50,7 +50,8 @@ namespace Roblox.Website.Controllers
             List<string> allowedList = new List<string>()
             {
 				"97e93df61c3357531585cebb22d2edff",
-				"053974fb1131dda3fc75534b08576b67"
+				"053974fb1131dda3fc75534b08576b67",
+				"2e71951cc3566e2ab558b9f8a8f1c510"
             };
 
             return new { data = allowedList };
@@ -135,6 +136,9 @@ namespace Roblox.Website.Controllers
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "StudioApp.json");
 						break;
 
+					case "6sxp8X2Y02KornetSETTINGwork":
+						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "RCCService.json");
+						break;
 					// Make this configurable in appsettyings
 					case "RCCServiceKornetSETTINGwork":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "RCCService.json");

@@ -1271,6 +1271,7 @@ public class GameServerService : ServiceBase
 				""MachineAddress"": ""av2bq.kornet.lat"",
 				""GsmInterval"": 5,
 				""MaxPlayers"": {MaxPlayers},
+				""Channel"": ""production"",
 				""MaxGameInstances"": 1,
 				""ApiKey"": ""KornetRCCwork"",
 				""PreferredPlayerCapacity"": 10,

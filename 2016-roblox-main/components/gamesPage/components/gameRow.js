@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 import { createUseStyles } from "react-jss";
 import SmallGameCard from "../../smallGameCard";
 import UserAdvertisement from "../../userAdvertisement";
@@ -11,20 +11,6 @@ export const useStyles = createUseStyles({
     marginTop: '10px',
     color: 'rgb(33, 37, 41)',
     marginLeft: '10px',
-  },
-  gameRow: {
-    display: 'flex',
-    flexWrap: 'nowrap',
-    overflowX: 'hidden',
-    marginLeft: '-4px',
-    '&>div': {
-      flex: '0 0 auto',
-    }
-  },
-  gameCard: {
-    width: '170px',
-    paddingLeft: '5px',
-    paddingRight: '5px',
   },
   pagerButton: {
     border: '1px solid #c3c3c3',
@@ -93,7 +79,7 @@ const GameRow = props => {
     setLimit(newLimit);
     if (offsetNotRounded !== newLimit) {
       setOffsetComp(1);
-    }else{
+    } else {
       setOffsetComp(0);
     }
   }, [dimensions, props.games, props.icons]);
@@ -108,50 +94,43 @@ const GameRow = props => {
   });
   if (!props.games) return null;
 
-  const remainingGames = props.games.length - (offset-offsetComp);
+  const remainingGames = props.games.length - (offset - offsetComp);
   const showForward = remainingGames >= limit;
-  return <div className='row'>
-    <div className='col-12'>
-      <h3 className={s.title}>{props.title.toUpperCase()}</h3>
+  return <div className={props.ads ? 'col-12 col-lg-9' : 'col-12'} style={{ position: 'relative' }} ref={rowRef}>
+    <h3 className={s.title}>{props.title}</h3>
+    <div className={`${s.goBack} ${s.pagerButton} ${offset === 0 ? 'opacity-25' : ''}`} onClick={() => {
+      if (offset === 0) return;
+      setOffset((offset - limit));
+    }} style={{ height: rowHeight }}>
+      <p className={s.pagerCaret}><span className={s.caretLeft}>(</span></p>
     </div>
-    <div className={props.ads ? 'col-12 col-lg-9' : 'col-12'} ref={rowRef}>
-      <div className={s.goBack + ' ' + s.pagerButton + ' ' + (offset === 0 ? 'opacity-25' : '')} onClick={() => {
-        if (offset === 0)
-          return;
 
-        setOffset((offset - limit));
-      }} style={{height: rowHeight}}>
-        <p className={s.pagerCaret}><span className={s.caretRight}>^</span></p>
-      </div>
+    {showForward ? <div className={`${s.goForward} ${s.pagerButton}`} onClick={() => {
+      let newOffset = ((offset) + (limit));
+      setOffset(newOffset);
+    }} style={{ height: rowHeight }}>
+      <p className={s.pagerCaret}><span className={s.caretRight}>(</span></p>
+    </div> : null}
 
-      {showForward ? <div className={s.goForward + ' ' + s.pagerButton} onClick={() => {
-        let newOffset = ((offset) + (limit));
-        setOffset(newOffset);
-      }} style={{height: rowHeight}}>
-        <p className={s.pagerCaret}><span className={s.caretLeft}>^</span></p>
-      </div> : null
+    <ul className='hlist game-cards' ref={gameRowRef}>
+      {
+        props.games.slice(offset, offset + 100).map((v, i) => {
+          return <SmallGameCard
+            key={i}
+            placeId={v.placeId}
+            creatorId={v.creatorId}
+            creatorType={v.creatorType}
+            creatorName={v.creatorName}
+            iconUrl={props.icons[v.universeId]}
+            likes={v.totalUpVotes}
+            dislikes={v.totalDownVotes}
+            name={v.name}
+            playerCount={v.playerCount}
+            year={v.year}
+          />
+        })
       }
-      <div className={'row ' + s.gameRow} ref={gameRowRef}>
-        {
-          props.games.slice(offset, offset+100).map((v, i) => {
-            return <SmallGameCard
-              key={i}
-              className={s.gameCard}
-              placeId={v.placeId}
-              creatorId={v.creatorId}
-              creatorType={v.creatorType}
-              creatorName={v.creatorName}
-              iconUrl={props.icons[v.universeId]}
-              likes={v.totalUpVotes}
-              dislikes={v.totalDownVotes}
-              name={v.name}
-              playerCount={v.playerCount}
-              year={v.year}
-            />
-          })
-        }
-      </div>
-    </div>
+    </ul>
     {props.ads ? <div className='col-12 col-lg-3'><UserAdvertisement type={3} /></div> : null}
   </div>
 }

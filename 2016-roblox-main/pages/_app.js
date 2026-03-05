@@ -2,6 +2,7 @@ import '../styles/globals.css';
 import '../styles/helpers/textHelpers.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // Roblox CSS
+import '../styles/roblox/gameStyles2020.css';
 import '../styles/roblox/icons.css';
 import Navbar from '../components/navbar';
 import React, { useEffect, useState } from 'react';
@@ -73,7 +74,7 @@ function RobloxApp({ Component, pageProps }) {
         </NavigationStore.Provider>
       </LoginModalStore.Provider>
       <GlobalAlert />
-      <MainWrapper>
+      <MainWrapper className="gotham-font light-theme">
         {getFlag('clientSideRenderingEnabled', false) ? <NextNProgress options={{ showSpinner: false }} color='#fff' height={2} /> : null}
         <ThumbnailStore.Provider>
           <Component {...pageProps} />

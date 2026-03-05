@@ -302,6 +302,15 @@ namespace Roblox.Website.Controllers
 					message = (string?)null,
 				};
 			}
+			else if (targetStatus == JoinStatus.Waiting)
+			{
+				return new
+				{
+					jobId = targetJobId,
+					status = (int)JoinStatus.Waiting,
+					message = "Waiting for server"
+				};
+			}
 			
 			//return Result;
 			return new

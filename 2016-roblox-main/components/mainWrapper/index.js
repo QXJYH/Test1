@@ -6,9 +6,9 @@ const useStyles = createUseStyles({
   }
 })
 
-const MainWrapper = ({ children }) => {
+const MainWrapper = ({ children, className }) => {
   const s = useStyles();
-  return <div className={s.main}>
+  return <div className={`${s.main} ${className || ''}`}>
     {children}
   </div>
 }

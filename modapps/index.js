@@ -247,7 +247,6 @@ app.post('/api/transmit', transmissionLimiter, async (req, res) => {
     const { hwid, role, formData } = req.body;
 
     if (!req.session.discordUser || !req.session.discordUser.id || !req.session.discordUser.kornet_username) {
-        console.log(`[SECURITY] Blocked unverified transmission from ${req.ip}`);
         return res.status(401).send('IDENTITY_VERIFICATION_REQUIRED');
     }
 
