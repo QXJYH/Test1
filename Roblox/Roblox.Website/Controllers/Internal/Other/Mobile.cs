@@ -104,15 +104,12 @@ namespace Roblox.Website.Controllers
             return new
             {
                 Status = "OK",
-                UserInfo = new
-                {
-                    UserName = request.username,
-                    RobuxBalance = userBalance.robux,
-                    TicketsBalance = userBalance.tickets,
-                    IsAnyBuildersClubMember = true,
-                    ThumbnailUrl = $"{Configuration.BaseUrl}/Thumbs/Avatar.ashx?userId={userInfo.userId}",
-                    UserID = userInfo.userId
-                }
+                UserId = userInfo.userId,
+                UserName = userInfo.username,
+                RobuxBalance = userBalance.robux,
+                ThumbnailUrl = $"{Configuration.BaseUrl}/Thumbs/Avatar.ashx?userId={userInfo.userId}",
+                IsUnder13 = false,
+                MembershipType = 1
             };
         }
 
@@ -149,7 +146,7 @@ namespace Roblox.Website.Controllers
                 RobuxBalance = userBalance.robux,
                 ThumbnailUrl = $"{Configuration.BaseUrl}/Thumbs/Avatar.ashx?userId={userInfo.userId}",
                 IsUnder13 = false,
-                IsAnyBuildersClubMember = true
+                MembershipType = 1
             };
         }
 		
