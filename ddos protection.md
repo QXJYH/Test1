@@ -4,8 +4,6 @@
     </p>
 </div>
 
-this guide will be a tutorial on how to add ddos protection with cloudflare.
-
 ## navigation
 - first go to dash.cloudflare.com
 - then go to your domain
@@ -14,10 +12,14 @@ this guide will be a tutorial on how to add ddos protection with cloudflare.
 - now look on the next category
 
 ## rules
-- 1 - botapi                                   - URI Path contains /botapi
-- 2 - promocodes                               - URI Path contains /promocodes/redeem
-- 3 - Skip Challenge for Roblox                - User Agent contains Roblox and IP Source Address equals [VPS_IP]
-- 4 - Challenge Non-Roblox Clients             - Expression: ( not ip.src in { [VPS_IP] }
+* botapi
+    * URI Path contains /botapi
+* promocodes
+    * URI Path contains /promocodes/redeem
+* Skip Challenge for Roblox
+    * User Agent contains Roblox and IP Source Address equals [VPS_IP]
+* Challenge Non-Roblox Clients
+    * Expression: ( not ip.src in { [VPS_IP] }
 
 ## Configuration
 ## botapi
