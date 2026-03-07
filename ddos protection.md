@@ -20,7 +20,7 @@ this guide will be a tutorial on how to add ddos protection with cloudflare.
 - 3 - Skip Challenge for Roblox                - User Agent contains Roblox and IP Source Address equals [VPS_IP]
 - 4 - Challenge Non-Roblox Clients             - Expression: ( not ip.src in { [VPS_IP] }
 
-*Configuration*
+## Configuration
 ## botapi
 Field - URI Path
 Operator - contains
@@ -132,7 +132,7 @@ Select which rule this will fire after:
 ## Challenge Non-Roblox Clients
 Go to expression preview and in the far right theres a button called edit expression
 press it then add this:
-
+```
 (
   not ip.src in {
     [VPS_IP]
@@ -153,7 +153,7 @@ press it then add this:
 )
 and not http.user_agent contains "Roblox"
 and not http.user_agent contains "Discordbot"
-
+```
 Then take action - Managed Challenge
 
 Place at
