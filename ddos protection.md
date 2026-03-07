@@ -1,7 +1,7 @@
 ## this is only for cloudflare.
 <div align="center">
     <p>
-      <h1>Kornet DDOS Protection</h1>
+      <h1>DDOS Protection</h1>
     </p>
 </div>
 
@@ -15,10 +15,10 @@ this guide will be a tutorial on how to add ddos protection with cloudflare.
 - now look on the next category
 
 ## rules
-1 - botapi                                   - URI Path contains /botapi
-2 - promocodes                               - URI Path contains /promocodes/redeem
-3 - Skip Challenge for Roblox                - User Agent contains Roblox and IP Source Address equals [VPS_IP]
-4 - Challenge Non-Roblox Clients             - Expression: ( not ip.src in { [VPS_IP] }
+- 1 - botapi                                   - URI Path contains /botapi
+- 2 - promocodes                               - URI Path contains /promocodes/redeem
+- 3 - Skip Challenge for Roblox                - User Agent contains Roblox and IP Source Address equals [VPS_IP]
+- 4 - Challenge Non-Roblox Clients             - Expression: ( not ip.src in { [VPS_IP] }
 
 *Configuration*
 ## botapi
@@ -27,31 +27,31 @@ Operator - contains
 Value - /botapi
 
 Expression Preview
-(http.request.uri.path contains "/botapi")
+`(http.request.uri.path contains "/botapi")`
 
 Then take action - Skip
 
 Log matching requests - yes
 
-- WAF components to skip
-Yes - All remaining custom rules
-Yes - All rate limiting rules
-Yes - All managed rules
-Yes - All Super Bot Fight Mode Rules
+WAF components to skip
+- Yes - All remaining custom rules
+- Yes - All rate limiting rules
+- Yes - All managed rules
+- Yes - All Super Bot Fight Mode Rules
 
 
-- More components to skip
-No - Zone Lockdown
-No - User Agent Blocking
-Yes - Browser Integrity Check
-No - Hotlink Protection
-Yes - Security Level
-No - Rate limiting rules (Previous version)
-No - Managed rules (Previous version)
+More components to skip
+- No - Zone Lockdown
+- No - User Agent Blocking
+- Yes - Browser Integrity Check
+- No - Hotlink Protection
+- Yes - Security Level
+- No - Rate limiting rules (Previous version)
+- No - Managed rules (Previous version)
 
 Place at
 Select order:
-First
+- First
 
 ## promocodes
 Field - URI Path
@@ -59,34 +59,34 @@ Operator - contains
 Value - /promocodes/redeem
 
 Expression Preview
-(http.request.uri.path contains "/promocodes/redeem")
+`(http.request.uri.path contains "/promocodes/redeem")`
 
 Then take action - Skip
 
 Log matching requests - yes
 
-- WAF components to skip
-Yes - All remaining custom rules
-Yes - All rate limiting rules
-Yes - All managed rules
-Yes - All Super Bot Fight Mode Rules
+WAF components to skip
+- Yes - All remaining custom rules
+- Yes - All rate limiting rules
+- Yes - All managed rules
+- Yes - All Super Bot Fight Mode Rules
 
 
-- More components to skip
-No - Zone Lockdown
-No - User Agent Blocking
-Yes - Browser Integrity Check
-No - Hotlink Protection
-Yes - Security Level
-No - Rate limiting rules (Previous version)
-No - Managed rules (Previous version)
+More components to skip
+- No - Zone Lockdown
+- No - User Agent Blocking
+- Yes - Browser Integrity Check
+- No - Hotlink Protection
+- Yes - Security Level
+- No - Rate limiting rules (Previous version)
+- No - Managed rules (Previous version)
 
 Place at
 Select order:
-Custom
+- Custom
 
 Select which rule this will fire after:
-botapi
+- botapi
 
 ## Skip Challenge for Roblox
 Field - User Agent
@@ -100,39 +100,38 @@ Operator - equals
 Value - [VPS_IP]
 
 Expression Preview
-(http.user_agent contains "Roblox" and ip.src eq [VPS_IP])
+`(http.user_agent contains "Roblox" and ip.src eq [VPS_IP])`
 
 Then take action - Skip
 
 Log matching requests - yes
 
-- WAF components to skip
-No - All remaining custom rules
-No - All rate limiting rules
-Yes - All managed rules
-No - All Super Bot Fight Mode Rules
+WAF components to skip
+- No - All remaining custom rules
+- No - All rate limiting rules
+- Yes - All managed rules
+- No - All Super Bot Fight Mode Rules
 
 
-- More components to skip
-No - Zone Lockdown
-No - User Agent Blocking
-No - Browser Integrity Check
-No - Hotlink Protection
-No - Security Level
-No - Rate limiting rules (Previous version)
-No - Managed rules (Previous version)
+More components to skip
+- No - Zone Lockdown
+- No - User Agent Blocking
+- No - Browser Integrity Check
+- No - Hotlink Protection
+- No - Security Level
+- No - Rate limiting rules (Previous version)
+- No - Managed rules (Previous version)
 
 Place at
 Select order:
-Custom
+- Custom
 
 Select which rule this will fire after:
-promocodes
+- promocodes
 
 ## Challenge Non-Roblox Clients
 Go to expression preview and in the far right theres a button called edit expression
 press it then add this:
-
 
 (
   not ip.src in {
@@ -159,7 +158,7 @@ Then take action - Managed Challenge
 
 Place at
 Select order:
-Custom
+- Custom
 
 Select which rule this will fire after:
-Skip Challenge for Roblox
+- Skip Challenge for Roblox
