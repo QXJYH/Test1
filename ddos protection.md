@@ -1,4 +1,3 @@
-## this is only for cloudflare.
 <div align="center">
     <p>
       <h1>DDOS Protection</h1>
