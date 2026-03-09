@@ -457,6 +457,33 @@ namespace Roblox.Website.Controllers
             string jsonString = JsonConvert.SerializeObject(jsonData);
             return Content(jsonString, "application/json");
         }
+
+        [HttpGetBypass("api/users/account-info")]
+        [HttpPostBypass("api/users/account-info")]
+        public async Task<dynamic> accountInfor()
+        {
+            var userBalance = await services.economy.GetUserBalance(userSession.userId);
+
+            var roles = new string[] { };
+
+            var jsonData = new
+            {
+                UserId = userSession.userId,
+                Username = userSession.username,
+                DisplayName = userSession.username,
+                HasPasswordSet = true,
+                Email = "", 
+                MembershipType = 0,
+                RobuxBalance = userBalance.robux,
+                AgeBracket = 0,
+                Roles = roles.ToArray(),
+                EmailNotificationEnabled = false,
+                PasswordNotificationEnabled = false,
+            };
+
+            string jsonString = JsonConvert.SerializeObject(jsonData);
+            return Content(jsonString, "application/json");
+        }
 		
         [HttpPostBypass("user/following-exists")]
         [HttpGetBypass("user/following-exists")]

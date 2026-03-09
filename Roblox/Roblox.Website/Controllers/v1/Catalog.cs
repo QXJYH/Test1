@@ -8,6 +8,7 @@ using Roblox.Services;
 using Roblox.Website.WebsiteModels;
 using Roblox.Website.WebsiteModels.Catalog;
 using MultiGetEntry = Roblox.Dto.Assets.MultiGetEntry;
+using Roblox.Services.Exceptions;
 #pragma warning disable CS8600
 
 namespace Roblox.Website.Controllers;
@@ -645,6 +646,22 @@ public class CatalogControllerV1 : ControllerBase
 	[HttpGet("recommendations/asset/{assetTypeId}")]
 	public async Task<dynamic> GetRecommendations(Models.Assets.Type assetTypeId, long contextAssetId, int numItems)
 	{
+		var ipHash = GetIP(GetRequesterIpRaw(HttpContext));
+		var rateLimitKey = $"RateLimit:CatalogRecommendations:{ipHash}";
+
+		var userAgent = Request.Headers["User-Agent"].ToString();
+		if (userAgent.Contains("Roblox/WinInet"))
+		{
+			Console.WriteLine($"[block] blocked robloxwininet for IP {ipHash} on recommendations");
+			throw new RobloxException(400, 0, "Asset is invalid or does not exist");
+		}
+
+		if (!await services.cooldown.TryIncrementBucketCooldown(rateLimitKey, 60, TimeSpan.FromMinutes(1)))
+		{
+			Console.WriteLine($"[ratelimit] rate limit for IP {ipHash} on recommendations");
+			throw new RobloxException(429, 0, "Too many requests");
+		}
+
 		var result = await services.assets.GetRecommendedItems(assetTypeId, contextAssetId, numItems * 2); // get more items in case of hidden ones
 		
 		var visibleItems = new List<dynamic>();
@@ -846,6 +863,22 @@ public class CatalogControllerV1 : ControllerBase
     [HttpGet("search/items")]
     public async Task<SearchResponse> SearchItems(string? category, string? subcategory, string? sortType, string? keyword, string? cursor, int limit = 10, CreatorType? creatorType = null, long? creatorTargetId = null, bool includeNotForSale = false, string? _genreFilterCsv = null)
     {
+		var ipHash = GetIP(GetRequesterIpRaw(HttpContext));
+		var rateLimitKey = $"RateLimit:CatalogSearch:{ipHash}";
+
+		if (!await services.cooldown.TryIncrementBucketCooldown(rateLimitKey, 60, TimeSpan.FromMinutes(1)))
+		{
+			Console.WriteLine($"[ratelimit] rate limit for IP {ipHash}");
+			throw new RobloxException(429, 0, "Too many requests");
+		}
+
+		var userAgent = Request.Headers["User-Agent"].ToString();
+		if (userAgent.Contains("Roblox/WinInet"))
+		{
+			Console.WriteLine($"[block] blocked robloxwininet for IP {ipHash}");
+			throw new RobloxException(403, 0, "Forbidden");
+		}
+
 	    var include18Plus = userSession != null && await services.users.Is18Plus(userSession.userId);
 	    var request = new CatalogSearchRequest()
 	    {

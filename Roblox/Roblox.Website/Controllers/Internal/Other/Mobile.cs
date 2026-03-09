@@ -33,8 +33,8 @@ namespace Roblox.Website.Controllers
     [MVC.Route("/")]
     public class MobileShitTesting : ControllerBase 
     {
-		[HttpGetBypass("/mobile/check-app-version")]
-        [HttpPostBypass("/mobile/check-app-version")]
+		[HttpGetBypass("mobile/check-app-version")]
+        [HttpPostBypass("mobile/check-app-version")]
 		public MVC.IActionResult MobileCheckAppVer()
 		{
             Console.WriteLine("[POST] /mobile/check-app-version");
@@ -47,8 +47,8 @@ namespace Roblox.Website.Controllers
 			});
 		}
 		
-		[HttpGetBypass("/device/initialize")]
-        [HttpPostBypass("/device/initialize")]
+		[HttpGetBypass("api/device/initialize")]
+        [HttpPostBypass("api/device/initialize")]
         public MVC.IActionResult InitDevice()
         {
             Console.WriteLine("[POST] /device/initialize");
@@ -76,7 +76,7 @@ namespace Roblox.Website.Controllers
 			public string password { get; set; }
 		}
 		
-		[HttpPostBypass("/mobile/login")]
+		[HttpPostBypass("mobile/login")]
         public async Task<dynamic> MobileLogin([FromBody] MobileLoginReq request)
         {
             Console.WriteLine("[POST] /mobile/login");
@@ -113,7 +113,7 @@ namespace Roblox.Website.Controllers
             };
         }
 
-		[HttpPostBypass("/Login/v1")]
+		[HttpPostBypass("Login/v1")]
         public async Task<dynamic> MobileLoginV1([FromBody] MobileLoginReq request)
         {
             Console.WriteLine("[POST] /Login/v1");
