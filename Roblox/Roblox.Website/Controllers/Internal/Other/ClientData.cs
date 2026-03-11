@@ -178,6 +178,10 @@ namespace Roblox.Website.Controllers
 					case "PCDesktopClient2021":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "PCDesktopClient2021.json");
 						break;
+					
+					case "AndroidApp":
+						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "AndroidAppV2.json");
+						break;
 				}
 			}
 

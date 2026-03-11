@@ -562,18 +562,22 @@ public class AssetsService : ServiceBase, IService
 	private async Task CreatePackageThumbnail(long assetId, CancellationToken? cancellationToken = null)
 	{
 		var latestVersion = await GetLatestAssetVersion(assetId);
-		var packageAssets = await GetPackageAssets(assetId);
-		
-		var assets = new List<string>();
-		foreach (var asset in packageAssets)
-		{
-			assets.Add($"{asset}");
-		}
-		
-		assets.Add($"{Configuration.PackageShirtAssetId}");
-		assets.Add($"{Configuration.PackagePantsAssetId}");
-		var charApp = $"{Configuration.BaseUrl}/v1.1/avatar-fetch?placeId=0&userId=0";
+        var packageAssets = await GetPackageAssets(assetId);
 
+		var assets = new List<string>();
+
+        assets.Add($"{Configuration.PackageShirtAssetId}");
+		assets.Add($"{Configuration.PackagePantsAssetId}");
+        foreach (var asset in packageAssets)
+        {
+            assets.Add($"{asset}");
+        }
+
+        var assetUrlsString = string.Join(";", 
+            assets.Select(id => $"{Configuration.BaseUrl}/v1/asset/?id={id}")
+        );
+
+		var charApp = $"{Configuration.BaseUrl}/v1.1/avatar-fetch?placeId=0&userId=0";
 		var port = await StartRccService();
 		var jobId = Guid.NewGuid().ToString();
 
@@ -582,15 +586,16 @@ public class AssetsService : ServiceBase, IService
 			Mode = "Thumbnail",
 			Settings = new
 			{
-				Type = "Avatar_R15_Action_Package",
+				Type = "Package",
 				Arguments = new object[]
 				{
+                    assetUrlsString,
 					Configuration.BaseUrl,
-					charApp,
 					"Png",
 					840,
 					840,
-					assets.ToArray()
+                    $"{Configuration.BaseUrl}/v1/asset?id=1785197",
+                    ""
 				}
 			}
 		};
@@ -830,7 +835,6 @@ public class AssetsService : ServiceBase, IService
 	private async Task CreateBodyPartThumbnail(long assetId, Models.Assets.Type assetType, CancellationToken? cancellationToken = null)
 	{
 		var latestVersion = await GetLatestAssetVersion(assetId);
-        var packageAssets = await GetPackageAssets(assetId);
 
 		var clothingId = assetType switch
 		{
@@ -842,18 +846,11 @@ public class AssetsService : ServiceBase, IService
 			_ => throw new ArgumentException("Bad asset type for body part thumb")
 		};
 
-		var assets = new List<string>();
-
-        assets.Add($"{Configuration.PackageShirtAssetId}");
-		assets.Add($"{Configuration.PackagePantsAssetId}");
-        foreach (var asset in packageAssets)
-        {
-            assets.Add($"{asset}");
-        }
-
-        var assetUrlsString = string.Join(";", 
-            assets.Select(id => $"{Configuration.BaseUrl}/v1/asset/?id={id}")
-        );
+		var assets = new List<long>
+		{
+			assetId,
+			clothingId
+		};
 
 		var charApp = $"{Configuration.BaseUrl}/v1.1/avatar-fetch?placeId=0&userId=0";
 		var port = await StartRccService();
@@ -864,16 +861,15 @@ public class AssetsService : ServiceBase, IService
 			Mode = "Thumbnail",
 			Settings = new
 			{
-				Type = "Package",
+				Type = "Avatar_R15_Action_Package",
 				Arguments = new object[]
 				{
-                    assetUrlsString,
 					Configuration.BaseUrl,
+					charApp,
 					"Png",
 					840,
 					840,
-                    $"{Configuration.BaseUrl}/v1/asset?id=1785197",
-                    ""
+					assets.ToArray()
 				}
 			}
 		};

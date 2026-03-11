@@ -47,8 +47,8 @@ namespace Roblox.Website.Controllers
 			});
 		}
 		
-		[HttpGetBypass("api/device/initialize")]
-        [HttpPostBypass("api/device/initialize")]
+		[HttpGetBypass("device/initialize")]
+        [HttpPostBypass("device/initialize")]
         public MVC.IActionResult InitDevice()
         {
             Console.WriteLine("[POST] /device/initialize");
