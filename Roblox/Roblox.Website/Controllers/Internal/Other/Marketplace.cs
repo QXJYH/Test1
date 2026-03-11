@@ -271,6 +271,44 @@ namespace Roblox.Website.Controllers
 			};
 		}
 
+        [HttpGetBypass("gametransactions/getpendingtransactions")]
+        public async Task<dynamic> GetPendingTransactions(long placeId, long playerId)
+        {
+            if (!isRCC)
+                throw new UnauthorizedException();
+
+            var universeId = await services.games.GetUniverseId(placeId);
+            var pendingReceipts = await services.games.GetPendingProductReceipts(playerId, universeId);
+
+            if (pendingReceipts is null)
+                return Array.Empty<dynamic>();
+
+            return pendingReceipts.Select(pendingReceipt => new
+            {
+                playerId,
+                placeId,
+                receipt = pendingReceipt.id,
+                actionArgs = new List<dynamic>
+                {
+                    new
+                    {
+                        Key = "productId",
+                        Value = pendingReceipt.productId
+                    },
+                    new
+                    {
+                        Key = "currencyTypeId",
+                        Value = 1
+                    },
+                    new
+                    {
+                        Key = "unitPrice",
+                        Value = pendingReceipt.price
+                    }
+                }
+            }).ToArray();
+        }
+
         [HttpGetBypass("marketplace/productdetails")]
         public async Task<dynamic> GetProductDetailsMarketplace(long productId)
         {

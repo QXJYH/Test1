@@ -121,6 +121,15 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("asset")]
 		public async Task<MVC.ActionResult> GetAssetById(long id, [MVC.FromQuery] string? apiKey = null, [MVC.FromQuery(Name = "assetversionid")] long? assetVersionId = null)
         {
+            var ipHash = GetIP(GetRequesterIpRaw(HttpContext));
+            var rateLimitKey = $"RateLimit:GetAssetById:{ipHash}";
+            
+            if (!await services.cooldown.TryIncrementBucketCooldown(rateLimitKey, 60, TimeSpan.FromMinutes(1)))
+            {
+                Console.WriteLine($"[ratelimit] rate limit exceeded for IP {ipHash}");
+                throw new RobloxException(429, 0, "Too many requests");
+            }
+
 			var CachedRobloxAsset = await GetCachedAsset(id);
 			if (CachedRobloxAsset != null)
 			{

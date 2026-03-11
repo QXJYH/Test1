@@ -59,6 +59,32 @@ namespace Roblox.Website.Controllers
             return Redirect("/");
         }
 
+		[HttpPostBypass("my/friendsonline")]
+        [HttpGetBypass("my/friendsonline")]
+        public async Task<dynamic> GetFriendsOnline()
+        {
+            var result = await services.friends.GetFriends(safeUserSession.userId);
+            List<dynamic> onlineFriends = new List<dynamic>();
+            foreach (FriendEntry friend in result)
+            {
+                if (!friend.isOnline)
+                    continue;
+                var onlineStatus = (await services.users.MultiGetPresence(new[] { friend.id })).First();
+                onlineFriends.Add(new
+                {
+                    VisitorId = friend.id,
+                    GameId = onlineStatus.gameId,
+                    IsOnline = friend.isOnline,
+                    LastOnline = onlineStatus.lastOnline,
+                    LastLocation = onlineStatus.lastLocation,
+                    LocationType = (int)onlineStatus.userPresenceType,
+                    PlaceId = onlineStatus.placeId,
+                    UserName = friend.name,
+                });
+            }
+            return onlineFriends;
+        }
+
         [HttpGetBypass("abusereport/UserProfile"), HttpGetBypass("abusereport/asset"), HttpGetBypass("abusereport/user"), HttpGetBypass("abusereport/users")]
         public MVC.IActionResult ReportAbuseRedirect()
         {
@@ -183,7 +209,148 @@ namespace Roblox.Website.Controllers
 				return $"{(int)span.TotalMinutes} minute{(span.TotalMinutes >= 2 ? "s" : "")}";
 			return $"{(int)span.TotalSeconds} second{(span.TotalSeconds >= 2 ? "s" : "")}";
 		}
+
+		[HttpGetBypass("my/settings/json")]
+        public async Task<dynamic> SettingsJsonA()
+        {
+            var userInfo = await services.users.GetUserById(safeUserSession.userId);
+            string membership = await services.users.GetUserMemberShipAsString(safeUserSession.userId);
+            bool isAdmin = await StaffFilter.IsStaff(safeUserSession.userId);
+
+            return new
+            {
+                ChangeUsernameEnabled = true,
+                IsAdmin = isAdmin,
+                UserId = safeUserSession.userId,
+                Name = safeUserSession.username,
+                DisplayName = safeUserSession.username,
+                IsEmailOnFile = true,
+                IsEmailVerified = true,
+                IsPhoneFeatureEnabled = true,
+                RobuxRemainingForUsernameChange = 0,
+                PreviousUserNames = "",
+                UseSuperSafePrivacyMode = false,
+                IsSuperSafeModeEnabledForPrivacySetting = false,
+                UseSuperSafeChat = false,
+                IsAppChatSettingEnabled = true,
+                IsGameChatSettingEnabled = true,
+                IsAccountPrivacySettingsV2Enabled = true,
+                IsSetPasswordNotificationEnabled = false,
+                ChangePasswordRequiresTwoStepVerification = false,
+                ChangeEmailRequiresTwoStepVerification = false,
+                UserEmail = "kornet@kornet.lat",
+                UserEmailMasked = true,
+                UserEmailVerified = true,
+                CanHideInventory = true,
+                CanTrade = false,
+                MissingParentEmail = false,
+                IsUpdateEmailSectionShown = true,
+                IsUnder13UpdateEmailMessageSectionShown = false,
+                IsUserConnectedToFacebook = false,
+                IsTwoStepToggleEnabled = false,
+                AgeBracket = 0,
+                UserAbove13 = true,
+                ClientIpAddress = GetRequesterIpRaw(HttpContext),
+                AccountAgeInDays = DateTime.UtcNow.Subtract(userInfo.created).Days,
+                IsOBC = false,
+                IsTBC = false,
+                IsAnyBC = false,
+                IsPremium = false,
+                IsBcRenewalMembership = false,
+                BcExpireDate = "/Date(-0)/",
+                BcRenewalPeriod = (string?)null,
+                BcLevel = (int?)null,
+                HasCurrencyOperationError = false,
+                CurrencyOperationErrorMessage = (string?)null,
+                BlockedUsersModel = new
+                {
+                    BlockedUserIds = new List<int>() { },
+                    BlockedUsers = new List<string>() { },
+                    MaxBlockedUsers = 50,
+                    Total = 1,
+                    Page = 1
+                },
+                Tab = (string?)null,
+                ChangePassword = false,
+                IsAccountPinEnabled = true,
+                IsAccountRestrictionsFeatureEnabled = true,
+                IsAccountRestrictionsSettingEnabled = false,
+                IsAccountSettingsSocialNetworksV2Enabled = false,
+                IsUiBootstrapModalV2Enabled = true,
+                IsI18nBirthdayPickerInAccountSettingsEnabled = true,
+                InApp = false,
+                MyAccountSecurityModel = new
+                {
+                    IsEmailSet = true,
+                    IsEmailVerified = true,
+                    IsTwoStepEnabled = false,
+                    ShowSignOutFromAllSessions = true,
+                    TwoStepVerificationViewModel = new
+                    {
+                        UserId = safeUserSession.userId,
+                        IsEnabled = false,
+                        CodeLength = 6,
+                        ValidCodeCharacters = (int?)null
+                    }
+                },
+                ApiProxyDomain = Configuration.BaseUrl,
+                AccountSettingsApiDomain = Configuration.BaseUrl,
+                AuthDomain = Configuration.BaseUrl,
+                IsDisconnectFbSocialSignOnEnabled = true,
+                IsDisconnectXboxEnabled = true,
+                NotificationSettingsDomain = Configuration.BaseUrl,
+                AllowedNotificationSourceTypes = new List<string>
+                {
+                    "Test",
+                    "FriendRequestReceived",
+                    "FriendRequestAccepted",
+                    "PartyInviteReceived",
+                    "PartyMemberJoined",
+                    "ChatNewMessage",
+                    "PrivateMessageReceived",
+                    "UserAddedToPrivateServerWhiteList",
+                    "ConversationUniverseChanged",
+                    "TeamCreateInvite",
+                    "GameUpdate",
+                    "DeveloperMetricsAvailable"
+                },
+                AllowedReceiverDestinationTypes = new List<string>
+                {
+                    "DesktopPush",
+                    "NotificationStream"
+                },
+                BlacklistedNotificationSourceTypesForMobilePush = new List<string> { },
+                MinimumChromeVersionForPushNotifications = 50,
+                PushNotificationsEnabledOnFirefox = true,
+                LocaleApiDomain = Configuration.BaseUrl,
+                HasValidPasswordSet = true,
+                IsUpdateEmailApiEndpointEnabled = true,
+                FastTrackMember = (string?)null,
+                IsFastTrackAccessible = false,
+                HasFreeNameChange = false,
+                IsAgeDownEnabled = false,
+                IsSendVerifyEmailApiEndpointEnabled = true,
+                IsPromotionChannelsEndpointEnabled = true,
+                ReceiveNewsletter = false,
+                SocialNetworksVisibilityPrivacy = 6,
+                SocialNetworksVisibilityPrivacyValue = "AllUsers",
+                Facebook = (string?)null,
+                Twitter = (string?)null,
+                YouTube = (string?)null,
+                Twitch = (string?)null
+            };
+        }
 		
+		[HttpGetBypass("/v1/user/currency")]
+        [HttpGetBypass("/my/balance")]
+        public async Task<dynamic> MyBalance()
+        {
+            return new
+            {
+                robux = await services.economy.GetUserRobux(safeUserSession.userId),
+            };
+        }
+
 		[HttpGetBypass("promocodes/redeem")]
 		public async Task<dynamic> RedeemPromoCode(
 			[Required] string code,

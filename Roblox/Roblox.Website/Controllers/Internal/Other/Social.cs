@@ -433,29 +433,23 @@ namespace Roblox.Website.Controllers
 		
         [HttpGetBypass("users/account-info")]
         [HttpPostBypass("users/account-info")]
-        public async Task<dynamic> accountInfo()
+        public async Task<dynamic> AccountInfo()
         {
-            var userBalance = await services.economy.GetUserBalance(userSession.userId);
-
-            var roles = new string[] { };
-
-            var jsonData = new
+            var userBalance = await services.economy.GetUserBalance(safeUserSession.userId);
+            return new
             {
-                UserId = userSession.userId,
-                Username = userSession.username,
-                DisplayName = userSession.username,
+                UserId = safeUserSession.userId,
+                Username = safeUserSession.username,
+                DisplayName = safeUserSession.username,
                 HasPasswordSet = true,
-                Email = "", 
-                MembershipType = 0,
+                Email = "kornet@kornet.lat",
+                MembershipType = 3,
                 RobuxBalance = userBalance.robux,
                 AgeBracket = 0,
-                Roles = roles.ToArray(),
+                Roles = new string[] { },
                 EmailNotificationEnabled = false,
-                PasswordNotificationEnabled = false,
+                PasswordNotifcationEnabled = false,
             };
-
-            string jsonString = JsonConvert.SerializeObject(jsonData);
-            return Content(jsonString, "application/json");
         }
 		
         [HttpPostBypass("user/following-exists")]
