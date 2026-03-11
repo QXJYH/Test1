@@ -830,6 +830,7 @@ public class AssetsService : ServiceBase, IService
 	private async Task CreateBodyPartThumbnail(long assetId, Models.Assets.Type assetType, CancellationToken? cancellationToken = null)
 	{
 		var latestVersion = await GetLatestAssetVersion(assetId);
+        var packageAssets = await GetPackageAssets(assetId);
 
 		var clothingId = assetType switch
 		{
@@ -841,11 +842,18 @@ public class AssetsService : ServiceBase, IService
 			_ => throw new ArgumentException("Bad asset type for body part thumb")
 		};
 
-		var assets = new List<long>
-		{
-			assetId,
-			clothingId
-		};
+		var assets = new List<string>();
+
+        assets.Add($"{Configuration.PackageShirtAssetId}");
+		assets.Add($"{Configuration.PackagePantsAssetId}");
+        foreach (var asset in packageAssets)
+        {
+            assets.Add($"{asset}");
+        }
+
+        var assetUrlsString = string.Join(";", 
+            assets.Select(id => $"{Configuration.BaseUrl}/v1/asset/?id={id}")
+        );
 
 		var charApp = $"{Configuration.BaseUrl}/v1.1/avatar-fetch?placeId=0&userId=0";
 		var port = await StartRccService();
@@ -856,15 +864,16 @@ public class AssetsService : ServiceBase, IService
 			Mode = "Thumbnail",
 			Settings = new
 			{
-				Type = "Avatar_R15_Action_Package",
+				Type = "Package",
 				Arguments = new object[]
 				{
+                    assetUrlsString,
 					Configuration.BaseUrl,
-					charApp,
 					"Png",
 					840,
 					840,
-					assets.ToArray()
+                    $"{Configuration.BaseUrl}/v1/asset?id=1785197",
+                    ""
 				}
 			}
 		};
@@ -944,26 +953,14 @@ public class AssetsService : ServiceBase, IService
 	}
 
     #endregion
-
-    /// <summary>
-    /// Render asset and wait for it to finish
-    /// </summary>
-    /// <param name="assetId"></param>
-    /// <param name="assetType"></param>
-    /// <param name="cancellationToken">The CancellationToken</param>
-    /// <exception cref="Exception"></exception>
 	public async Task RenderAssetAsync(long assetId, Models.Assets.Type assetType, CancellationToken? cancellationToken = null)
 	{
 		List<Task> thumbRequests = new();
 		switch (assetType)
 		{
-			// case Models.Assets.Type.Image:
-			// case Models.Assets.Type.Decal:
 			case Models.Assets.Type.Face:
 				thumbRequests.Add(CreateAssetTextureThumbnail(assetId, assetType, cancellationToken));
 				break;
-
-			// Treat Shirts and Pants as Hats
 			case Models.Assets.Type.Shirt:
 			case Models.Assets.Type.Pants:
 				thumbRequests.Add(CreateAssetThumbnail(assetId, cancellationToken));
@@ -986,9 +983,7 @@ public class AssetsService : ServiceBase, IService
                 break;
 
 			case Type.Hat:
-			//case Type.Place:
 			case Type.Gear:
-			//case Type.Mesh:
 			case Type.HairAccessory:
 			case Type.NeckAccessory:
 			case Type.ShoulderAccessory:
@@ -996,6 +991,9 @@ public class AssetsService : ServiceBase, IService
 			case Type.FrontAccessory:
 			case Type.FaceAccessory:
 			case Type.WaistAccessory:
+            
+            // ill do it later
+
 /* 			case Type.LeftArm:
 			case Type.LeftLeg:
 			case Type.RightArm:

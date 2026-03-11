@@ -136,6 +136,14 @@ namespace Roblox.Website.Controllers
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "StudioApp.json");
 						break;
 
+					case "PCStudioApp":
+						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "PCStudioApp.json");
+						break;
+
+					case "AndroidApp":
+						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "AndroidApp.json");
+						break;
+
 					case "6sxp8X2Y02KornetSETTINGwork":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "RCCService.json");
 						break;

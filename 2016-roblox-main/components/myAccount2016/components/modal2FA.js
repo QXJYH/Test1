@@ -6,10 +6,12 @@ import request from "../../../lib/request";
 import useModalStyles from "../styles/modal";
 import ActionButton from "../../actionButton";
 import MyAccountStore from "../stores/myAccountStore";
+import AuthenticationStore from "../../../stores/authentication";
 
 const ModalEnable2FA = () => {
   const s = useModalStyles();
   const store = MyAccountStore.useContainer();
+  const auth = AuthenticationStore.useContainer();
 
   const [enabled, setEnabled] = useState(null);
   const [totp, setTotp] = useState(null);
@@ -35,7 +37,7 @@ const ModalEnable2FA = () => {
         setLoading(false);
       });
   }, []);
-  
+
   const handleEnable2FA = () => {
     setLocked(true);
     setFeedback(null);
@@ -60,7 +62,7 @@ const ModalEnable2FA = () => {
       })
       .finally(() => setLocked(false));
   };
-  
+
   const handleDisable2FA = () => {
     setLocked(true);
     setFeedback(null);
@@ -85,7 +87,7 @@ const ModalEnable2FA = () => {
       })
       .finally(() => setLocked(false));
   };
-  
+
   if (loading) {
     return <p className="ps-4">Loading 2FA...</p>;
   }
@@ -95,10 +97,10 @@ const ModalEnable2FA = () => {
   }
 
   console.log("enabled:", enabled, "totp:", totp);
-  
+
   if (enabled === false && totp) {
-	store.setModal('MODAL_ENABLE_2FA_BIG');
-    const OTP = `otpauth://totp/Kornet?secret=${totp}&issuer=Kornet`;
+    store.setModal('MODAL_ENABLE_2FA_BIG');
+    const OTP = `otpauth://totp/Kornet%20-%20${auth.username}?secret=${totp}`;
 
     return (
       <div

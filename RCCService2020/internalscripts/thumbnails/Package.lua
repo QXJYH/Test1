@@ -47,8 +47,6 @@ local function processR15Anim(animFolder)
 			return
 		end
 
-		-- By default the pose animation will be used for the thumbnail
-		-- If the pose animation doesn't exist then the idle will be used, otherwise the first animation will be used.
 		if string.lower(strValue.Name) == "pose" then
 			poseValueFound = true
 			poseAnimationId = animation.AnimationId

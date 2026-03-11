@@ -114,6 +114,12 @@ namespace Roblox.Website.Controllers
 			return badheaders.Contains(headername);
 		}
 
+        // used to ddos
+        public List<long> BlacklistedAssetIds = new List<long>
+        {
+            72478963, // 163mb place 😭😭
+        };
+
         [HttpGetBypass("v2/asset")]
         [HttpGetBypass("v1/asset")]
         [HttpGetBypass("asset")]
@@ -121,6 +127,11 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("asset")]
 		public async Task<MVC.ActionResult> GetAssetById(long id, [MVC.FromQuery] string? apiKey = null, [MVC.FromQuery(Name = "assetversionid")] long? assetVersionId = null)
         {
+            if (BlacklistedAssetIds.Contains(id))
+            {
+                throw new RobloxException(400, 0, "Asset is invalid or does not exist");
+            }
+
             var ipHash = GetIP(GetRequesterIpRaw(HttpContext));
             var rateLimitKey = $"RateLimit:GetAssetById:{ipHash}";
             

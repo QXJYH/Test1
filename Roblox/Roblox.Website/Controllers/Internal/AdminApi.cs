@@ -2418,8 +2418,8 @@ public class AdminApiController : ControllerBase
     public async Task RemoveUserRobux([Required, FromBody] GiveUserRobuxRequest request)
     {
         // temporary
-        if (request.robux is <= 0 or > 10000000)
-            throw new StaffException("Invalid robux amount. Must be between 1 and 10M (inclusive)");
+        // if (request.robux is <= 0 or > 10000000)
+        //     throw new StaffException("Invalid robux amount. Must be between 1 and 10M (inclusive)");
 
         await db.ExecuteAsync("UPDATE user_economy SET balance_robux = balance_robux - :amt WHERE user_id = :user_id",
             new

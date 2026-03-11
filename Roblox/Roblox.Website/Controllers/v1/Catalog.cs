@@ -649,17 +649,17 @@ public class CatalogControllerV1 : ControllerBase
 		var ipHash = GetIP(GetRequesterIpRaw(HttpContext));
 		var rateLimitKey = $"RateLimit:CatalogRecommendations:{ipHash}";
 
-		if (!await services.cooldown.TryIncrementBucketCooldown(rateLimitKey, 60, TimeSpan.FromMinutes(1)))
-		{
-			Console.WriteLine($"[ratelimit] rate limit for IP {ipHash} on recommendations");
-			throw new RobloxException(429, 0, "Too many requests");
-		}
-
 		var userAgent = Request.Headers["User-Agent"].ToString();
 		if (userAgent.Contains("Roblox/WinInet"))
 		{
 			Console.WriteLine($"[block] blocked robloxwininet for IP {ipHash} on recommendations");
-			throw new RobloxException(403, 0, "Forbidden");
+			throw new RobloxException(400, 0, "Asset is invalid or does not exist");
+		}
+
+		if (!await services.cooldown.TryIncrementBucketCooldown(rateLimitKey, 60, TimeSpan.FromMinutes(1)))
+		{
+			Console.WriteLine($"[ratelimit] rate limit for IP {ipHash} on recommendations");
+			throw new RobloxException(429, 0, "Too many requests");
 		}
 
 		var result = await services.assets.GetRecommendedItems(assetTypeId, contextAssetId, numItems * 2); // get more items in case of hidden ones

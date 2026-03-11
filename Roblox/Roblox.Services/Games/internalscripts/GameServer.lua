@@ -16,7 +16,7 @@ local http = game:GetService("HttpService")
 local ns = game:GetService("NetworkServer")
 local scriptContext = game:GetService("ScriptContext")
 local playersService = game:GetService("Players")
-local webhook = "https://discord.com/api/webhooks/1470146039569842186/dyo0RGWRR7-5RSHuQCA18YWwS0zxumBnVz0MriyJtBFx50Sa9yKc18tnMKx4y7CivK_s"
+
 ------------------- UTILITY -------------------
 local function waitForChild(parent, childName)
 	while true do
@@ -27,17 +27,7 @@ local function waitForChild(parent, childName)
 end
 
 local function sendtohook(content)
-	spawn(function()
-		local success, err = pcall(function()
-			local data = {
-				content = content,
-			}
-			http:PostAsync(webhook, http:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
-		end)
-		if not success then
-			--print("[webhook] failed to send message:", err)
-		end
-	end)
+	return
 end
 
 ------------------- SETTINGS -------------------
