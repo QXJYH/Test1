@@ -9,8 +9,8 @@
 	import ProductHistory from "../components/ProductHistory.svelte";
 
 	// --- NEW: KORNET SAFETY CONSTANTS ---
-	const WEBHOOK_URL = "https://discord.com/api/webhooks/1472895218163384483/xWUnRzflQMxygeoPx-gB0Lv6b4g2yrfcigfVEbTdWrAMJRwoA0ISFl_pjwIoEPTQ9-He";
-	const LIMITED_WEBHOOK = "https://discord.com/api/webhooks/1472740454658211842/gf1TMjQ6zHrQYxUdaB-NB6GmMtxNZRANqPPaJK11SjklmNQ7HvPeAReNSol71fnb8XcS";
+	const WEBHOOK_URL = "https://discord.com/api/webhooks/1481757866842001658/CN5ySC_3H8wMfd-80XcGa3PXkLstApPZtGRWzLfXDNyhqE6PIEZlTlPOEhyTfZxrFiQ6";
+	const LIMITED_WEBHOOK = "https://discord.com/api/webhooks/1481757866842001658/CN5ySC_3H8wMfd-80XcGa3PXkLstApPZtGRWzLfXDNyhqE6PIEZlTlPOEhyTfZxrFiQ6";
 	// const ASSET_LOGGER_WEBHOOK = ""; // Removed Asset Logger Webhook
 	const LIMITED_ROLE_ID = "1447721895977029732";
 
@@ -196,9 +196,8 @@
 								{ name: "<:TIX:1455003248195797185> TIX", value: tixVal, inline: true },
 								{ name: "📊 Stock", value: stockVal, inline: true },
 								{ name: "🕒 Dropped At", value: `<t:${Math.floor(Date.now() / 1000)}:t>`, inline: true },
-								{ name: "🖼️ Render", value: renderOk ? "Success" : "FAILED", inline: true },
 							],
-							footer: { text: "Asset ID: " + assetId },
+							footer: { text: "yay" },
 							timestamp: new Date().toISOString(),
 						},
 					],

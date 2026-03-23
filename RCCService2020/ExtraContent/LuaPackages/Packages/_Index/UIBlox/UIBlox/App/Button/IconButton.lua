@@ -13,7 +13,6 @@ local ControlState = require(Core.Control.Enum.ControlState)
 local getContentStyle = require(Core.Button.getContentStyle)
 local getIconSize = require(App.ImageSet.getIconSize)
 local enumerateValidator = require(UIBlox.Utility.enumerateValidator)
-local bindingValidator = require(Core.Utility.bindingValidator)
 local validateImage = require(Core.ImageSet.Validator.validateImage)
 
 local withStyle = require(Core.Style.withStyle)
@@ -49,7 +48,7 @@ IconButton.validateProps = t.strictInterface({
 	icon = t.optional(validateImage),
 	iconSize = t.optional(enumerateValidator(IconSize)),
 	iconColor3 = t.optional(t.Color3),
-	iconTransparency = t.optional(t.union(t.number, bindingValidator(t.number))),
+	iconTransparency = t.optional(t.number),
 
 	-- Override the default controlState
 	[IconButton.debugProps.controlState] = t.optional(enumerateValidator(ControlState)),

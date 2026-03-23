@@ -19,6 +19,7 @@ public class UserDiscord
 	public string username { get; set; }
 	public DateTime created { get; set; }
 	public DateTime lastOnline { get; set; }
+	public string? discordId { get; set; }
 }
 
 public class Transcript

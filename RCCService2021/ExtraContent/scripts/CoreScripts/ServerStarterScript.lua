@@ -52,7 +52,7 @@ end
 
 local function reportplayer(userId, eventType)
 	local msg = {
-		authorization = "KrntAuthNTCatinoMenaslgie",
+		authorization = "authkrntislwkgoatedheh",
 		serverId = game.JobId,
 		userId = tostring(userId),
 		eventType = eventType,
@@ -65,7 +65,7 @@ local function pollToReportActivity()
 	--while serverOk do
 	while true do
 		local msg ={
-			authorization = "KrntAuthNTCatinoMenaslgie",
+			authorization = "authkrntislwkgoatedheh",
 			serverId = game.JobId,
 			placeId = placeId
 		}
@@ -77,7 +77,7 @@ end
 local function shutdown()
 	print("[info] Shutting down server")
 	local msg = {
-		authorization = "KrntAuthNTCatinoMenaslgie",
+		authorization = "authkrntislwkgoatedheh",
 		serverId = game.JobId,
 		placeId = placeId
 	}

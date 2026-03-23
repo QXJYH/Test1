@@ -24,8 +24,6 @@ local Constants = {
         },
     },
 
-    EmotesImage = "rbxthumb://type=Asset&id=%d&w=420&h=420",
-    --todo: remove with GetFFlagUseThumbnailUrl
     EmotesImageApi = "asset-thumbnail/image?assetId=%d&width=420&height=420&format=png",
 
     EmotesMenuZIndex = 50,

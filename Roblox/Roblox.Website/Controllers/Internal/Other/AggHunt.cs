@@ -20,9 +20,9 @@ namespace Roblox.Website.Controllers
     [MVC.Route("/")]
     public class EggHunt : ControllerBase
     {
-        private static bool IsTheAggHuntEnably = true;
+        private static bool IsTheAggHuntEnably = false;
 		// Top secret fbi bobux key
-        private const string ApiKey = "egghuntingistgbroehydidwekeepthisfuckingshut";
+        private const string ApiKey = "eggjgjasnfdwrgkjehkjghwejdawgbrothathwthatomgomfdhwyig";
         
         [HttpGetEgg("game/EggHunt.ashx")]
         public async Task<IActionResult> AggHuntReqrust([FromQuery] long? placeId, [FromQuery] long? playerId, [FromQuery] long? eggId, [FromQuery] bool? toggle, [FromQuery] bool? getStatus, [FromQuery] string apiKey)
@@ -32,16 +32,16 @@ namespace Roblox.Website.Controllers
                 return Unauthorized("Bad man.... No leaky.");
             }
 			
-            if (toggle.HasValue)
-            {
-                IsTheAggHuntEnably = toggle.Value;
-                return Ok(new { enabled = IsTheAggHuntEnably });
-            }
+            // if (toggle.HasValue)
+            // {
+            //     IsTheAggHuntEnably = toggle.Value;
+            //     return Ok(new { enabled = IsTheAggHuntEnably });
+            // }
 
-            if (getStatus.HasValue && getStatus.Value)
-            {
-                return Ok(new { enabled = IsTheAggHuntEnably });
-            }
+            // if (getStatus.HasValue && getStatus.Value)
+            // {
+            //     return Ok(new { enabled = IsTheAggHuntEnably });
+            // }
 
             if (placeId.HasValue && playerId.HasValue && eggId.HasValue)
             {

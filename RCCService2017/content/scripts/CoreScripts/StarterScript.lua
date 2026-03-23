@@ -41,11 +41,13 @@ scriptContext:AddCoreScriptLocal("CoreScripts/PerformanceStatsManagerScript",
 spawn(function() safeRequire(RobloxGui.Modules.ChatSelector) end)
 spawn(function() safeRequire(RobloxGui.Modules.PlayerlistModule) end)
 
-scriptContext:AddCoreScriptLocal("CoreScripts/BubbleChat", RobloxGui)
-
 -- Purchase Prompt Script (run both versions, they will check the relevant flag)
 scriptContext:AddCoreScriptLocal("CoreScripts/PurchasePromptScript2", RobloxGui)
 scriptContext:AddCoreScriptLocal("CoreScripts/PurchasePromptScript3", RobloxGui)
+
+-- Prompt Block Player Script
+scriptContext:AddCoreScriptLocal("CoreScripts/BlockPlayerPrompt", RobloxGui)
+scriptContext:AddCoreScriptLocal("CoreScripts/FriendPlayerPrompt", RobloxGui)
 
 -- Backpack!
 spawn(function() safeRequire(RobloxGui.Modules.BackpackScript) end)
@@ -104,5 +106,3 @@ if UserSettings().GameSettings:InStudioMode() then
 		UserInputService.Changed:connect(onVREnabled)
 	end)
 end
-
-

@@ -71,6 +71,30 @@ namespace Roblox.Website.Controllers
 			throw new NotImplementedException();
 		}
 
+		[HttpGetBypass("v1/users/{userId:long}/items/gamepass/{assetId:long}")]
+		public async Task<dynamic> GetUserGamePass(long userId, long assetId)
+		{
+			var owned = await services.users.GetUserGamePass(userId, assetId);
+			var data = new List<dynamic>();
+			if (owned != null)
+			{
+				data.Add(new
+				{
+					Id = owned.id,
+					Name = owned.name ?? "Game Pass",
+					Type = 34,
+					InstanceId = 0
+				});
+			}
+
+			return new
+			{
+				nextPageCursor = (string?)null,
+				previousPageCursor = (string?)null,
+				data = data
+			};
+		}
+
         [HttpGet("game/luawebservice/handlesocialrequest.ashx")]
         public async Task<string> LuaSocialRequest([Required, MVC.FromQuery] string method, long? playerid = null, long? groupid = null, long? userid = null)
         {

@@ -26,6 +26,8 @@ local ChatTypesSet = false
 local ClassicChatEnabled = PlayersService.ClassicChat
 local BubbleChatEnabled = PlayersService.BubbleChat
 
+local FFlagCoreScriptsNoHotKeysWhenMenuOpen = require(RobloxGui.Modules.Flags.FFlagCoreScriptsNoHotKeysWhenMenuOpen)
+
 local Util = require(RobloxGui.Modules.ChatUtil)
 
 local moduleApiTable = {}
@@ -185,8 +187,10 @@ do
         if not FFlagUserHandleChatHotKeyWithContextActionService then
             GuiService:AddSpecialKey(Enum.SpecialKey.ChatHotkey)
 			GuiService.SpecialKeyPressed:connect(function(key, modifiers)
-				if GuiService.MenuIsOpen then
-					return
+				if FFlagCoreScriptsNoHotKeysWhenMenuOpen then
+					if GuiService.MenuIsOpen then
+						return
+					end
 				end
 
                 DispatchEvent("SpecialKeyPressed", key, modifiers)

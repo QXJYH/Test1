@@ -344,8 +344,10 @@ function onRunning(speed)
 		end
 		pose = "Running"
 	else
-		playAnimation("idle", 0.1, Humanoid)
-		pose = "Standing"
+		if emoteNames[currentAnim] == nil then
+			playAnimation("idle", 0.1, Humanoid)
+			pose = "Standing"
+		end
 	end
 end
 

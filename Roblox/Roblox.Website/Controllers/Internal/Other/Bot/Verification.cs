@@ -65,5 +65,12 @@ namespace Roblox.Website.Controllers
 
             return new { success = false, message = "Invalid code" };
         }
+
+		[HttpGetBypass("botapi/discord/test-auth")]
+		public async Task<dynamic> TestAuth()
+		{
+			ValidateBotAuth();
+			return new { success = true, message = "Authenticated" };
+		}
     }
 }

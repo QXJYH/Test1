@@ -6,13 +6,10 @@ local module = {}
 
 local modulesFolder = script.Parent
 
---////////////////////////////// Include
---//////////////////////////////////////
-local ClassMaker = require(modulesFolder:WaitForChild("ClassMaker"))
-
 --////////////////////////////// Methods
 --//////////////////////////////////////
 local methods = {}
+methods.__index = methods
 
 function methods:SayMessage(message, channelName, extraData)
 	if (self.ChatService:InternalDoProcessCommands(self.Name, message, channelName)) then return end
@@ -25,7 +22,7 @@ function methods:SayMessage(message, channelName, extraData)
 
 	local messageObj = channel:InternalPostMessage(self, message, extraData)
 	if (messageObj) then
-		local success, err = pcall(function() self.eSaidMessage:Fire(messageObj) end)
+		local success, err = pcall(function() self.eSaidMessage:Fire(messageObj, channelName) end)
 		if not success and err then
 			print("Error saying message: " ..err)
 		end
@@ -48,7 +45,7 @@ function methods:JoinChannel(channelName)
 	self.Channels[channelName:lower()] = channel
 	channel:InternalAddSpeaker(self)
 	local success, err = pcall(function()
-		self.eChannelJoined:Fire(channel.Name, channel.WelcomeMessage)
+		self.eChannelJoined:Fire(channel.Name, channel:GetWelcomeMessageForSpeaker(self))
 	end)
 	if not success and err then
 		print("Error joining channel: " ..err)
@@ -108,19 +105,20 @@ function methods:SendSystemMessage(message, channelName, extraData)
 end
 
 function methods:GetPlayer()
-	return rawget(self, "PlayerObj")
+	return self.PlayerObj
 end
 
 function methods:SetExtraData(key, value)
 	self.ExtraData[key] = value
+	self.eExtraDataUpdated:Fire(key, value)
 end
 
 function methods:GetExtraData(key)
 	return self.ExtraData[key]
 end
 
-function methods:SetMainChannel(channel)
-	local success, err = pcall(function() self.eMainChannelSet:Fire(channel) end)
+function methods:SetMainChannel(channelName)
+	local success, err = pcall(function() self.eMainChannelSet:Fire(channelName) end)
 	if not success and err then
 		print("Error setting main channel: " ..err)
 	end
@@ -147,45 +145,63 @@ function methods:InternalDestroy()
 	end
 
 	self.eDestroyed:Fire()
+
+	self.eDestroyed:Destroy()
+	self.eSaidMessage:Destroy()
+	self.eReceivedMessage:Destroy()
+	self.eReceivedUnfilteredMessage:Destroy()
+	self.eMessageDoneFiltering:Destroy()
+	self.eReceivedSystemMessage:Destroy()
+	self.eChannelJoined:Destroy()
+	self.eChannelLeft:Destroy()
+	self.eMuted:Destroy()
+	self.eUnmuted:Destroy()
+	self.eExtraDataUpdated:Destroy()
+	self.eMainChannelSet:Destroy()
+	self.eChannelNameColorUpdated:Destroy()
 end
 
 function methods:InternalAssignPlayerObject(playerObj)
-	rawset(self, "PlayerObj", playerObj)
+	self.PlayerObj = playerObj
 end
 
-function methods:InternalSendMessage(messageObj, channel)
+function methods:InternalSendMessage(messageObj, channelName)
 	local success, err = pcall(function()
-		self.eReceivedMessage:Fire(messageObj, channel)
+		self.eReceivedUnfilteredMessage:Fire(messageObj, channelName)
 	end)
 	if not success and err then
 		print("Error sending internal message: " ..err)
 	end
 end
 
-function methods:InternalSendFilteredMessage(messageObj, channel)
+function methods:InternalSendFilteredMessage(messageObj, channelName)
 	local success, err = pcall(function()
-		self.eMessageDoneFiltering:Fire(messageObj, channel)
+		self.eReceivedMessage:Fire(messageObj, channelName)
+		self.eMessageDoneFiltering:Fire(messageObj, channelName)
 	end)
 	if not success and err then
 		print("Error sending internal filtered message: " ..err)
 	end
 end
 
-function methods:InternalSendSystemMessage(messageObj, channel)
+function methods:InternalSendSystemMessage(messageObj, channelName)
 	local success, err = pcall(function()
-		self.eReceivedSystemMessage:Fire(messageObj, channel)
+		self.eReceivedSystemMessage:Fire(messageObj, channelName)
 	end)
 	if not success and err then
 		print("Error sending internal system message: " ..err)
 	end
 end
 
+function methods:UpdateChannelNameColor(channelName, channelNameColor)
+	self.eChannelNameColorUpdated:Fire(channelName, channelNameColor)
+end
+
 --///////////////////////// Constructors
 --//////////////////////////////////////
-ClassMaker.RegisterClassType("Speaker", methods)
 
 function module.new(vChatService, name)
-	local obj = {}
+	local obj = setmetatable({}, methods)
 
 	obj.ChatService = vChatService
 
@@ -197,30 +213,38 @@ function module.new(vChatService, name)
 	obj.Channels = {}
 	obj.MutedSpeakers = {}
 
+	-- Make sure to destroy added binadable events in the InternalDestroy method.
 	obj.eDestroyed = Instance.new("BindableEvent")
-	obj.Destroyed = obj.eDestroyed.Event
-
 	obj.eSaidMessage = Instance.new("BindableEvent")
 	obj.eReceivedMessage = Instance.new("BindableEvent")
+	obj.eReceivedUnfilteredMessage = Instance.new("BindableEvent")
 	obj.eMessageDoneFiltering = Instance.new("BindableEvent")
 	obj.eReceivedSystemMessage = Instance.new("BindableEvent")
 	obj.eChannelJoined = Instance.new("BindableEvent")
 	obj.eChannelLeft = Instance.new("BindableEvent")
 	obj.eMuted = Instance.new("BindableEvent")
 	obj.eUnmuted = Instance.new("BindableEvent")
+	obj.eExtraDataUpdated = Instance.new("BindableEvent")
 	obj.eMainChannelSet = Instance.new("BindableEvent")
+	obj.eChannelNameColorUpdated = Instance.new("BindableEvent")
 
+	obj.Destroyed = obj.eDestroyed.Event
 	obj.SaidMessage = obj.eSaidMessage.Event
 	obj.ReceivedMessage = obj.eReceivedMessage.Event
+	obj.ReceivedUnfilteredMessage = obj.eReceivedUnfilteredMessage.Event
 	obj.MessageDoneFiltering = obj.eMessageDoneFiltering.Event
 	obj.ReceivedSystemMessage = obj.eReceivedSystemMessage.Event
 	obj.ChannelJoined = obj.eChannelJoined.Event
 	obj.ChannelLeft = obj.eChannelLeft.Event
 	obj.Muted = obj.eMuted.Event
 	obj.Unmuted = obj.eUnmuted.Event
+	obj.ExtraDataUpdated = obj.eExtraDataUpdated.Event
 	obj.MainChannelSet = obj.eMainChannelSet.Event
+	obj.ChannelNameColorUpdated = obj.eChannelNameColorUpdated.Event
 
-	ClassMaker.MakeClass("Speaker", obj)
+	--- DEPRECATED:
+	--- Mispelled version of ReceivedUnfilteredMessage, retained for compatibility with legacy versions.
+	obj.RecievedUnfilteredMessage = obj.eReceivedUnfilteredMessage.Event
 
 	return obj
 end

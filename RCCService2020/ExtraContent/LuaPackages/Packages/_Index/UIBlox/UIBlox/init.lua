@@ -71,7 +71,6 @@ local function initializeLibrary()
 		Bar = strict({
 			HeaderBar = require(script.App.Bar.HeaderBar),
 			RootHeaderBar = require(script.App.Bar.RootHeaderBar),
-			FullscreenTitleBar = require(script.App.Bar.FullscreenTitleBar),
 		}),
 
 		Button = strict({
@@ -209,12 +208,6 @@ local function initializeLibrary()
 			DropdownMenu = require(script.App.Menu.DropdownMenu),
 
 		}),
-
-		SelectionImage = strict({
-			SelectionCursorProvider = require(script.App.SelectionImage.SelectionCursorProvider),
-			CursorKind = require(script.App.SelectionImage.CursorKind),
-			withSelectionCursorProvider = require(script.App.SelectionImage.withSelectionCursorProvider),
-		})
 	})
 
 	-- DEPRECATED SECTION

@@ -19,17 +19,11 @@ public class RobloxLoggingMiddleware
         await _next(ctx);
         watch.Stop();
 
-        var str = $"[{ctx.Request.Method.ToUpper()}] {ctx.Request.GetEncodedUrl()} - {watch.ElapsedMilliseconds}ms";
-		// Should we comment this later? It always shows errors in console and the requests just flood it so you can't really see the errors
-        Console.WriteLine(str);
-/* 		var url = ctx.Request.GetEncodedUrl();
-        if (url.Contains("persistence", StringComparison.OrdinalIgnoreCase) ||
-			url.Contains("marketplace", StringComparison.OrdinalIgnoreCase) ||
-			url.Contains("badge", StringComparison.OrdinalIgnoreCase))
-        {
-            var str = $"[{ctx.Request.Method.ToUpper()}] {url} - {watch.ElapsedMilliseconds}ms";
-            Console.WriteLine(str);
-        } */
+        var path = ctx.Request.Path.Value ?? "";
+        var query = ctx.Request.QueryString.Value ?? "";
+        
+        var consoleStr = $"[{ctx.Request.Method.ToUpper()}] {path}{query} - Status: {ctx.Response.StatusCode} - {watch.ElapsedMilliseconds}ms";
+        Console.WriteLine(consoleStr);
     }
 }
 

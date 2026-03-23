@@ -191,7 +191,7 @@ namespace Roblox.Website.Controllers
 
 			HttpContext.Response.Cookies.Append(Middleware.SessionMiddleware.CookieName, sessionCookie, new CookieOptions()
 			{
-				Domain = ".{Configuration.BaseUrl}",
+				Domain = ".kornet.lat",
 				Secure = false,
 				Expires = DateTimeOffset.Now.Add(TimeSpan.FromDays(364)),
 				IsEssential = true,

@@ -3,7 +3,6 @@ local TextService = game:GetService("TextService")
 
 local Otter = require(CorePackages.Packages.Otter)
 local Roact = require(CorePackages.Packages.Roact)
-local RoactRodux = require(CorePackages.Packages.RoactRodux)
 local t = require(CorePackages.Packages.t)
 local Constants = require(script.Parent.Parent.Constants)
 local Types = require(script.Parent.Parent.Types)
@@ -27,8 +26,6 @@ ChatBubble.validateProps = t.strictInterface({
 	theme = t.optional(t.string),
 	TextSize = t.optional(t.number),
 	Font = t.optional(t.enum(Enum.Font)),
-
-	chatSettings = Types.IChatSettings,
 })
 
 ChatBubble.defaultProps = {
@@ -83,12 +80,11 @@ function ChatBubble:render()
 		Layout = Roact.createElement("UIListLayout", {
 			SortOrder = Enum.SortOrder.LayoutOrder,
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-			Padding = UDim.new(0, -1), --UICorner generates a 1 pixel gap (UISYS-625), this fixes it by moving the carrot up by 1 pixel
 		}),
 
 		Frame = Roact.createElement("Frame", {
 			LayoutOrder = 1,
-			BackgroundColor3 = self.props.chatSettings.BackgroundColor3,
+			BackgroundColor3 = Themes.BackgroundColor[self.props.theme],
 			AnchorPoint = Vector2.new(0.5, 0),
 			Size = UDim2.fromScale(1, 1),
 			BorderSizePixel = 0,
@@ -126,7 +122,7 @@ function ChatBubble:render()
 			BackgroundTransparency = 1,
 			Size = UDim2.fromOffset(9, 6),
 			Image = "rbxasset://textures/ui/InGameChat/Caret.png",
-			ImageColor3 = self.props.chatSettings.BackgroundColor3,
+			ImageColor3 = Themes.BackgroundColor[self.props.theme],
 			ImageTransparency = self.transparency,
 		}),
 	})
@@ -177,10 +173,4 @@ function ChatBubble:willUnmount()
 	self.widthMotor:destroy()
 end
 
-local function mapStateToProps(state)
-	return {
-		chatSettings = state.chatSettings,
-	}
-end
-
-return RoactRodux.connect(mapStateToProps)(ChatBubble)
+return ChatBubble

@@ -17,6 +17,7 @@ local SetCurrentPage = require(InGameMenu.Actions.SetCurrentPage)
 local Pages = require(InGameMenu.Components.Pages)
 local Constants = require(InGameMenu.Resources.Constants)
 
+local FFlagFixRespawnDialogOpeningWhenDisabled = game:DefineFastFlag("FixRespawnDialogOpeningWhenDisabled", false)
 local GetFFlagUseNewLeaveGamePrompt = require(InGameMenu.Flags.GetFFlagUseNewLeaveGamePrompt)
 
 local RobloxGui = CoreGui:WaitForChild("RobloxGui")
@@ -49,7 +50,7 @@ local function bindMenuActions(store)
 					store:dispatch(OpenMenu(Constants.AnalyticsMenuOpenTypes.Keyboard))
 				else
 					store:dispatch(OpenMenu)
-				end
+				end	
 			end
 		end
 	end
@@ -114,8 +115,10 @@ local function bindMenuActions(store)
 			return Enum.ContextActionResult.Pass
 		end
 
-		if not state.respawn.enabled then
-			return Enum.ContextActionResult.Pass
+		if FFlagFixRespawnDialogOpeningWhenDisabled then
+			if not state.respawn.enabled then
+				return Enum.ContextActionResult.Pass
+			end
 		end
 
 		if Pages.pagesByKey[state.menuPage].isModal then

@@ -214,7 +214,6 @@ namespace Roblox.Website.Controllers
         public async Task<dynamic> SettingsJsonA()
         {
             var userInfo = await services.users.GetUserById(safeUserSession.userId);
-            string membership = await services.users.GetUserMemberShipAsString(safeUserSession.userId);
             bool isAdmin = await StaffFilter.IsStaff(safeUserSession.userId);
 
             return new

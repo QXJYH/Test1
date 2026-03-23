@@ -196,7 +196,7 @@ function VersionReporter:didMount()
 	self.mounted = true
 
 	coroutine.wrap(function()
-		local serverVersionRemote = RobloxReplicatedStorage:WaitForChild("GetServerVersion", math.huge)
+		local serverVersionRemote = RobloxReplicatedStorage:WaitForChild("GetServerVersion")
 		local version = serverVersionRemote:InvokeServer()
 
 		if self.mounted then

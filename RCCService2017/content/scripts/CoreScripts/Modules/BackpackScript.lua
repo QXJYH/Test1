@@ -1,6 +1,14 @@
 -- Backpack Version 5.01
 -- OnlyTwentyCharacters, SolarCrane
 
+local backpackUseGridLayoutSuccess, backpackUseGridLayoutValue = pcall(function() return settings():GetFFlag("BackpackUseGridLayout") end)
+local backpackUseGridLayoutEnabled = backpackUseGridLayoutSuccess and backpackUseGridLayoutValue
+
+if backpackUseGridLayoutEnabled then
+	local BackpackScriptV2 = script.Parent:WaitForChild("BackpackScriptV2")
+	return require(BackpackScriptV2)
+end
+
 -------------------
 --| Exposed API |--
 -------------------
@@ -1263,7 +1271,7 @@ function gamepadConnected()
 	if FullHotbarSlots >= 1 then
 		bindBackpackHotbarAction()
 	end
-	
+
 	if InventoryFrame.Visible then
 		enableGamepadInventoryControl()
 	end
@@ -1280,7 +1288,7 @@ end
 local function OnCoreGuiChanged(coreGuiType, enabled)
 	-- Check for enabling/disabling the whole thing
 	if coreGuiType == Enum.CoreGuiType.Backpack or coreGuiType == Enum.CoreGuiType.All then
-		enabled = enabled and TopbarEnabled 
+		enabled = enabled and TopbarEnabled
 		WholeThingEnabled = enabled
 		MainFrame.Visible = enabled
 
@@ -1676,7 +1684,7 @@ do -- Make the Inventory expand/collapse arrow (unless TopBar)
 				end
 				enableGamepadInventoryControl()
 			end
-			
+
 		else
 			if GamepadEnabled then
 				gamepadHintsFrame.Visible = false

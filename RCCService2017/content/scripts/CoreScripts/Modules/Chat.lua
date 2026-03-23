@@ -289,8 +289,8 @@ do
 
     local inGroupCache = {}
     return function(player)
-      if player and player.userId then
-        local userId = player.userId
+      if player and player.UserId then
+        local userId = player.UserId
 
         if inGroupCache[userId] == nil then
           local inGroup = false
@@ -1849,20 +1849,14 @@ local function CreateChatWindowWidget(settings)
     local settings = shallowCopy(this.Settings)
 
     if informationTable["Text"] and type(informationTable["Text"]) == "string" then
-      if informationTable["Color"] and pcall(function() Color3.new(informationTable["Color"].r, informationTable["Color"].g, informationTable["Color"].b) end) then
-        settings.DefaultMessageTextColor = informationTable["Color"]
+      if typeof(informationTable.Color) == "Color3" then
+        settings.DefaultMessageTextColor = informationTable.Color
       end
-      if informationTable["Font"] then
-        local success, value = pcall(function() return checkEnum(Enum.Font:GetEnumItems(), informationTable["Font"].Value) end)
-        if success and value ~= nil then
-          settings.Font = value
-        end
+      if typeof(informationTable.Font) == "EnumItem" and informationTable.Font.EnumType == Enum.Font then
+        settings.Font = informationTable.Font
       end
-      if informationTable["FontSize"] then
-        local success, value = pcall(function() return checkEnum(Enum.FontSize:GetEnumItems(), informationTable["FontSize"].Value) end)
-        if success and value ~= nil then
-          settings.FontSize = value
-        end
+      if typeof(informationTable.FontSize) == "EnumItem" and informationTable.FontSize.EnumType == Enum.FontSize then
+        settings.FontSize = informationTable.FontSize
       end
       local chatMessage = CreateSystemChatMessage(settings, informationTable["Text"])
       this:PushMessageIntoQueue(chatMessage, false)
@@ -2308,7 +2302,7 @@ local function CreateChat()
 
   function this:IsPlayerBlocked(player)
     if blockingUtility then
-      return player and blockingUtility:IsPlayerBlockedByUserId(player.userId)
+      return player and blockingUtility:IsPlayerBlockedByUserId(player.UserId)
     else
       return false
     end
@@ -2316,7 +2310,7 @@ local function CreateChat()
 
   function this:BlockPlayerAsync(playerToBlock)
     if playerToBlock and Player ~= playerToBlock then
-      local blockUserId = playerToBlock.userId
+      local blockUserId = playerToBlock.UserId
       local playerToBlockName = playerToBlock.Name
       if blockUserId > 0 then
         if not this:IsPlayerBlocked(playerToBlock) then
@@ -2337,7 +2331,7 @@ local function CreateChat()
 
   function this:UnblockPlayerAsync(playerToUnblock)
     if playerToUnblock then
-      local unblockUserId = playerToUnblock.userId
+      local unblockUserId = playerToUnblock.UserId
       local playerToUnblockName = playerToUnblock.Name
 
       if this:IsPlayerBlocked(playerToUnblock) then
@@ -2353,7 +2347,7 @@ local function CreateChat()
 
   function this:IsPlayerMuted(player)
     if blockingUtility then
-      return player and blockingUtility:IsPlayerMutedByUserId(player.userId)
+      return player and blockingUtility:IsPlayerMutedByUserId(player.UserId)
     else
       return false
     end
@@ -2679,14 +2673,13 @@ local function CreateChat()
   function this:Initialize()
     --[[ Developer Customization API ]]--
     if not NON_CORESCRIPT_MODE then
-      game:WaitForChild("StarterGui"):RegisterSetCore("ChatMakeSystemMessage", 	function(informationTable)
+      StarterGui:RegisterSetCore("ChatMakeSystemMessage", 	function(informationTable)
           if this.ChatWindowWidget then
             this.ChatWindowWidget:AddDeveloperSystemChatMessage(informationTable)
           end
         end)
       local function isUDim2Value(value)
-        local success, value = pcall(function() return UDim2.new(value.X.Scale, value.X.Offset, value.Y.Scale, value.Y.Offset) end)
-        return success and value or nil
+        return typeof(value) == "UDim2" and value or nil
       end
 
       local function isBubbleChatOn()
@@ -2694,7 +2687,7 @@ local function CreateChat()
       end
 
       if allowMoveChat then
-        game.StarterGui:RegisterSetCore("ChatWindowPosition", 	function(value)
+        StarterGui:RegisterSetCore("ChatWindowPosition", 	function(value)
             if this.ChatWindowWidget and this.ChatBarWidget then
               value = isUDim2Value(value)
               if value ~= nil and not isBubbleChatOn() then
@@ -2705,7 +2698,7 @@ local function CreateChat()
             end
           end)
 
-        game.StarterGui:RegisterSetCore("ChatWindowSize", 	function(value)
+        StarterGui:RegisterSetCore("ChatWindowSize", 	function(value)
             if this.ChatWindowWidget and this.ChatBarWidget then
               value = isUDim2Value(value)
               if value ~= nil and not isBubbleChatOn() then
@@ -2718,11 +2711,11 @@ local function CreateChat()
           end)
 
       else
-        game.StarterGui:RegisterSetCore("ChatWindowPosition", 	function() end)
-        game.StarterGui:RegisterSetCore("ChatWindowSize",		function() end)
+        StarterGui:RegisterSetCore("ChatWindowPosition", 	function() end)
+        StarterGui:RegisterSetCore("ChatWindowSize",		function() end)
       end
 
-      game.StarterGui:RegisterGetCore("ChatWindowPosition", 	function()
+      StarterGui:RegisterGetCore("ChatWindowPosition", 	function()
           if this.ChatWindowWidget then
             return this.ChatWindowWidget.ChatContainer.Position
           else
@@ -2730,7 +2723,7 @@ local function CreateChat()
           end
         end)
 
-      game.StarterGui:RegisterGetCore("ChatWindowSize", 	function()
+      StarterGui:RegisterGetCore("ChatWindowSize", 	function()
           if this.ChatWindowWidget then
             return this.ChatWindowWidget.ChatContainer.Size
           else
@@ -2739,7 +2732,7 @@ local function CreateChat()
         end)
 
       if allowDisableChatBar then
-        game.StarterGui:RegisterSetCore("ChatBarDisabled", 	function(value)
+        StarterGui:RegisterSetCore("ChatBarDisabled", 	function(value)
             if this.ChatBarWidget then
               if type(value) == "boolean" then
                 chatBarDisabled = value
@@ -2750,10 +2743,10 @@ local function CreateChat()
             end
           end)
       else
-        game.StarterGui:RegisterSetCore("ChatBarDisabled", 	function() end)
+        StarterGui:RegisterSetCore("ChatBarDisabled", 	function() end)
       end
 
-      game.StarterGui:RegisterGetCore("ChatBarDisabled", function() return chatBarDisabled end)
+      StarterGui:RegisterGetCore("ChatBarDisabled", function() return chatBarDisabled end)
     end
 
     this:OnPlayerAdded(Player)
@@ -2834,6 +2827,18 @@ do
   function moduleApiTable:IsFocused(useWasFocused)
     return ChatInstance:IsFocused(useWasFocused)
   end
+
+	function moduleApiTable:ClassicChatEnabled()
+		return PlayersService.ClassicChat
+	end
+
+	function moduleApiTable:IsBubbleChatOnly()
+		return PlayersService.BubbleChat and not PlayersService.ClassicChat
+	end
+
+	function moduleApiTable:IsDisabled()
+		return false
+	end
 
   moduleApiTable.ChatBarFocusChanged = ChatInstance.ChatBarFocusChanged
   moduleApiTable.VisibilityStateChanged = ChatInstance.VisibilityStateChanged

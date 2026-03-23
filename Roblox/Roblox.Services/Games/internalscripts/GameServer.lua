@@ -83,7 +83,7 @@ end
 local function reportplayer(userId, eventType)
 	pcall(function()
 		local msg = http:JSONEncode({
-			authorization = "KrntAuthNTCatinoMenaslgie",
+			authorization = "authkrntislwkgoatedheh",
 			serverId = game.JobId,
 			userId = tostring(userId),
 			eventType = eventType,
@@ -98,7 +98,7 @@ local function pollToReportActivity()
 	while true do
 		local ok, err = pcall(function()
 			game:HttpPost(url .. "/gs/ping", http:JSONEncode({
-				authorization = "KrntAuthNTCatinoMenaslgie",
+				authorization = "authkrntislwkgoatedheh",
 				serverId = game.JobId,
 				placeId = placeId
 			}), false, "application/json")
@@ -113,7 +113,7 @@ local function shutdown()
 	print("[info] Shutting down server")
 	pcall(function()
 		game:HttpPost(url .. "/gs/shutdown", http:JSONEncode({
-			authorization = "KrntAuthNTCatinoMenaslgie",
+			authorization = "authkrntislwkgoatedheh",
 			serverId = game.JobId,
 			placeId = placeId
 		}), false, "application/json")

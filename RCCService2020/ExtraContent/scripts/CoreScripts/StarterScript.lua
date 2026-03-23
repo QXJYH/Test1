@@ -46,6 +46,11 @@ local UIBlox = require(CorePackages.UIBlox)
 local uiBloxConfig = require(CoreGuiModules.UIBloxInGameConfig)
 UIBlox.init(uiBloxConfig)
 
+local RoactRodux = require(CorePackages.RoactRodux)
+local FFlagCoreScriptsUseRoactRoduxNewConnectionOrder = require(
+	RobloxGui.Modules.Flags.FFlagCoreScriptsUseRoactRoduxNewConnectionOrder)
+RoactRodux.TEMP_CONFIG.newConnectionOrder = FFlagCoreScriptsUseRoactRoduxNewConnectionOrder
+
 local localPlayer = Players.LocalPlayer
 while not localPlayer do
 	Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
@@ -96,13 +101,6 @@ ScriptContext:AddCoreScriptLocal("CoreScripts/NotificationScript2", RobloxGui)
 initify(CoreGuiModules.TopBar)
 coroutine.wrap(safeRequire)(CoreGuiModules.TopBar)
 
-if game:GetEngineFeature("LuobuModerationStatus") then
-	coroutine.wrap(function()
-		initify(CoreGuiModules.Watermark)
-		safeRequire(CoreGuiModules.Watermark)
-	end)()
-end
-
 -- MainBotChatScript (the Lua part of Dialogs)
 ScriptContext:AddCoreScriptLocal("CoreScripts/MainBotChatScript2", RobloxGui)
 
@@ -117,20 +115,16 @@ end)()
 ScriptContext:AddCoreScriptLocal("CoreScripts/PerformanceStatsManagerScript", RobloxGui)
 
 -- Default Alternate Death Ragdoll (China only for now)
-ScriptContext:AddCoreScriptLocal("CoreScripts/PlayerRagdoll", RobloxGui)
+local FFlagSupportDeathType = game:DefineFastFlag("SupportDeathTypeClient", false)
+if FFlagSupportDeathType then
+	ScriptContext:AddCoreScriptLocal("CoreScripts/PlayerRagdoll", RobloxGui)
+end
 
 -- Chat script
 coroutine.wrap(safeRequire)(RobloxGui.Modules.ChatSelector)
 coroutine.wrap(safeRequire)(RobloxGui.Modules.PlayerList.PlayerListManager)
 
-local UserRoactBubbleChatBeta do
-	local success, value = pcall(function()
-		return UserSettings():IsUserFeatureEnabled("UserRoactBubbleChatBeta")
-	end)
-	UserRoactBubbleChatBeta = success and value
-end
-
-if game:GetEngineFeature("EnableBubbleChatFromChatService") or UserRoactBubbleChatBeta then
+if GetFFlagRoactBubbleChat() then
 	ScriptContext:AddCoreScriptLocal("CoreScripts/InGameChat", RobloxGui)
 end
 

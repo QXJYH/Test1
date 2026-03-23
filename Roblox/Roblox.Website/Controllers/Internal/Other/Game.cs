@@ -321,23 +321,23 @@ namespace Roblox.Website.Controllers
 			};
 		}
 				
-		public async Task<IEnumerable<ProductReceipt>?> GetPendingProductReceipts(long userId, long universeId)
-		{
-			return await db.QueryAsync<ProductReceipt>(
-				@"SELECT pr.id, pr.price, pr.processed, 
-				pr.created_at as createdAt,
-				pr.processed_at as processedAt,
-				pr.user_id as userId,
-				pr.product_id as productId
-				FROM product_receipt AS pr
-				LEFT JOIN developer_product dp ON dp.id = pr.product_id
-				WHERE pr.processed = FALSE AND dp.universe_id = :universeId AND pr.user_id = :userId",
-				new
-				{
-					userId,
-					universeId
-				});
-		}
+		// public async Task<IEnumerable<ProductReceipt>?> GetPendingProductReceipts(long userId, long universeId)
+		// {
+		// 	return await db.QueryAsync<ProductReceipt>(
+		// 		@"SELECT pr.id, pr.price, pr.processed, 
+		// 		pr.created_at as createdAt,
+		// 		pr.processed_at as processedAt,
+		// 		pr.user_id as userId,
+		// 		pr.product_id as productId
+		// 		FROM product_receipt AS pr
+		// 		LEFT JOIN developer_product dp ON dp.id = pr.product_id
+		// 		WHERE pr.processed = FALSE AND dp.universe_id = :universeId AND pr.user_id = :userId",
+		// 		new
+		// 		{
+		// 			userId,
+		// 			universeId
+		// 		});
+		// }
 
 		[HttpGetBypass("/game/Join.ashx")]
 		[HttpPostBypass("/game/Join.ashx")]
@@ -350,7 +350,7 @@ namespace Roblox.Website.Controllers
 				var JobId = Request.Query["jobId"].FirstOrDefault();
 				var PlaceYear = await services.games.GetPlaceYear(placeId);
 				string Year = PlaceYear?.ToString() ?? "2016";
-				bool is2020 = Year == "2020";
+				bool is2020 = Year == "2020" || Year == "2021";
 
 				long userId;
 				if (!string.IsNullOrEmpty(ticket))

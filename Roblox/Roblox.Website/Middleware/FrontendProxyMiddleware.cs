@@ -125,6 +125,10 @@ public class FrontendProxyMiddleware
         {
             ctx.Response.Headers["location"] = locationHeader;
         }
+		if (statusCode >= 400)
+		{
+			Console.WriteLine("[FProxy] {0}: {1}", statusCode, url);
+		}
         // cache _next stuff
 #if RELEASE
         if (url.StartsWith("/_next/") && statusCode == 200)

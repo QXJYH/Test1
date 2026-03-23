@@ -431,6 +431,33 @@ public class UsersService : ServiceBase, IService
 			"SELECT user_id FROM user_discord_links WHERE discord_id = @discordId",
 			new { discordId });
 	}
+
+	public async Task<long> GetUserIdUniversal(string input)
+	{
+		if (string.IsNullOrWhiteSpace(input)) throw new RecordNotFoundException();
+
+		var fromDiscord = await GetUserIdFromDiscordId(input);
+		if (fromDiscord != 0) return fromDiscord;
+
+		if (long.TryParse(input, out long kornetId))
+		{
+			try
+			{
+				var user = await GetUserById(kornetId);
+				if (user != null) return kornetId;
+			}
+			catch (RecordNotFoundException) { }
+		}
+
+		return await GetUserIdFromUsername(input);
+	}
+
+	public async Task<string?> GetDiscordIdFromUserId(long userId)
+	{
+		return await db.ExecuteScalarAsync<string?>(
+			"SELECT discord_id FROM user_discord_links WHERE user_id = @userId",
+			new { userId });
+	}
 	
 	public async Task<string?> GetUserHashedIp(long userId)
 	{
@@ -680,7 +707,30 @@ public class UsersService : ServiceBase, IService
 			userId = userId,
 			username = userInfo.username,
 			created = userInfo.created,
-			lastOnline = presence?.lastOnline ?? userInfo.created
+			lastOnline = presence?.lastOnline ?? userInfo.created,
+			discordId = ID
+		};
+	}
+
+	public async Task<UserDiscord> GetUserDataByKornetId(string ID)
+	{
+		long userId;
+		if (!long.TryParse(ID, out userId))
+		{
+			userId = await GetUserIdFromUsername(ID);
+		}
+		
+		var userInfo = await GetUserById(userId);
+		var presence = (await MultiGetPresence(new[] { userId })).FirstOrDefault();
+		var discordId = await GetDiscordIdFromUserId(userId);
+		
+		return new UserDiscord
+		{
+			userId = userId,
+			username = userInfo.username,
+			created = userInfo.created,
+			lastOnline = presence?.lastOnline ?? userInfo.created,
+			discordId = discordId
 		};
 	}
 	
@@ -2180,13 +2230,42 @@ public class UsersService : ServiceBase, IService
 			new { hashedIp });
 	}
 	
+	public async Task<(string punishmentText, DateTime? expiry, AccountStatus status)> GetBanBypassPunishment(long userId)
+	{
+		var offenseCount = await db.ExecuteScalarAsync<int>(
+			"SELECT COUNT(*) FROM moderation_user_ban WHERE user_id = :userId AND internal_reason = 'Audio bypass attempt'",
+			new { userId });
+
+		if (offenseCount == 0)
+			return ("Warning", DateTime.UtcNow, AccountStatus.Suppressed);
+		if (offenseCount == 1)
+			return ("3 Days Ban", DateTime.UtcNow.AddDays(3), AccountStatus.Suppressed);
+		if (offenseCount == 2)
+			return ("7 Days Ban", DateTime.UtcNow.AddDays(7), AccountStatus.Suppressed);
+		
+		return ("Permanent Ban", null, AccountStatus.Deleted);
+	}
+
 	public async Task BanForBypass(long userId)
 	{
-		var expiry = DateTime.UtcNow.AddDays(3);
-		const string reason = "Please do not attempt to upload bypassed audios. If this is a mistake, open a ticket in our Discord.";
+		var (punishmentText, expiry, status) = await GetBanBypassPunishment(userId);
+		string reason = punishmentText == "Warning" 
+			? "This is a warning for attempting to upload bypassed audio. Further violations will result in longer bans. Please acknowledge this warning to continue."
+			: "Please do not attempt to upload bypassed audios. If this is a mistake, open a ticket in our Discord.";
 		const string internalReason = "Audio bypass attempt";
 		
 		var info = await GetUserById(userId);
+        
+        var isntbannable = new[] { 
+            "Unknown", 
+            "Builderman", 
+            "ROBLOX", 
+            "Potatoluau" 
+        }.Contains(info.username, StringComparer.OrdinalIgnoreCase);
+
+		if (isntbannable)
+			throw new Exception("You cannot ban this user. He is a owner.");
+		
 		if (info.accountStatus != AccountStatus.Ok && info.accountStatus != AccountStatus.Suppressed && info.accountStatus != AccountStatus.MustValidateEmail)
 			throw new Exception("You cannot ban this user. Current status is " + info.accountStatus);
 		
@@ -2227,9 +2306,112 @@ public class UsersService : ServiceBase, IService
 			// mark as suppressed (temporary ban)
 			await db.ExecuteAsync("UPDATE \"user\" SET status = :st WHERE id = :id", new
 			{
-				st = AccountStatus.Suppressed,
+				st = status,
 				id = userId,
 			});
+
+			// take all limited items off sale
+			await db.ExecuteAsync("UPDATE user_asset SET price = 0 WHERE price != 0 AND user_id = :user_id", new
+			{
+				user_id = userId,
+			});
+			
+			return 0;
+		});
+	}
+
+	public async Task PunishUser(long userId, string type, long authorUserId)
+	{
+		var info = await GetUserById(userId);
+		
+		var isntbannable = new[] { 
+			"Unknown", 
+			"Builderman", 
+			"ROBLOX", 
+			"Potatoluau" 
+		}.Contains(info.username, StringComparer.OrdinalIgnoreCase);
+
+		if (isntbannable)
+			throw new Exception("You cannot punish this user. He is a owner.");
+
+		AccountStatus status;
+		DateTime? expiry = null;
+		string reason;
+		string internalReason = "Manual punishment: " + type;
+
+		switch (type.ToLower())
+		{
+			case "warning":
+				status = AccountStatus.Suppressed;
+				expiry = DateTime.UtcNow.AddMinutes(10);
+				reason = "This is a warning for breaking the rules. Please acknowledge this to continue.";
+				break;
+			case "1day":
+				status = AccountStatus.Suppressed;
+				expiry = DateTime.UtcNow.AddDays(1);
+				reason = "Your account has been suspended for 1 day. Please follow our rules in the future.";
+				break;
+			case "3days":
+				status = AccountStatus.Suppressed;
+				expiry = DateTime.UtcNow.AddDays(3);
+				reason = "Your account has been suspended for 3 days. Further violations will result in longer bans.";
+				break;
+			case "7days":
+				status = AccountStatus.Suppressed;
+				expiry = DateTime.UtcNow.AddDays(7);
+				reason = "Your account has been suspended for 7 days. This is your final warning.";
+				break;
+			case "permanent":
+				status = AccountStatus.Deleted;
+				reason = "Your account has been permanently suspended for violating our terms of service.";
+				break;
+			case "ip":
+				status = AccountStatus.Poisoned;
+				reason = "This account and any associated accounts have been terminated.";
+				break;
+			default:
+				throw new ArgumentException("Invalid punishment type");
+		}
+
+		await InTransaction(async _ =>
+		{
+			// insert ban
+			await db.ExecuteAsync(
+				"INSERT INTO user_ban (user_id, reason, author_user_id, expired_at, internal_reason) VALUES (:user_id, :reason, :author, :expires, :internal_reason)", new
+				{
+					internal_reason = internalReason,
+					user_id = userId,
+					reason = reason,
+					author = authorUserId,
+					expires = expiry,
+				});
+			
+			// insert into user ban history
+			await db.ExecuteAsync(
+				"INSERT INTO moderation_user_ban (user_id, reason, author_user_id, expired_at, internal_reason) VALUES (:user_id, :reason, :author, :expires, :internal_reason)", new
+				{
+					internal_reason = internalReason,
+					user_id = userId,
+					reason = reason,
+					author = authorUserId,
+					expires = expiry,
+				});
+
+			// Update user status
+			await db.ExecuteAsync("UPDATE \"user\" SET status = :st WHERE id = :id", new
+			{
+                st = (int)status,
+				id = userId,
+			});
+
+			if (type.ToLower() == "ip")
+			{
+				var hashedIp = await GetUserHashedIp(userId);
+				if (!string.IsNullOrEmpty(hashedIp))
+				{
+					await db.ExecuteAsync("UPDATE user_hashed_ips SET poisoned = true WHERE hashed_ip = :ip", new { ip = hashedIp });
+				}
+			}
 
 			// take all limited items off sale
 			await db.ExecuteAsync("UPDATE user_asset SET price = 0 WHERE price != 0 AND user_id = :user_id", new
@@ -2688,6 +2870,45 @@ public class UsersService : ServiceBase, IService
 		{
 			c.name = c.name ?? "Game Pass";
 			return c;
+		});
+	}
+
+	public async Task<GamePassEntry?> GetUserGamePass(long userId, long assetId)
+	{
+		return await db.QuerySingleOrDefaultAsync<GamePassEntry>(
+			@"SELECT ua.asset_id as id, a.name
+			  FROM public.user_asset ua
+			  JOIN public.asset a ON a.id = ua.asset_id
+			  WHERE ua.user_id = :user_id AND ua.asset_id = :asset_id AND a.asset_type = 34",
+			new
+			{
+				user_id = userId,
+				asset_id = assetId
+			});
+	}
+
+	public async Task TransferLimiteds(long fromId, long toId, IEnumerable<long> uaids)
+	{
+		await InTransaction(async _ =>
+		{
+			foreach (var uaid in uaids)
+			{
+				await db.ExecuteAsync("UPDATE user_asset SET user_id = @to, updated_at = @now WHERE id = @uaid AND user_id = @from", new
+				{
+					to = toId,
+					from = fromId,
+					uaid = uaid,
+					now = DateTime.UtcNow
+				});
+			}
+			return 0;
+		});
+
+		Task.Run(async () =>
+		{
+			using var avatar = ServiceProvider.GetOrCreate<AvatarService>();
+			await avatar.RedrawAvatar(fromId);
+			await avatar.RedrawAvatar(toId);
 		});
 	}
 	

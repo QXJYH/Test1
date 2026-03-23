@@ -54,6 +54,26 @@ namespace Roblox.Website.Controllers
 			}
 		}
 
+		[HttpGetBypass("botapi/tickets/kornet/{idOrName}")]
+		public async Task<ActionResult<UserDiscord>> GetUserByKornetId(string idOrName)
+		{
+			try
+			{
+				ValidateBotAuth();
+				var User = await services.users.GetUserDataByKornetId(idOrName);
+				
+				return Ok(User);
+			}
+			catch (RecordNotFoundException)
+			{
+				return NotFound();
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500);
+			}
+		}
+
 		[HttpPostBypass("botapi/tickets/transcripts")]
 		public async Task<ActionResult> StoreTranscriptMessages([MVC.FromBody] TicketTranscriptRequest request)
 		{
@@ -79,11 +99,7 @@ namespace Roblox.Website.Controllers
 					
 					try
 					{
-						long userId;
-						if (!long.TryParse(TRequest.user, out userId))
-						{
-							userId = await services.users.GetUserIdFromUsername(TRequest.user);
-						}
+						long userId = await services.users.GetUserIdUniversal(TRequest.user);
 						
 						await services.users.StoreTranscriptMessage(
 							LatestTicket,
@@ -104,6 +120,39 @@ namespace Roblox.Website.Controllers
 			catch (Exception ex)
 			{
 				return StatusCode(500);
+			}
+		}
+		public class PunishRequest
+		{
+			public string Type { get; set; }
+			public string ID { get; set; }
+			public string AuthorId { get; set; }
+		}
+
+		[HttpPostBypass("botapi/discord/punish")]
+		public async Task<ActionResult> Punish([MVC.FromBody] PunishRequest request)
+		{
+			try
+			{
+				ValidateBotAuth();
+				
+				long userId = await services.users.GetUserIdUniversal(request.ID);
+
+				long authorUserId = 1; 
+				try 
+				{
+					var authorInfo = await services.users.GetUserDataByDiscordId(request.AuthorId);
+					authorUserId = authorInfo.userId;
+				}
+				catch {}
+
+				await services.users.PunishUser(userId, request.Type, authorUserId);
+				
+				return Ok(new { success = true, message = "Punishment applied" });
+			}
+			catch (Exception ex)
+			{
+				return Ok(new { success = false, error = ex.Message });
 			}
 		}
     }

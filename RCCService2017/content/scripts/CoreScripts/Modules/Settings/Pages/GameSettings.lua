@@ -10,10 +10,12 @@ local CoreGui = game:GetService("CoreGui")
 local RobloxGui = CoreGui:WaitForChild("RobloxGui")
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
-local PlatformService = nil 
+local RunService = game:GetService("RunService")
+local PlatformService = nil
 pcall(function() PlatformService = game:GetService("PlatformService") end)
 local ContextActionService = game:GetService("ContextActionService")
 local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
 local Settings = UserSettings()
 local GameSettings = Settings.GameSettings
 
@@ -57,7 +59,7 @@ local isTenFootInterface = require(RobloxGui.Modules.TenFootInterface):IsEnabled
 local HasVRAPI = false
 pcall(function() HasVRAPI = UserInputService.GetUserCFrame ~= nil end)
 local PageInstance = nil
-local LocalPlayer = game.Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 local platform = UserInputService:GetPlatform()
 local overscanScreen = nil
 
@@ -79,7 +81,7 @@ local function Initialize()
   local function onVREnabled(prop)
     if prop ~= "VREnabled" then return end
     if UserInputService.VREnabled and allSettingsCreated then
-      --Only call this if all settings have been created. 
+      --Only call this if all settings have been created.
       --If they aren't ready by the time VR is enabled, this
       --will be called later when they are.
       onVRSettingsReady()
@@ -125,7 +127,7 @@ local function Initialize()
         else
           if this.FullscreenEnabler:GetSelectedIndex() ~= 2 then
             this.FullscreenEnabler:SetSelectionIndex(2)
-          end	
+          end
         end
       end)
 
@@ -135,107 +137,106 @@ local function Initialize()
       graphicsEnablerStart = 2
     end
 
-    this.GraphicsEnablerFrame, 
+    this.GraphicsEnablerFrame,
     this.GraphicsEnablerLabel,
     this.GraphicsQualityEnabler = utility:AddNewRow(this, "Graphics Mode", "Selector", {"Automatic", "Manual"}, graphicsEnablerStart)
 
     ------------------ Gfx Slider GUI Setup  ------------------
-    this.GraphicsQualityFrame, 
+    this.GraphicsQualityFrame,
     this.GraphicsQualityLabel,
     this.GraphicsQualitySlider = utility:AddNewRow(this, "Graphics Quality", "Slider", GRAPHICS_QUALITY_LEVELS, 1)
     this.GraphicsQualitySlider:SetMinStep(1)
 
     ------------------------------------------------------
     ------------------------- Connection Setup ----------------------------
-    local UserGameSettings = UserSettings():GetService("UserGameSettings")
+    settings().Rendering.EnableFRM = true
 
     function SetGraphicsQuality(newValue, automaticSettingAllowed)
-        local maxGraphicsLevel = 10
-        local percentage = newValue/GRAPHICS_QUALITY_LEVELS
-        local newQualityLevel = math.floor((maxGraphicsLevel - 1) * percentage)
-        
-        if newQualityLevel == 20 then
-            newQualityLevel = 21
-        elseif newValue == 1 then
-            newQualityLevel = 1
-        elseif newValue < 1 and not automaticSettingAllowed then
-            newValue = 1
-            newQualityLevel = 1
-        elseif newQualityLevel > maxGraphicsLevel then
-            newQualityLevel = maxGraphicsLevel - 1
-        end
+      local percentage = newValue/GRAPHICS_QUALITY_LEVELS
+      local newQualityLevel = math.floor((settings().Rendering:GetMaxQualityLevel() - 1) * percentage)
+      if newQualityLevel == 20 then
+        newQualityLevel = 21
+      elseif newValue == 1 then
+        newQualityLevel = 1
+      elseif newValue < 1 and not automaticSettingAllowed then
+        newValue = 1
+        newQualityLevel = 1
+      elseif newQualityLevel > settings().Rendering:GetMaxQualityLevel() then
+        newQualityLevel = settings().Rendering:GetMaxQualityLevel() - 1
+      end
 
-        GameSettings.SavedQualityLevel = newValue
-        UserGameSettings.SavedQualityLevel = Enum.SavedQualitySetting["QualityLevel"..tostring(newQualityLevel)]
+      GameSettings.SavedQualityLevel = newValue
+      settings().Rendering.QualityLevel = newQualityLevel
     end
 
     local function setGraphicsToAuto()
-        this.GraphicsQualitySlider:SetZIndex(1)
-        this.GraphicsQualityLabel.ZIndex = 1
-        this.GraphicsQualitySlider:SetInteractable(false)
+      this.GraphicsQualitySlider:SetZIndex(1)
+      this.GraphicsQualityLabel.ZIndex = 1
+      this.GraphicsQualitySlider:SetInteractable(false)
 
-        GameSettings.SavedQualityLevel = Enum.SavedQualitySetting.Automatic
-        UserGameSettings.SavedQualityLevel = Enum.SavedQualitySetting.Automatic
+      SetGraphicsQuality(Enum.QualityLevel.Automatic.Value, true)
     end
 
     local function setGraphicsToManual(level)
-        this.GraphicsQualitySlider:SetZIndex(2)
-        this.GraphicsQualityLabel.ZIndex = 2
-        this.GraphicsQualitySlider:SetInteractable(true)
+      this.GraphicsQualitySlider:SetZIndex(2)
+      this.GraphicsQualityLabel.ZIndex = 2
+      this.GraphicsQualitySlider:SetInteractable(true)
 
-        if this.GraphicsQualitySlider:GetValue() == level then
-            SetGraphicsQuality(level)
-        else
-            this.GraphicsQualitySlider:SetValue(level)
-        end
+      -- need to force the quality change if slider is already at this position
+      if this.GraphicsQualitySlider:GetValue() == level then
+        SetGraphicsQuality(level)
+      else
+        this.GraphicsQualitySlider:SetValue(level)
+      end
     end
 
     game.GraphicsQualityChangeRequest:connect(function(isIncrease)
+        --  was using settings().Rendering.Quality level, which was wrongly saying it was automatic.
         if GameSettings.SavedQualityLevel == Enum.SavedQualitySetting.Automatic then return end
         local currentGraphicsSliderValue = this.GraphicsQualitySlider:GetValue()
         if isIncrease then
-            currentGraphicsSliderValue = currentGraphicsSliderValue + 1
+          currentGraphicsSliderValue = currentGraphicsSliderValue + 1
         else
-            currentGraphicsSliderValue = currentGraphicsSliderValue - 1
+          currentGraphicsSliderValue = currentGraphicsSliderValue - 1
         end
 
         this.GraphicsQualitySlider:SetValue(currentGraphicsSliderValue)
-    end)
+      end)
 
     this.GraphicsQualitySlider.ValueChanged:connect(function(newValue)
         SetGraphicsQuality(newValue)
-    end)
+      end)
 
     this.GraphicsQualityEnabler.IndexChanged:connect(function(newIndex)
         if newIndex == 1 then
-            setGraphicsToAuto()
+          setGraphicsToAuto()
         elseif newIndex == 2 then
-            setGraphicsToManual(this.GraphicsQualitySlider:GetValue())
+          setGraphicsToManual( this.GraphicsQualitySlider:GetValue() )
         end
-    end)
+      end)
 
     -- initialize the slider position
     if GameSettings.SavedQualityLevel == Enum.SavedQualitySetting.Automatic then
-        this.GraphicsQualitySlider:SetValue(5)
-        setGraphicsToAuto()
+      this.GraphicsQualitySlider:SetValue(5)
+      setGraphicsToAuto()
     else
-        local graphicsLevel = tostring(GameSettings.SavedQualityLevel)
-        if GRAPHICS_QUALITY_TO_INT[graphicsLevel] then
-            graphicsLevel = GRAPHICS_QUALITY_TO_INT[graphicsLevel]
-        else
-            graphicsLevel = GRAPHICS_QUALITY_LEVELS
-        end
+      local graphicsLevel = tostring(GameSettings.SavedQualityLevel)
+      if GRAPHICS_QUALITY_TO_INT[graphicsLevel] then
+        graphicsLevel = GRAPHICS_QUALITY_TO_INT[graphicsLevel]
+      else
+        graphicsLevel = GRAPHICS_QUALITY_LEVELS
+      end
 
-        spawn(function()
-            this.GraphicsQualitySlider:SetValue(graphicsLevel)
+      spawn(function()
+          this.GraphicsQualitySlider:SetValue(graphicsLevel)
         end)
     end
-end -- of createGraphicsOptions
-  
-  local function createPerformanceStatsOptions()    
+  end  -- of createGraphicsOptions
+
+  local function createPerformanceStatsOptions()
     ------------------
     ------------------ Performance Stats -----------------
-    this.PerformanceStatsFrame, 
+    this.PerformanceStatsFrame,
     this.PerformanceStatsLabel,
     this.PerformanceStatsMode,
     this.PerformanceStatsOverrideText = nil
@@ -250,12 +251,12 @@ end -- of createGraphicsOptions
 
     local startIndex = GetDesiredPerformanceStatsIndex()
 
-    this.PerformanceStatsFrame, 
+    this.PerformanceStatsFrame,
     this.PerformanceStatsLabel,
-    this.PerformanceStatsMode = utility:AddNewRow(this, 
-      "Performance Stats", 
-      "Selector", 
-      {"On", "Off"}, 
+    this.PerformanceStatsMode = utility:AddNewRow(this,
+      "Performance Stats",
+      "Selector",
+      {"On", "Off"},
       startIndex)
 
     this.PerformanceStatsOverrideText = utility:Create'TextLabel'
@@ -280,10 +281,10 @@ end -- of createGraphicsOptions
           GameSettings.PerformanceStatsVisible = false
         end
       end)
-    
+
     GameSettings.PerformanceStatsVisibleChanged:connect(function()
         local desiredIndex = GetDesiredPerformanceStatsIndex()
-        if desiredIndex ~= this.PerformanceStatsMode.CurrentIndex then 
+        if desiredIndex ~= this.PerformanceStatsMode.CurrentIndex then
           this.PerformanceStatsMode:SetSelectionIndex(desiredIndex)
         end
       end)
@@ -293,8 +294,8 @@ end -- of createGraphicsOptions
     ------------------------------------------------------
     ------------------
     ------------------ Shift Lock Switch -----------------
-    if UserInputService.MouseEnabled then
-      this.ShiftLockFrame, 
+    if UserInputService.MouseEnabled and not isTenFootInterface then
+      this.ShiftLockFrame,
       this.ShiftLockLabel,
       this.ShiftLockMode,
       this.ShiftLockOverrideText = nil
@@ -305,10 +306,10 @@ end -- of createGraphicsOptions
           startIndex = 1
         end
 
-        this.ShiftLockFrame, 
+        this.ShiftLockFrame,
         this.ShiftLockLabel,
         this.ShiftLockMode = utility:AddNewRow(this,
-          "Shift Lock Switch", 
+          "Shift Lock Switch",
           "Selector",
           {"On", "Off"},
           startIndex)
@@ -375,7 +376,7 @@ end -- of createGraphicsOptions
         cameraEnumNameToItem[displayName] = enumItems[i].Value
       end
 
-      this.CameraModeFrame, 
+      this.CameraModeFrame,
       this.CameraModeLabel,
       this.CameraMode = utility:AddNewRow(this, "Camera Mode", "Selector", cameraEnumNames, startingCameraEnumItem)
 
@@ -416,11 +417,11 @@ end -- of createGraphicsOptions
       local VR_ROTATION_INTENSITY_OPTIONS = {"Low", "High", "Smooth"}
 
       if utility:IsSmallTouchScreen() then
-        this.VRRotationFrame, 
+        this.VRRotationFrame,
         this.VRRotationLabel,
         this.VRRotationMode = utility:AddNewRow(this, "VR Camera Rotation", "Selector", VR_ROTATION_INTENSITY_OPTIONS, GameSettings.VRRotationIntensity)
       else
-        this.VRRotationFrame, 
+        this.VRRotationFrame,
         this.VRRotationLabel,
         this.VRRotationMode = utility:AddNewRow(this, "VR Camera Rotation", "Selector", VR_ROTATION_INTENSITY_OPTIONS, GameSettings.VRRotationIntensity, 3)
       end
@@ -472,7 +473,7 @@ end -- of createGraphicsOptions
         movementEnumNameToItem[displayName] = movementEnumItems[i]
       end
 
-      this.MovementModeFrame, 
+      this.MovementModeFrame,
       this.MovementModeLabel,
       this.MovementMode = utility:AddNewRow(this, "Movement Mode", "Selector", movementEnumNames, startingMovementEnumItem)
 
@@ -613,13 +614,13 @@ end -- of createGraphicsOptions
 
   local function createVolumeOptions()
     local startVolumeLevel = math.floor(GameSettings.MasterVolume * 10)
-    this.VolumeFrame, 
+    this.VolumeFrame,
     this.VolumeLabel,
     this.VolumeSlider = utility:AddNewRow(this, "Volume", "Slider", 10, startVolumeLevel)
 
-    local volumeSound = Instance.new("Sound", game.CoreGui.RobloxGui.Sounds)
+    local volumeSound = Instance.new("Sound", game:GetService("CoreGui").RobloxGui.Sounds)
     volumeSound.Name = "VolumeChangeSound"
-    volumeSound.SoundId = "rbxasset://sounds/metalstone2.mp3"
+    volumeSound.SoundId = "rbxasset://sounds/uuhhh.mp3"
 
     this.VolumeSlider.ValueChanged:connect(function(newValue)
         local soundPercent = newValue/10
@@ -633,7 +634,7 @@ end -- of createGraphicsOptions
     local MouseSteps = 10
     local MinMouseSensitivity = 0.2
     local AdvancedSuccess, AdvancedValue = pcall(function() return settings():GetFFlag("AdvancedMouseSensitivityEnabled") end)
-    local AdvancedEnabled = AdvancedSuccess and AdvancedValue 
+    local AdvancedEnabled = AdvancedSuccess and AdvancedValue
 
     -- equations below map a function to include points (0, 0.2) (5, 1) (10, 4)
     -- where x is the slider position, y is the mouse sensitivity
@@ -661,7 +662,7 @@ end -- of createGraphicsOptions
     end
 
     if AdvancedEnabled then
-      this.MouseModeFrame, 
+      this.MouseModeFrame,
       this.MouseModeLabel,
       this.MouseModeEnabler = utility:AddNewRow(this, "Mouse Sensitivity Mode", "Selector", {"Basic", "Advanced"}, MouseModeEnablerStart)
     end
@@ -672,7 +673,7 @@ end -- of createGraphicsOptions
     if not AdvancedEnabled then
       SliderLabel = "Mouse Sensitivity"
     end
-    this.MouseSensitivityFrame, 
+    this.MouseSensitivityFrame,
     this.MouseSensitivityLabel,
     this.MouseSensitivitySlider = utility:AddNewRow(this, SliderLabel, "Slider", MouseSteps, startMouseLevel)
     this.MouseSensitivitySlider:SetMinStep(1)
@@ -685,7 +686,7 @@ end -- of createGraphicsOptions
     -- affects both first and third person.
     if AdvancedEnabled then
       local MouseAdvancedStart = tostring(GameSettings.MouseSensitivityFirstPerson.y)
-      this.MouseAdvancedFrame, 
+      this.MouseAdvancedFrame,
       this.MouseAdvancedLabel,
       this.MouseAdvancedEntry = utility:AddNewRow(this, "Advanced Mouse Sensitivity", "TextEntry", 1.0, 1.0, MouseAdvancedStart)
 
@@ -704,7 +705,7 @@ end -- of createGraphicsOptions
             newValue = -newValue
           end
 
-          -- * assume a minimum that allows a 16000 dpi mouse a full 800mm travel for 360deg 
+          -- * assume a minimum that allows a 16000 dpi mouse a full 800mm travel for 360deg
           --   ~0.0029: min of 0.001 seems ok.
           -- * assume a max that allows a 400 dpi mouse a 360deg travel in 10mm
           --   ~9.2: max of 10 seems ok, but users will want to have a bit of fun with crazy settings.
@@ -730,7 +731,7 @@ end -- of createGraphicsOptions
     ------------------ Mouse Invert ------------------
     -- This is a common setting in games, even if it is rare
     if AdvancedEnabled then
-      this.MouseInvertFrame, 
+      this.MouseInvertFrame,
       this.MouseInvertLabel,
       this.MouseInvertEnabler = utility:AddNewRow(this, "Advanced Mouse Invert", "Selector", {"Normal", "Inverted"}, MouseInvertStart)
 
@@ -806,7 +807,10 @@ end -- of createGraphicsOptions
   end
 
   local function createOverscanOption()
-    local showOverscanScreen = function()
+      local showOverscanScreen = function()
+      if RunService:IsStudio() then
+        return
+      end
 
       if not overscanScreen then
         local overscanModule = RobloxGui.Modules:FindFirstChild('OverscanScreen')
@@ -849,6 +853,13 @@ end -- of createGraphicsOptions
     adjustText.Font = Enum.Font.SourceSans
     adjustButton.Position = UDim2.new(1,-400,0,12)
 
+    if RunService:IsStudio() then
+      adjustButton.Selectable = value
+      adjustButton.Active = value
+      adjustButton.Enabled.Value = value
+      adjustText.TextColor3 = Color3.fromRGB(100, 100, 100)
+    end
+
     local row = utility:AddNewRowObject(this, "Safe Zone", adjustButton)
     setButtonRowRef(row)
   end
@@ -890,10 +901,10 @@ end -- of createGraphicsOptions
     end
   end
 
-  createCameraModeOptions(not isTenFootInterface and 
+  createCameraModeOptions(not isTenFootInterface and
     (UserInputService.TouchEnabled or UserInputService.MouseEnabled or UserInputService.KeyboardEnabled))
 
-  if UserInputService.MouseEnabled then
+  if UserInputService.MouseEnabled and not isTenFootInterface then
     createMouseOptions()
   end
 
@@ -924,28 +935,17 @@ end -- of createGraphicsOptions
 
   ------ TAB CUSTOMIZATION -------
   this.TabHeader.Name = "GameSettingsTab"
-
-  this.TabHeader.Icon.Image = "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png"
-  if utility:IsSmallTouchScreen() then
-    this.TabHeader.Icon.Size = UDim2.new(0,34,0,34)
-    this.TabHeader.Icon.Position = UDim2.new(this.TabHeader.Icon.Position.X.Scale,this.TabHeader.Icon.Position.X.Offset,0.5,-17)
-    this.TabHeader.Size = UDim2.new(0,125,1,0)
-  elseif isTenFootInterface then
-    this.TabHeader.Icon.Image = "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab@2x.png"
-    this.TabHeader.Icon.Size = UDim2.new(0,90,0,90)
-    this.TabHeader.Icon.Position = UDim2.new(0,0,0.5,-43)
-    this.TabHeader.Size = UDim2.new(0,280,1,0)
-  else
-    this.TabHeader.Icon.Size = UDim2.new(0,45,0,45)
-    this.TabHeader.Icon.Position = UDim2.new(0,15,0.5,-22)
-  end
-
+  this.TabHeader.Icon.Image = isTenFootInterface and "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab@2x.png" or "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png"
 
   this.TabHeader.Icon.Title.Text = "Settings"
 
   ------ PAGE CUSTOMIZATION -------
   this.Page.ZIndex = 5
 
+  if this.PageListLayout then
+    this.PageListLayout.Padding = UDim.new(0, 0)
+  end
+  
   return this
 end
 

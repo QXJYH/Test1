@@ -105,6 +105,17 @@ public class CreateUniverseResponse
     public long universeId { get; set; }
 }
 
+public class ProductReceipt
+{
+    public Guid id { get; set; }
+    public long userId { get; set; }
+    public long productId { get; set; }
+    public long price { get; set; }
+    public bool processed { get; set; }
+    public DateTime createdAt { get; set; }
+    public DateTime? processedAt { get; set; }
+}
+
 public class PlayEntry
 {
     public DateTime createdAt { get; set; }

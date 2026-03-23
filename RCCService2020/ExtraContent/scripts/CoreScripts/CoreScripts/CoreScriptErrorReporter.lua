@@ -101,7 +101,7 @@ if game:GetFastFlag("EnableCoreScriptBacktraceReporting") and game:GetFastString
         end
 	end)
 
-	local serverVersionRemote = RobloxReplicatedStorage:WaitForChild("GetServerVersion", math.huge)
+	local serverVersionRemote = RobloxReplicatedStorage:WaitForChild("GetServerVersion")
 	local serverVersion = serverVersionRemote:InvokeServer()
 	staticAttributes.ServerVersion = serverVersion
 end

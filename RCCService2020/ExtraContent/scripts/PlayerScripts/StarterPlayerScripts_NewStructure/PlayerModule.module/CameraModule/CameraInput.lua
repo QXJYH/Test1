@@ -1,6 +1,6 @@
 local FFlagUserCameraInputRefactor do
 	local success, result = pcall(function()
-		return UserSettings():IsUserFeatureEnabled("UserCameraInputRefactor2")
+		return UserSettings():IsUserFeatureEnabled("UserCameraInputRefactor")
 	end)
 	FFlagUserCameraInputRefactor = success and result
 end
@@ -9,6 +9,8 @@ local ContextActionService = game:GetService("ContextActionService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local UserGameSettings = UserSettings():GetService("UserGameSettings")
+
+local ZoomController = require(script.Parent:WaitForChild("ZoomController"))
 
 local player = Players.LocalPlayer
 
@@ -172,7 +174,7 @@ do
 	function CameraInput.getZoomDelta()
 		local kKeyboard = keyboardState.O - keyboardState.I
 		local kMouse = -mouseState.Wheel + mouseState.Pinch
-		local kTouch = -touchState.Pinch
+		local kTouch = touchState.Pinch
 		return kKeyboard*ZOOM_SPEED_KEYS + kMouse*ZOOM_SPEED_MOUSE + kTouch*ZOOM_SPEED_TOUCH
 	end
 
@@ -223,85 +225,95 @@ do
 		local touchBegan, touchChanged, touchEnded do
 			-- Use TouchPan & TouchPinch when they work in the Studio emulator
 
-			local touches = {} -- {[InputObject] = sunk}
-			local dynamicThumbstickInput -- Special-cased 
-			local lastPinchDiameter
+			local numUnsunkTouches = 0
+			local fingerTouches = {}
+			local startingDiff
+			local pinchBeginZoom
+			local dynamicTouchInput
 
 			function touchBegan(input, sunk)
-				assert(input.UserInputType == Enum.UserInputType.Touch)
-				assert(input.UserInputState == Enum.UserInputState.Begin)
-				
-				if dynamicThumbstickInput == nil and isInDynamicThumbstickArea(input.Position) and not sunk then
-					-- any finger down starting in the dynamic thumbstick area should always be
-					-- ignored for camera purposes. these must be handled specially from all other
-					-- inputs, as the DT does not sink inputs by itself
-					dynamicThumbstickInput = input
+				if dynamicTouchInput == nil and isInDynamicThumbstickArea(input.Position) then
+					-- First input in the dynamic thumbstick area should always be ignored for camera purposes
+					-- Even if the dynamic thumbstick does not process it immediately
+					dynamicTouchInput = input
 					return
 				end
 				
-				-- register the finger
-				touches[input] = sunk
+				-- Dedup+register unsunk touch
+				if fingerTouches[input] == nil and not sunk then
+					numUnsunkTouches += 1
+				end
+				
+				fingerTouches[input] = sunk
 			end
 
-			function touchEnded(input, sunk)
-				assert(input.UserInputType == Enum.UserInputType.Touch)
-				assert(input.UserInputState == Enum.UserInputState.End)
-				
-				-- reset the DT input
-				if input == dynamicThumbstickInput then
-					dynamicThumbstickInput = nil
+			function touchEnded(input, sunk)		
+				-- reset the DT input	
+				if input == dynamicTouchInput then
+					dynamicTouchInput = nil
+					return
 				end
-				
-				-- reset pinch state if one unsunk finger lifts
-				if touches[input] == false then
-					lastPinchDiameter = nil
+
+				-- reset pinch states if one finger lifts
+				if fingerTouches[input] == false then
+					if numUnsunkTouches == 2 then
+						startingDiff = nil
+						pinchBeginZoom = nil
+					end
 				end
-				
-				-- unregister input
-				touches[input] = nil
+
+				-- unregister
+				if fingerTouches[input] == false then
+					numUnsunkTouches -= 1
+				end
+				fingerTouches[input] = nil
 			end
 
 			function touchChanged(input, sunk)
-				assert(input.UserInputType == Enum.UserInputType.Touch)
-				assert(input.UserInputState == Enum.UserInputState.Change)
-				
-				-- ignore movement from the DT finger
-				if input == dynamicThumbstickInput then
+				-- ignore the DT input
+				if input == dynamicTouchInput then
 					return
 				end
-				
+
 				-- fixup unknown touches
-				if touches[input] == nil then
-					touches[input] = sunk
-				end
-				
-				-- collect unsunk touches
-				local unsunkTouches = {}
-				for touch, sunk in pairs(touches) do
+				if fingerTouches[input] == nil then
+					fingerTouches[input] = sunk
 					if not sunk then
-						table.insert(unsunkTouches, touch)
+						numUnsunkTouches += 1
 					end
 				end
-				
+
 				-- 1 finger: pan
-				if #unsunkTouches == 1 then
-					if touches[input] == false then
+				if numUnsunkTouches == 1 then
+					if fingerTouches[input] == false then
 						local delta = input.Delta
 						touchState.Move = Vector2.new(delta.X, delta.Y)
 					end
 				end
-				
+
 				-- 2 fingers: pinch
-				if #unsunkTouches == 2 then
-					local pinchDiameter = (unsunkTouches[1].Position - unsunkTouches[2].Position).Magnitude
-					
-					if lastPinchDiameter then
-						touchState.Pinch = pinchDiameter - lastPinchDiameter
+				if numUnsunkTouches == 2 then
+					local unsunkTouches = {}
+					for touch, wasSunk in pairs(fingerTouches) do
+						if not wasSunk then
+							table.insert(unsunkTouches, touch)
+						end
 					end
-					
-					lastPinchDiameter = pinchDiameter
+
+					if #unsunkTouches == 2 then
+						local diff = (unsunkTouches[1].Position - unsunkTouches[2].Position).Magnitude
+						if startingDiff and pinchBeginZoom then
+							local scale = diff/math.max(0.01, startingDiff)
+							local clampedScale = math.clamp(scale, 0.1, 10)
+							touchState.Pinch = pinchBeginZoom/clampedScale - ZoomController.GetZoomDistance()
+						else
+							startingDiff = diff
+							pinchBeginZoom = ZoomController.GetZoomDistance()
+						end
+					end
 				else
-					lastPinchDiameter = nil
+					startingDiff = nil
+					pinchBeginZoom = nil
 				end
 			end
 		end
@@ -312,25 +324,25 @@ do
 				
 				mouseState.Wheel = wheel
 				mouseState.Pan = pan*inversionVector
-				mouseState.Pinch = -pinch
+				mouseState.Pinch = pinch
 			end
 		end
 
-		local function inputBegan(input, sunk)
+		local function inputBegan(input, gpe)
 			if input.UserInputType == Enum.UserInputType.Touch then
-				touchBegan(input, sunk)
+				touchBegan(input, gpe)
 			end
 		end
 
-		local function inputChanged(input, sunk)
+		local function inputChanged(input, gpe)
 			if input.UserInputType == Enum.UserInputType.Touch then
-				touchChanged(input, sunk)
+				touchChanged(input, gpe)
 			end
 		end
 
-		local function inputEnded(input, sunk)
+		local function inputEnded(input, gpe)
 			if input.UserInputType == Enum.UserInputType.Touch then
-				touchEnded(input, sunk)
+				touchEnded(input, gpe)
 			end
 		end
 

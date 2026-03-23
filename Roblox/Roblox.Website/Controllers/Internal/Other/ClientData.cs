@@ -51,7 +51,9 @@ namespace Roblox.Website.Controllers
             {
 				"97e93df61c3357531585cebb22d2edff",
 				"053974fb1131dda3fc75534b08576b67",
-				"2e71951cc3566e2ab558b9f8a8f1c510"
+				"2e71951cc3566e2ab558b9f8a8f1c510",
+				"501af5504a8361a6c99ee0876ac20b69",
+				"505afe0786b7cc5b79d1735a26b3ffec"
             };
 
             return new { data = allowedList };
@@ -61,11 +63,16 @@ namespace Roblox.Website.Controllers
         public MVC.ActionResult<dynamic> AllowedSecurityVersions()
         {
             List<string> allowedList = new List<string>()
-            {  
+            {  	
 				"0.463.0pcplayer",
+				"0.300.0pcplayer",
 				"0.285.0pcplayer",
 				"0.283.0pcplayer",
-				"0.275.0pcplayer"
+				"0.275.0pcplayer",
+				"0.201.0pcplayer",
+				"INTERNALandroidapp",
+				"INTERNALiosapp",
+				"INTERNALpcplayer"
             };
 			
             return new { data = allowedList };
@@ -144,11 +151,11 @@ namespace Roblox.Website.Controllers
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "AndroidApp.json");
 						break;
 
-					case "6sxp8X2Y02KornetSETTINGwork":
+					case "6sxp8X2Y02settingsislwkgoated":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "RCCService.json");
 						break;
 					// Make this configurable in appsettyings
-					case "RCCServiceKornetSETTINGwork":
+					case "RCCServicesettingsislwkgoated":
 						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "RCCService.json");
 						break;
 						

@@ -25,7 +25,10 @@ local function getViewportSize()
 		game.Workspace.Changed:wait()
 	end
 
-	while game.Workspace.CurrentCamera.ViewportSize == Vector2.new(0,0) do
+	-- ViewportSize is initally set to 1, 1 in Camera.cpp constructor.
+	-- Also check against 0, 0 incase this is changed in the future.
+	while game.Workspace.CurrentCamera.ViewportSize == Vector2.new(0,0) or
+		game.Workspace.CurrentCamera.ViewportSize == Vector2.new(1,1) do
 		game.Workspace.CurrentCamera.Changed:wait()
 	end
 
@@ -72,7 +75,7 @@ local create = function(className, defaultParent)
 				end
 			end
 		end
-		
+
 		if parent then
 			object.Parent = parent
 		end
@@ -199,30 +202,22 @@ local function createTenfootCancelGui()
 		Text = "Cancel";
 	}
 
-	-- bind cancel action
-	local platformService = nil
-	pcall(function()
-		platformService = game:GetService('PlatformService')
-	end)
-
-	if platformService then
-		if not game:GetService("ReplicatedFirst"):IsFinishedReplicating() then
-			local seenBButtonBegin = false
-			ContextActionService:BindCoreAction("CancelGameLoad",
-				function(actionName, inputState, inputObject)
-					if inputState == Enum.UserInputState.Begin then
-						seenBButtonBegin = true
-					elseif inputState == Enum.UserInputState.End and seenBButtonBegin then
-						cancelLabel:Destroy()
-						cancelText.Text = "Canceling..."
-						cancelText.Position = UDim2.new(1, -32, 0, 64)
-						ContextActionService:UnbindCoreAction('CancelGameLoad')
-						platformService:RequestGameShutdown()
-					end
-				end,
-				false,
-				Enum.KeyCode.ButtonB)
-		end
+	if not game:GetService("ReplicatedFirst"):IsFinishedReplicating() then
+		local seenBButtonBegin = false
+		ContextActionService:BindCoreAction("CancelGameLoad",
+			function(actionName, inputState, inputObject)
+				if inputState == Enum.UserInputState.Begin then
+					seenBButtonBegin = true
+				elseif inputState == Enum.UserInputState.End and seenBButtonBegin then
+					cancelLabel:Destroy()
+					cancelText.Text = "Canceling..."
+					cancelText.Position = UDim2.new(1, -32, 0, 64)
+					ContextActionService:UnbindCoreAction('CancelGameLoad')
+					game:Shutdown()
+				end
+			end,
+			false,
+			Enum.KeyCode.ButtonB)
 	end
 
 	while cancelLabel.Parent == nil do
@@ -443,6 +438,22 @@ function MainGui:GenerateMain()
 	end
 	screenGui.Parent = game:GetService("CoreGui")
 	currScreenGui = screenGui
+
+	local function onResized(prop)
+		if prop == "AbsoluteSize" then
+			if screenGui.AbsoluteSize.Y < screenGui.AbsoluteSize.X then
+				--Landscape
+				infoFrame.Position = UDim2.new(0, (isMobile == true and 20 or 100), 1, (isMobile == true and -120 or -150))
+				uiMessageFrame.Position = UDim2.new(0.25, 0, 1, -120)
+			else
+				--Portrait
+				infoFrame.Position = UDim2.new(0, 20, 0, 100)
+				uiMessageFrame.Position = UDim2.new(0.25, 0, 0.5, 0)
+			end
+		end
+	end
+	onResized("AbsoluteSize")
+	screenGui.Changed:connect(onResized)
 end
 
 function round(num, idp)

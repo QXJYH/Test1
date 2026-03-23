@@ -8,8 +8,6 @@ local AppTempCommon = CorePackages.AppTempCommon
 local Modules = CoreGui.RobloxGui.Modules
 local ShareGame = Modules.Settings.Pages.ShareGame
 
-local isSelectionGroupEnabled = require(ShareGame.isSelectionGroupEnabled)
-
 local FFlagLuaInviteModalEnabled = settings():GetFFlag("LuaInviteModalEnabledV384")
 local FFlagDisableAutoTranslateForKeyTranslatedContent = require(RobloxGui.Modules.Flags.FFlagDisableAutoTranslateForKeyTranslatedContent)
 
@@ -66,11 +64,6 @@ function ShareGamePageFrame:render()
 		toggleSearchIcon = not isDesktop
 	end
 
-	local isVisible = nil
-	if isSelectionGroupEnabled() then
-		isVisible = self.props.isVisible
-	end
-
 	return Roact.createElement("Frame", {
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 1, 0),
@@ -102,7 +95,6 @@ function ShareGamePageFrame:render()
 			layoutOrder = 1,
 			zIndex = zIndex,
 			searchText = searchText,
-			isVisible = isVisible,
 		}),
 	})
 end

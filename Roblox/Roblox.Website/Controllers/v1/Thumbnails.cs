@@ -195,16 +195,16 @@ public class ThumbnailsControllerV1 : ControllerBase
         return await Process18PlusAssets(result);
     }
     
-    [HttpGetBypass("thumbnail/avatar-headshot")]
-    public async Task<dynamic> GetHeadshotThumbnailJson(long userId)
-    {
-        var result = (await services.thumbnails.GetUserHeadshots(new[] { userId })).ToList();
-        return new
-        {
-            Final = true,
-            Url = $"{Configuration.BaseUrl}{result[0].imageUrl}",
-        };
-    }
+    // [HttpGetBypass("thumbnail/avatar-headshot")]
+    // public async Task<dynamic> GetHeadshotThumbnailJson(long userId)
+    // {
+    //     var result = (await services.thumbnails.GetUserHeadshots(new[] { userId })).ToList();
+    //     return new
+    //     {
+    //         Final = true,
+    //         Url = $"{Configuration.BaseUrl}{result[0].imageUrl}",
+    //     };
+    // }
 
     [HttpGet("users/outfits")]
     public async Task<RobloxCollection<ThumbnailEntry>> GetUserOutfitThumbnails(string userOutfitIds)

@@ -6,6 +6,10 @@ local EventFolderName = "DefaultChatSystemChatEvents"
 local EventFolderParent = game:GetService("ReplicatedStorage")
 local modulesFolder = script
 
+local PlayersService = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Chat = game:GetService("Chat")
+
 local ChatService = require(modulesFolder:WaitForChild("ChatService"))
 
 local useEvents = {}
@@ -48,9 +52,13 @@ CreateIfDoesntExist(EventFolder, "OnChannelLeft", "RemoteEvent")
 CreateIfDoesntExist(EventFolder, "OnMuted", "RemoteEvent")
 CreateIfDoesntExist(EventFolder, "OnUnmuted", "RemoteEvent")
 CreateIfDoesntExist(EventFolder, "OnMainChannelSet", "RemoteEvent")
+CreateIfDoesntExist(EventFolder, "ChannelNameColorUpdated", "RemoteEvent")
 
 CreateIfDoesntExist(EventFolder, "SayMessageRequest", "RemoteEvent")
 CreateIfDoesntExist(EventFolder, "GetInitDataRequest", "RemoteFunction")
+CreateIfDoesntExist(EventFolder, "MutePlayerRequest", "RemoteFunction")
+CreateIfDoesntExist(EventFolder, "UnMutePlayerRequest", "RemoteFunction")
+CreateIfDoesntExist(EventFolder, "SetBlockedUserIdsRequest", "RemoteEvent")
 
 EventFolder = useEvents
 
@@ -64,13 +72,13 @@ local function CreatePlayerSpeakerObject(playerObj)
 		ChatService:RemoveSpeaker(playerObj.Name)
 	end
 
-	speaker = ChatService:InternalAddSpeakerWithPlayerObject(playerObj.Name, playerObj)
+	speaker = ChatService:InternalAddSpeakerWithPlayerObject(playerObj.Name, playerObj, false)
 
 	for i, channel in pairs(ChatService:GetAutoJoinChannelList()) do
 		speaker:JoinChannel(channel.Name)
 	end
 
-	speaker.ReceivedMessage:connect(function(messageObj, channel)
+	speaker.ReceivedUnfilteredMessage:connect(function(messageObj, channel)
 		EventFolder.OnNewMessage:FireClient(playerObj, messageObj, channel)
 	end)
 
@@ -84,12 +92,14 @@ local function CreatePlayerSpeakerObject(playerObj)
 
 	speaker.ChannelJoined:connect(function(channel, welcomeMessage)
 		local log = nil
+		local channelNameColor = nil
 
 		local channelObject = ChatService:GetChannel(channel)
 		if (channelObject) then
-			log = channelObject:GetHistoryLog()
+			log = channelObject:GetHistoryLogForSpeaker(speaker)
+			channelNameColor = channelObject.ChannelNameColor
 		end
-		EventFolder.OnChannelJoined:FireClient(playerObj, channel, welcomeMessage, log)
+		EventFolder.OnChannelJoined:FireClient(playerObj, channel, welcomeMessage, log, channelNameColor)
 	end)
 
 	speaker.ChannelLeft:connect(function(channel)
@@ -107,6 +117,12 @@ local function CreatePlayerSpeakerObject(playerObj)
 	speaker.MainChannelSet:connect(function(channel)
 		EventFolder.OnMainChannelSet:FireClient(playerObj, channel)
 	end)
+
+	speaker.ChannelNameColorUpdated:connect(function(channelName, channelNameColor)
+		EventFolder.ChannelNameColorUpdated:FireClient(playerObj, channelName, channelNameColor)
+	end)
+
+	ChatService:InternalFireSpeakerAdded(speaker.Name)
 end
 
 EventFolder.SayMessageRequest.OnServerEvent:connect(function(playerObj, message, channel)
@@ -116,6 +132,64 @@ EventFolder.SayMessageRequest.OnServerEvent:connect(function(playerObj, message,
 	end
 
 	return nil
+end)
+
+EventFolder.MutePlayerRequest.OnServerInvoke = function(playerObj, muteSpeakerName)
+	local speaker = ChatService:GetSpeaker(playerObj.Name)
+	if speaker then
+		local muteSpeaker = ChatService:GetSpeaker(muteSpeakerName)
+		if muteSpeaker then
+			speaker:AddMutedSpeaker(muteSpeaker.Name)
+			return true
+		end
+	end
+	return false
+end
+
+EventFolder.UnMutePlayerRequest.OnServerInvoke = function(playerObj, unmuteSpeakerName)
+	local speaker = ChatService:GetSpeaker(playerObj.Name)
+	if speaker then
+		local unmuteSpeaker = ChatService:GetSpeaker(unmuteSpeakerName)
+		if unmuteSpeaker then
+			speaker:RemoveMutedSpeaker(unmuteSpeaker.Name)
+			return true
+		end
+	end
+	return false
+end
+
+-- Map storing Player -> Blocked user Ids.
+local BlockedUserIdsMap = {}
+
+PlayersService.PlayerAdded:connect(function(newPlayer)
+	for player, blockedUsers in pairs(BlockedUserIdsMap) do
+		local speaker = ChatService:GetSpeaker(player.Name)
+		if speaker then
+			for i = 1, #blockedUsers do
+				local blockedUserId = blockedUsers[i]
+				if blockedUserId == newPlayer.UserId then
+					speaker:AddMutedSpeaker(newPlayer.Name)
+				end
+			end
+		end
+	end
+end)
+
+PlayersService.PlayerRemoving:connect(function(removingPlayer)
+	BlockedUserIdsMap[removingPlayer] = nil
+end)
+
+EventFolder.SetBlockedUserIdsRequest.OnServerEvent:connect(function(player, blockedUserIdsList)
+	BlockedUserIdsMap[player] = blockedUserIdsList
+	local speaker = ChatService:GetSpeaker(player.Name)
+	if speaker then
+		for i = 1, #blockedUserIdsList do
+			local blockedPlayer = PlayersService:GetPlayerByUserId(blockedUserIdsList[i])
+			if blockedPlayer then
+				speaker:AddMutedSpeaker(blockedPlayer.Name)
+			end
+		end
+	end
 end)
 
 EventFolder.GetInitDataRequest.OnServerInvoke = (function(playerObj)
@@ -135,8 +209,9 @@ EventFolder.GetInitDataRequest.OnServerInvoke = (function(playerObj)
 			local channelData =
 			{
 				channelName,
-				channelObj.WelcomeMessage,
-				channelObj:GetHistoryLog(),
+				channelObj:GetWelcomeMessageForSpeaker(speaker),
+				channelObj:GetHistoryLogForSpeaker(speaker),
+				channelObj.ChannelNameColor,
 			}
 
 			table.insert(data.Channels, channelData)
@@ -160,6 +235,9 @@ local function DoJoinCommand(speakerName, channelName, fromChannelName)
 			if (channel.Joinable) then
 				if (not speaker:IsInChannel(channel.Name)) then
 					speaker:JoinChannel(channel.Name)
+				else
+					speaker:SetMainChannel(channel.Name)
+					speaker:SendSystemMessage(string.format("You are now chatting in channel: '%s'", channel.Name), channel.Name)
 				end
 			else
 				speaker:SendSystemMessage("You cannot join channel '" .. channelName .. "'.", fromChannelName)
@@ -178,6 +256,7 @@ local function DoLeaveCommand(speakerName, channelName, fromChannelName)
 		if (speaker:IsInChannel(channelName)) then
 			if (channel.Leavable) then
 				speaker:LeaveChannel(channel.Name)
+				speaker:SendSystemMessage(string.format("You have left channel '%s'", channel.Name), "System")
 			else
 				speaker:SendSystemMessage("You cannot leave channel '" .. channelName .. "'.", fromChannelName)
 			end
@@ -217,6 +296,21 @@ local systemChannel = ChatService:AddChannel("System")
 
 allChannel.Leavable = false
 allChannel.AutoJoin = true
+
+allChannel:RegisterGetWelcomeMessageFunction(function(speaker)
+	if RunService:IsStudio() then
+		return nil
+	end
+	local player = speaker:GetPlayer()
+	if player then
+		local success, canChat = pcall(function()
+			return Chat:CanUserChatAsync(player.UserId)
+		end)
+		if success and not canChat then
+			return ""
+		end
+	end
+end)
 
 systemChannel.Leavable = false
 systemChannel.AutoJoin = true

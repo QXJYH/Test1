@@ -60,6 +60,7 @@ namespace Roblox.Services
 
 			switch (Year)
 			{
+                case "2021":
 				case "2020":
 					return await Generate2020JoinScript(UserInfo, PlaceDetails, UniID, jobId, serverPort, MembershipType, AccountAge, Creator, Ticket);
 				case "2018":

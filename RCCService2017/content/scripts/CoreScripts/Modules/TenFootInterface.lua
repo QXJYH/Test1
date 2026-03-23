@@ -15,13 +15,14 @@ local CoreGui = game:GetService("CoreGui")
 local RobloxGui = CoreGui:WaitForChild("RobloxGui")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
+local Players = game:GetService("Players")
 
 ------------------ VARIABLES --------------------
 local tenFootInterfaceEnabled = false
 do
 	local platform = UserInputService:GetPlatform()
 
-	tenFootInterfaceEnabled = (platform == Enum.Platform.XBoxOne or platform == Enum.Platform.WiiU or platform == Enum.Platform.PS4 or 
+	tenFootInterfaceEnabled = (platform == Enum.Platform.XBoxOne or platform == Enum.Platform.WiiU or platform == Enum.Platform.PS4 or
 		platform == Enum.Platform.AndroidTV or platform == Enum.Platform.XBox360 or platform == Enum.Platform.PS3 or
 		platform == Enum.Platform.Ouya or platform == Enum.Platform.SteamOS)
 end
@@ -29,6 +30,9 @@ end
 if FORCE_TEN_FOOT_INTERFACE then
 	tenFootInterfaceEnabled = true
 end
+
+local showVisibleAgeV2Success, showVisibleAgeV2Value = pcall(function() return settings():GetFFlag("CoreScriptShowVisibleAgeV2") end)
+local showVisibleAgeV2Enabled = showVisibleAgeV2Success and showVisibleAgeV2Value
 
 local Util = {}
 do
@@ -51,6 +55,8 @@ local function CreateModule()
 	local this = {}
 	local nextObjectDisplayYPos = DISPLAY_POS_INIT_INSET
 	local displayStack = {}
+	local displayStackChanged = Instance.new("BindableEvent")
+	local healthContainerPropertyChanged = Instance.new("BindableEvent")
 
 	-- setup base gui
 	local function createContainer()
@@ -59,7 +65,7 @@ local function CreateModule()
 			{
 				Name = "TopRightContainer";
 				Size = UDim2.new(0, 350, 0, 100);
-				Position = UDim2.new(1,-360,0,10);
+				Position = showVisibleAgeV2Enabled and UDim2.new(1,-415,0,10) or UDim2.new(1,-360,0,10);
 				AutoButtonColor = false;
 				Image = "";
 				Active = false;
@@ -86,6 +92,7 @@ local function CreateModule()
 												objectToMoveUp.Position.Y.Scale, prevObject.AbsolutePosition.Y)
 			prevObject = objectToMoveUp
 		end
+		displayStackChanged:Fire()
 	end
 
 	function addBackToDisplayStack(displayObject)
@@ -104,6 +111,7 @@ local function CreateModule()
 												objectToMoveDown.Position.Y.Scale, nextDisplayPos)
 			prevObject = objectToMoveDown
 		end
+		displayStackChanged:Fire()
 	end
 
 	function addToDisplayStack(displayObject)
@@ -133,6 +141,7 @@ local function CreateModule()
 				end
 			end
 		end)
+		displayStackChanged:Fire()
 	end
 
 	function this:CreateHealthBar()
@@ -164,7 +173,7 @@ local function CreateModule()
 			BackgroundColor3 = HEALTH_GREEN_COLOR;
 			Parent = healthFillHolder;
 		};
-		
+
 		local healthText = Util.Create'TextLabel'{
 			Name = "HealthText";
 			Size = UDim2.new(0, 98, 0, 50);
@@ -183,10 +192,108 @@ local function CreateModule()
 			Visible = false
 		}
 
+		local accountType = Util.Create'TextLabel'{
+			Visible = false
+		}
+
 		addToDisplayStack(this.HealthContainer)
 		createContainer()
-		
-		return this.Container, username, this.HealthContainer, healthFill
+
+		this.HealthContainer.Changed:connect(function()
+			healthContainerPropertyChanged:Fire()
+		end)
+
+		return this.Container, username, this.HealthContainer, healthFill, accountType
+	end
+
+	function this:CreateAccountTypeV2(accountTypeTextShort)
+		this.AccountTypeContainer = Util.Create'Frame'{
+			Name = "AccountTypeContainer";
+			Size = UDim2.new(0, 50, 0, 50);
+			Position = UDim2.new(1, -55, 0, 10);
+			BorderSizePixel = 0;
+			BackgroundColor3 = Color3.new(0,0,0);
+			BackgroundTransparency = 0.5;
+			Parent = RobloxGui;
+		};
+
+		local accountTypeTextLabel = Util.Create'TextLabel'{
+			Name = "AccountTypeText";
+			Size = UDim2.new(1, 0, 1, 0);
+			Position = UDim2.new(0, 0, 0, 0);
+			BackgroundTransparency = 1;
+			BackgroundColor3 = Color3.new(0,0,0);
+			Font = Enum.Font.SourceSans;
+			FontSize = Enum.FontSize.Size36;
+			Text = accountTypeTextShort;
+			TextColor3 = Color3.new(1,1,1);
+			BorderSizePixel = 0;
+			Parent = this.AccountTypeContainer;
+			TextXAlignment = Enum.TextXAlignment.Center;
+			TextYAlignment = Enum.TextYAlignment.Center;
+		};
+	end
+
+	function this:CreateAccountType(accountTypeText)
+		local container = Util.Create'ImageButton'
+		{
+			Name = "AccountTypeContainer";
+			Position = UDim2.new(1,-370,0,10);
+			AutoButtonColor = false;
+			Image = "";
+			BackgroundTransparency = 1;
+			Parent = RobloxGui;
+		}
+
+		local bubble = Util.Create'ImageButton'
+		{
+			Name = "AccountTypeBubble";
+			Size = UDim2.new(1, -10, 1, -16);
+			Position = UDim2.new(0, 10, 0, 8);
+			AutoButtonColor = false;
+			Image = "rbxasset://textures/ui/TopBar/Round.png";
+			ScaleType = Enum.ScaleType.Slice;
+			SliceCenter = Rect.new(10, 10, 10, 10);
+			ImageTransparency = 0;
+			BackgroundTransparency = 1;
+			Parent = container;
+		}
+
+		local accountTypeTextLabel = Util.Create'TextLabel'{
+			Name = "AccountTypeText";
+			Text = accountTypeText;
+			Size = UDim2.new(1, -12, 1, -12);
+			Position = UDim2.new(0, 6, 0, 6);
+			Font = Enum.Font.SourceSansBold;
+			FontSize = Enum.FontSize.Size14;
+			BackgroundTransparency = 1;
+			TextColor3 = Color3.new(1,1,1);
+			TextYAlignment = Enum.TextYAlignment.Center;
+			TextXAlignment = Enum.TextXAlignment.Left;
+			Parent = bubble;
+		};
+
+		local function repositionAccountType()
+			local negativeYOffset = 375
+			if #displayStack == 0 then
+				negativeYOffset = 15
+			elseif #displayStack == 1 and displayStack[1] == this.HealthContainer then
+				if this.HealthContainer.Visible == false then
+					negativeYOffset = 10
+				end
+			end
+
+			local containerSize = 22 + accountTypeTextLabel.TextBounds.X
+			container.Size = UDim2.new(0, containerSize, 0, 50)
+			container.Position = UDim2.new(1,- (negativeYOffset + containerSize),0,10);
+		end
+
+		repositionAccountType()
+
+		displayStackChanged.Event:connect(repositionAccountType)
+		healthContainerPropertyChanged.Event:connect(repositionAccountType)
+
+		return nil
 	end
 
 	function this:SetupTopStat()
@@ -275,13 +382,14 @@ local function CreateModule()
 			end
 		end
 
-		function tenFootInterfaceChanged()
-			game:WaitForChild("Players")
-			while not game.Players.LocalPlayer do
-				wait()
-			end
+		local localPlayer = Players.LocalPlayer
+		while not localPlayer do
+			Players.PlayerAdded:wait()
+			localPlayer = Players.LocalPlayer
+		end
 
-			local leaderstats = game.Players.LocalPlayer:FindFirstChild('leaderstats')
+		function tenFootInterfaceChanged()
+			local leaderstats = localPlayer:FindFirstChild('leaderstats')
 			if leaderstats then
 				local statChildren = leaderstats:GetChildren()
 				for i = 1, #statChildren do
@@ -294,29 +402,24 @@ local function CreateModule()
 			end
 		end
 
-		game:WaitForChild("Players")
-		while not game.Players.LocalPlayer do
-			wait()
-		end
-
-		local leaderstats = game.Players.LocalPlayer:FindFirstChild('leaderstats')
+		local leaderstats = localPlayer:FindFirstChild('leaderstats')
 		if leaderstats then
 			tenFootInterfaceChanged()
 		else
-			game.Players.LocalPlayer.ChildAdded:connect(tenFootInterfaceChanged)
+			localPlayer.ChildAdded:connect(tenFootInterfaceChanged)
 		end
-		
+
 		--Top Stat Public API
-		
+
 		local topStatApiTable = {}
-		
+
 		function topStatApiTable:SetTopStatEnabled(value)
 			topStatEnabled = value
 			if displayedStat then
 				updateTenFootStat(displayedStat, "")
 			end
 		end
-		
+
 		return topStatApiTable
 	end
 
@@ -336,6 +439,14 @@ local moduleApiTable = {}
 
 	function moduleApiTable:CreateHealthBar()
 		return TenFootInterfaceModule:CreateHealthBar()
+	end
+
+	function moduleApiTable:CreateAccountType(accountTypeText)
+		return TenFootInterfaceModule:CreateAccountType(accountTypeText)
+	end
+
+	function moduleApiTable:CreateAccountTypeV2(accountTypeTextShort)
+		return TenFootInterfaceModule:CreateAccountTypeV2(accountTypeTextShort)
 	end
 
 	function moduleApiTable:SetupTopStat()

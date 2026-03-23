@@ -152,7 +152,7 @@ local function reportPlayerEvent(userId, t)
     -- wrapped in pcall to prevent keys spilling in error logs
 	local ok, msg = pcall(function()
 		local msg = http:JSONEncode({
-			["authorization"] = "KrntAuthNTCatinoMenaslgie",
+			["authorization"] = "authkrntislwkgoatedheh",
 			["serverId"] = game.JobId,
 			["userId"] = tostring(userId),
 			["eventType"] = t,
@@ -168,7 +168,7 @@ print("[info] jobId is", game.JobId);
 local function pollToReportActivity()
 	local function sendPing()
 		game:HttpPost(url .. "/gs/ping", http:JSONEncode({
-			["authorization"] = "KrntAuthNTCatinoMenaslgie",
+			["authorization"] = "authkrntislwkgoatedheh",
 			["serverId"] = game.JobId,
 			["placeId"] = placeId,
 		}), false, "application/json");
@@ -192,7 +192,7 @@ local function shutdown()
 	end
 	pcall(function()
 		game:HttpPost(url .. "/gs/shutdown", http:JSONEncode({
-			["authorization"] = "KrntAuthNTCatinoMenaslgie",
+			["authorization"] = "authkrntislwkgoatedheh",
 			["serverId"] = game.JobId,
 			["placeId"] = placeId,
 		}), false, "application/json");

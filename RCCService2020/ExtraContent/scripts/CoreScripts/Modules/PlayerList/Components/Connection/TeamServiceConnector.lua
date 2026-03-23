@@ -6,10 +6,17 @@ local RoactRodux = require(CorePackages.RoactRodux)
 local Components = script.Parent.Parent
 local PlayerList = Components.Parent
 
+local FFlagPlayerListFixTeamUpdates = game:DefineFastFlag("PlayerListFixTeamUpdates", false)
+
 local SetTeamName = require(PlayerList.Actions.SetTeamName)
 local SetTeamColor = require(PlayerList.Actions.SetTeamColor)
 local AddPlayerToTeam = require(PlayerList.Actions.AddPlayerToTeam)
-local RemovePlayerFromTeam = require(PlayerList.Actions.RemovePlayerFromTeam)
+local RemovePlayerFromTeam
+if FFlagPlayerListFixTeamUpdates then
+	RemovePlayerFromTeam = require(PlayerList.Actions.RemovePlayerFromTeam)
+else
+	RemovePlayerFromTeam = require(PlayerList.Actions.AddPlayerToTeam)
+end
 
 local AddTeam = require(PlayerList.Actions.AddTeam)
 local RemoveTeam = require(PlayerList.Actions.RemoveTeam)
@@ -92,6 +99,11 @@ function TeamServiceConnector:render()
 			callback = function(team)
 				if team:IsA("Team") then
 					self.props.addTeam(team)
+					if not FFlagPlayerListFixTeamUpdates then
+						for _, player in ipairs(team:GetPlayers()) do
+							self.props.addPlayerToTeam(player, team)
+						end
+					end
 				end
 			end,
 		}),
@@ -107,16 +119,18 @@ function TeamServiceConnector:render()
 	})
 end
 
-function TeamServiceConnector:didUpdate(prevProps, prevState)
-	if self.props.teams ~= prevProps.teams then
-		local oldTeamMap = {}
-		for _, oldTeam in ipairs(prevProps.teams) do
-			oldTeamMap[oldTeam] = true
-		end
-		for _, team in ipairs(self.props.teams) do
-			if not oldTeamMap[team] then
-				for _, player in ipairs(team:GetPlayers()) do
-					self.props.addPlayerToTeam(player, team)
+if FFlagPlayerListFixTeamUpdates then
+	function TeamServiceConnector:didUpdate(prevProps, prevState)
+		if self.props.teams ~= prevProps.teams then
+			local oldTeamMap = {}
+			for _, oldTeam in ipairs(prevProps.teams) do
+				oldTeamMap[oldTeam] = true
+			end
+			for _, team in ipairs(self.props.teams) do
+				if not oldTeamMap[team] then
+					for _, player in ipairs(team:GetPlayers()) do
+						self.props.addPlayerToTeam(player, team)
+					end
 				end
 			end
 		end

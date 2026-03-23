@@ -18,6 +18,8 @@ local ThemedTextLabel = require(InGameMenu.Components.ThemedTextLabel)
 
 local ImageSetLabel = UIBlox.Core.ImageSet.Label
 
+local FFlagFixInGameMenuMissingAssets = require(InGameMenu.Flags.FFlagFixInGameMenuMissingAssets)
+
 local TextEntryField = Roact.PureComponent:extend("TextEntryField")
 
 local FULL_CIRCLE_OVERAGE = 10
@@ -190,19 +192,22 @@ function TextEntryField:render()
 				}),
 			}),
 
-			BottomBar = Roact.createElement("ImageLabel", {
+			BottomBar = Roact.createElement(FFlagFixInGameMenuMissingAssets and "ImageLabel" or ImageSetLabel, {
 				BackgroundTransparency = 1,
-				Image = CIRCLE_BACKGROUND_ASSET.Image,
+				Image = FFlagFixInGameMenuMissingAssets and CIRCLE_BACKGROUND_ASSET.Image
+					or Assets.Images.BottomRoundedRect.Image,
 				ImageColor3 = style.Theme.BackgroundMuted.Color,
 				ImageTransparency = 0,
-				ScaleType = Enum.ScaleType.Slice,
+				ScaleType = FFlagFixInGameMenuMissingAssets and Enum.ScaleType.Slice
+					or Assets.Images.BottomRoundedRect.ScaleType,
 				AnchorPoint = Vector2.new(0, 1),
 				Position = UDim2.new(0, 0, 1, 0),
 				Size = UDim2.new(1, 0, 0, 32),
-				SliceCenter = Rect.new(halfImageWidth - 1, 0, halfImageWidth + 1, 1),
-				SliceScale = 1 / Images.ImagesResolutionScale,
-				ImageRectSize = Vector2.new(imageWidth, halfImageWidth),
-				ImageRectOffset = (imageOffset + Vector2.new(0, halfImageWidth)),
+				SliceCenter = FFlagFixInGameMenuMissingAssets and Rect.new(halfImageWidth - 1, 0, halfImageWidth + 1, 1)
+					or Assets.Images.BottomRoundedRect.SliceCenter,
+				SliceScale = FFlagFixInGameMenuMissingAssets and 1 / Images.ImagesResolutionScale or nil,
+				ImageRectSize = FFlagFixInGameMenuMissingAssets and Vector2.new(imageWidth, halfImageWidth) or nil,
+				ImageRectOffset = FFlagFixInGameMenuMissingAssets and (imageOffset + Vector2.new(0, halfImageWidth)) or nil,
 			}, {
 				TextAmmountIndicator = Roact.createElement("Frame", {
 					BackgroundTransparency = 1,

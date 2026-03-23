@@ -4,6 +4,8 @@ local PlayersService = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local RobloxReplicatedStorage = game:GetService("RobloxReplicatedStorage")
 
+local FFlagFixBlockedListInitLogic = game:DefineFastFlag("FixBlockedListInitLogic", false)
+
 local BlockingUtility = {}
 BlockingUtility.__index = BlockingUtility
 
@@ -17,7 +19,7 @@ local GET_BLOCKED_USERIDS_TIMEOUT = 5
 
 local RemoteEvent_UpdatePlayerBlockList = nil
 spawn(function()
-	RemoteEvent_UpdatePlayerBlockList = RobloxReplicatedStorage:WaitForChild("UpdatePlayerBlockList", math.huge)
+	RemoteEvent_UpdatePlayerBlockList = RobloxReplicatedStorage:WaitForChild("UpdatePlayerBlockList")
 end)
 
 local BlockStatusChanged = Instance.new("BindableEvent")
@@ -85,14 +87,25 @@ local function initializeBlockList()
 	end
 	GetBlockedPlayersStarted = true
 
-	BlockedList = GetBlockedPlayersAsync()
-	GetBlockedPlayersCompleted = true
+	if FFlagFixBlockedListInitLogic then
+		BlockedList = GetBlockedPlayersAsync()
+		GetBlockedPlayersCompleted = true
 
-	GetBlockedPlayersFinished:Fire()
+		GetBlockedPlayersFinished:Fire()
 
-	local RemoteEvent_SetPlayerBlockList = RobloxReplicatedStorage:WaitForChild("SetPlayerBlockList", math.huge)
-	local blockedUserIds = getBlockedUserIds()
-	RemoteEvent_SetPlayerBlockList:FireServer(blockedUserIds)
+		local RemoteEvent_SetPlayerBlockList = RobloxReplicatedStorage:WaitForChild("SetPlayerBlockList")
+		local blockedUserIds = getBlockedUserIds()
+		RemoteEvent_SetPlayerBlockList:FireServer(blockedUserIds)
+	else
+		coroutine.wrap(function()
+			BlockedList = GetBlockedPlayersAsync()
+			GetBlockedPlayersCompleted = true
+
+			local RemoteEvent_SetPlayerBlockList = RobloxReplicatedStorage:WaitForChild("SetPlayerBlockList")
+			local blockedUserIds = getBlockedUserIds()
+			RemoteEvent_SetPlayerBlockList:FireServer(blockedUserIds)
+		end)()
+	end
 end
 
 local function isBlocked(userId)

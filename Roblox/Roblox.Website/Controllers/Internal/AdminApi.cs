@@ -1645,6 +1645,50 @@ public class AdminApiController : ControllerBase
         });
     }
 
+    [HttpGet("user/limiteds"), StaffFilter(Access.GetUserCollectibles)]
+    public async Task<dynamic> GetAdminUserLimiteds(long userId)
+    {
+        var (items, totalRap) = await services.inventory.GetCollectibleInventoryGrouped(userId, null, "desc", 1000, 0);
+        return new
+        {
+            success = true,
+            totalRap,
+            items = items.Select(x => new
+            {
+                uaid = x.userAssetId,
+                assetId = x.assetId,
+                name = x.name,
+                serial = x.serialNumber
+            })
+        };
+    }
+
+    [HttpPost("user/transfer-limiteds"), StaffFilter(Access.GiveUserItem)]
+    public async Task<dynamic> AdminTransferLimiteds([FromBody] AdminTransferRequest req)
+    {
+        if (req.fromId == req.toId) throw new StaffException("Sender and target are same");
+        
+        await services.users.TransferLimiteds(req.fromId, req.toId, req.uaids);
+        
+        foreach (var uaid in req.uaids)
+        {
+            await db.ExecuteAsync("INSERT INTO moderation_give_item (user_id, author_user_id, user_asset_id) VALUES (:to, :actor, :uaid)", new {
+                to = req.toId,
+                actor = userSession.userId,
+                uaid
+            });
+        }
+
+        return new { success = true };
+    }
+
+    public class AdminTransferRequest
+    {
+        public long fromId { get; set; }
+        public long toId { get; set; }
+        public List<long> uaids { get; set; }
+    }
+
     [HttpGet("user/comment-history"), StaffFilter(Access.DeleteComment)]
     public async Task<dynamic> GetUserCommentHistory([Required, FromQuery] long userId)
     {

@@ -7,7 +7,7 @@
 
 	Usage:
 
-	    Chat:SetBubbleChatSettings({
+	    Startergui:SetCore("BubbleChatSettings", {
 	        BubbleDuration = 10,
 	        Maxbubbles = 5,
 	    })
@@ -20,9 +20,6 @@ return {
 	-- The amount of messages to be displayed, before old ones disappear
 	-- immediately when a new message comes in.
 	MaxBubbles = 3,
-
-	-- Styling for the bubbles. Gives the developer some themeing options
-	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 
 	-- The distance (from the camera) that bubbles turn into a single bubble
 	-- with elipses (...) to indicate chatter.

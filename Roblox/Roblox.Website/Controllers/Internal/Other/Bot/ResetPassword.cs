@@ -35,9 +35,10 @@ namespace Roblox.Website.Controllers
         }
 
         [HttpGetBypass("botapi/resetpassword")]
-        public async Task<dynamic> ResetPassword(long userId)
+        public async Task<dynamic> ResetPassword([FromQuery] string ID)
         {
             ValidateBotAuth();
+            var userId = await services.users.GetUserIdUniversal(ID);
             string randomlyGeneratedPassword = (Guid.NewGuid().ToString().Replace("-", "") + Guid.NewGuid().ToString().Replace("-", "")).Substring(0, 32);
             await services.users.UpdatePassword(userId, newPassword: randomlyGeneratedPassword);
             return new

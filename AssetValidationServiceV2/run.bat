@@ -9,15 +9,15 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-for %%P in (%Packages%) do (
-    python -c "import %%P" 2>nul
-    if %ERRORLEVEL% NEQ 0 (
-        echo installing package: %%P
-        python -m pip install %%P
-    ) else (
-        echo already installed
-    )
-)
+@REM for %%P in (%Packages%) do (
+@REM     python -c "import %%P" 2>nul
+@REM     if %ERRORLEVEL% NEQ 0 (
+@REM         echo installing package: %%P
+@REM         python -m pip install %%P
+@REM     ) else (
+@REM         echo already installed
+@REM     )
+@REM )
 
 start "" python images.py
 go run main.go

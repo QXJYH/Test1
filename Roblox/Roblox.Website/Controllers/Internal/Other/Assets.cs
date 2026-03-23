@@ -127,7 +127,15 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("asset")]
 		public async Task<MVC.ActionResult> GetAssetById(long id, [MVC.FromQuery] string? apiKey = null, [MVC.FromQuery(Name = "assetversionid")] long? assetVersionId = null)
         {
-            if (BlacklistedAssetIds.Contains(id))
+            if(id == 507766388)
+            {
+                return PhysicalFile(@"C:\Users\Administrator\Downloads\kornet\Roblox\FixJitter\507766388.rbxm", "application/octet-stream");
+            }
+            else if(id == 507766666)
+            {
+                return PhysicalFile(@"C:\Users\Administrator\Downloads\kornet\Roblox\FixJitter\507766666.rbxm", "application/octet-stream");
+            } 
+            else if (BlacklistedAssetIds.Contains(id))
             {
                 throw new RobloxException(400, 0, "Asset is invalid or does not exist");
             }

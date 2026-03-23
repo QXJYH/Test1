@@ -206,6 +206,7 @@ public class EconomyControllerV1 : ControllerBase
     /// <remarks>
     /// Note that we use assetId instead of productId in url, however, all our endpoints return an assetId instead of a productId for the productId param, so you are unlikely to need to code workarounds unless you hard-coded any productIds from Roblox.
     /// </remarks>
+    [HttpPost("/v1/purchases/products/{assetId:long}")]
     [HttpPost("purchases/products/{assetId:long}")]
     public async Task<dynamic> PurchaseAsset(long assetId, PurchaseRequest request)
     {

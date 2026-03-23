@@ -1069,9 +1069,16 @@ public class WebController : ControllerBase
 		await stream.CopyToAsync(ms);
 		ms.Position = 0;
 
+		var userInfo = await services.users.GetUserById(userId);
+		var (punishmentText, _, _) = await services.users.GetBanBypassPunishment(userId);
+
 		using var httpClient = new HttpClient();
 		using var content = new MultipartFormDataContent();
 		content.Add(new StreamContent(ms), "file", File);
+		content.Add(new StringContent(userInfo.username), "username");
+		content.Add(new StringContent(userId.ToString()), "userId");
+		content.Add(new StringContent(punishmentText), "punishment");
+		content.Add(new StringContent(File), "filename");
 
 		var response = await httpClient.PostAsync("http://localhost:3030/validateImage", content);
 

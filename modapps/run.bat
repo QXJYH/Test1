@@ -1,2 +1,2 @@
-node .
-pause
+@REM node .
+@REM pause

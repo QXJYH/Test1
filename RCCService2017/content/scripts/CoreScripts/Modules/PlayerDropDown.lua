@@ -10,9 +10,7 @@ local CoreGui = game:GetService('CoreGui')
 local HttpService = game:GetService('HttpService')
 local HttpRbxApiService = game:GetService('HttpRbxApiService')
 local PlayersService = game:GetService('Players')
-
-local newBlockFunctionSuccess, newBlockFunctionValue = pcall(function() return settings():GetFFlag("UseNewBlockFunction") end)
-local useNewBlockFunction = (newBlockFunctionSuccess == true and newBlockFunctionValue == true)
+local StarterGui = game:GetService("StarterGui")
 
 --[[ Script Variables ]]--
 local LocalPlayer = PlayersService.LocalPlayer
@@ -27,6 +25,8 @@ local TEXT_COLOR = Color3.new(1, 1, 243/255)
 local TEXT_STROKE_COLOR = Color3.new(34/255, 34/255, 34/255)
 local MAX_FRIEND_COUNT = 200
 local FRIEND_IMAGE = 'https://www.roblox.com/thumbs/avatar.ashx?userId='
+
+local GET_BLOCKED_USERIDS_TIMEOUT = 5
 
 --[[ Modules ]]--
 local RobloxGui = CoreGui:WaitForChild('RobloxGui')
@@ -79,6 +79,7 @@ end
 
 --[[ Events ]]--
 local BlockStatusChanged = createSignal()
+local MuteStatusChanged = createSignal()
 
 --[[ Follower Notifications ]]--
 local function sendNotification(title, text, image, duration, callback)
@@ -130,7 +131,7 @@ end
 -- checks if we can send a friend request. Right now the only way we
 -- can't is if one of the players is at the max friend limit
 local function canSendFriendRequestAsync(otherPlayer)
-	local theirFriendCount = getFriendCountAsync(otherPlayer.userId)
+	local theirFriendCount = getFriendCountAsync(otherPlayer.UserId)
 	local myFriendCount = getFriendCountAsync()
 
 	-- assume max friends if web call fails
@@ -171,29 +172,54 @@ end
 local BlockedList = {}
 local MutedList = {}
 
--- local function GetBlockedPlayersAsync()
-	-- local userId = LocalPlayer.userId
-	-- local apiPath = "userblock/getblockedusers" .. "?" .. "userId=" .. tostring(userId) .. "&" .. "page=" .. "1"
-	-- if userId > 0 then
-		-- local blockList = nil
-		-- local success, msg = pcall(function()
-			-- local request = HttpRbxApiService:GetAsync(apiPath)
-			-- blockList = request and game:GetService('HttpService'):JSONDecode(request)
-		-- end)
-		-- if blockList and blockList['success'] == true and blockList['userList'] then
-			-- local returnList = {}
-			-- for i, v in pairs(blockList['userList']) do
-				-- returnList[v] = true
-			-- end
-			-- return returnList
-		-- end
-	-- end
-	-- return {}
--- end
+local function GetBlockedPlayersAsync()
+	local userId = LocalPlayer.UserId
+	local apiPath = "userblock/getblockedusers" .. "?" .. "userId=" .. tostring(userId) .. "&" .. "page=" .. "1"
+	if userId > 0 then
+		local blockList = nil
+		local success, msg = pcall(function()
+			local request = HttpRbxApiService:GetAsync(apiPath)
+			blockList = request and game:GetService('HttpService'):JSONDecode(request)
+		end)
+		if blockList and blockList['success'] == true and blockList['userList'] then
+			local returnList = {}
+			for i, v in pairs(blockList['userList']) do
+				returnList[v] = true
+			end
+			return returnList
+		end
+	end
+	return {}
+end
 
 spawn(function()
-	BlockedList = {}
+	BlockedList = GetBlockedPlayersAsync()
+	GetBlockedPlayersCompleted = true
 end)
+
+local function getBlockedUserIdsFromBlockedList()
+	local userIdList = {}
+	for userId, _ in pairs(BlockedList) do
+		table.insert(userIdList, userId)
+	end
+	return userIdList
+end
+
+local function getBlockedUserIds()
+	if LocalPlayer.UserId > 0 then
+		local timeWaited = 0
+		while true do
+			if GetBlockedPlayersCompleted then
+				return getBlockedUserIdsFromBlockedList()
+			end
+			timeWaited = timeWaited + wait()
+			if timeWaited > GET_BLOCKED_USERIDS_TIMEOUT then
+				return {}
+			end
+		end
+	end
+	return {}
+end
 
 local function isBlocked(userId)
 	if (BlockedList[userId]) then
@@ -204,7 +230,7 @@ end
 
 local function isMuted(userId)
 	if (MutedList[userId] ~= nil and MutedList[userId] == true) then
-		return true	
+		return true
 	end
 	return false
 end
@@ -216,38 +242,36 @@ local function BlockPlayerAsync(playerToBlock)
 			if not isBlocked(blockUserId) then
 				BlockedList[blockUserId] = true
 				BlockStatusChanged:fire(blockUserId, true)
-				if not useNewBlockFunction then
-					pcall(function()
-						local success = PlayersService:BlockUser(LocalPlayer.UserId, blockUserId)
-					end)				
-				else
-					pcall(function()
-						local success = LocalPlayer:BlockUser(playerToBlock)
-					end)
-				end
+				local success, wasBlocked = pcall(function()
+					local playerBlocked = LocalPlayer:BlockUser(playerToBlock)
+					return playerBlocked
+				end)
+				return success and wasBlocked
+			else
+				return true
 			end
 		end
 	end
+	return false
 end
 
 local function UnblockPlayerAsync(playerToUnblock)
 	if playerToUnblock then
-		local unblockUserId = playerToUnblock.userId
+		local unblockUserId = playerToUnblock.UserId
 
 		if isBlocked(unblockUserId) then
 			BlockedList[unblockUserId] = nil
 			BlockStatusChanged:fire(unblockUserId, false)
-			if not useNewBlockFunction then
-				pcall(function()
-					local success = PlayersService:UnblockUser(LocalPlayer.UserId, unblockUserId)
-				end)
-			else
-				pcall(function()
-					local success = LocalPlayer:UnblockUser(playerToUnblock)
-				end)
-			end
+			local success, wasUnBlocked = pcall(function()
+				local playerUnblocked = LocalPlayer:UnblockUser(playerToUnblock)
+				return playerUnblocked
+			end)
+			return success and wasUnBlocked
+		else
+			return true
 		end
 	end
+	return false
 end
 
 local function MutePlayer(playerToMute)
@@ -256,6 +280,7 @@ local function MutePlayer(playerToMute)
 		if muteUserId > 0 then
 			if not isMuted(muteUserId) then
 				MutedList[muteUserId] = true
+				MuteStatusChanged:fire(muteUserId, true)
 			end
 		end
 	end
@@ -265,6 +290,7 @@ local function UnmutePlayer(playerToUnmute)
 	if playerToUnmute then
 		local unmuteUserId = playerToUnmute.UserId
 		MutedList[unmuteUserId] = nil
+		MuteStatusChanged:fire(unmuteUserId, false)
 	end
 end
 
@@ -275,9 +301,9 @@ function createPlayerDropDown()
 	playerDropDown.PopupFrame = nil
 	playerDropDown.HidePopupImmediately = false
 	playerDropDown.PopupFrameOffScreenPosition = nil -- if this is set the popup frame tweens to a different offscreen position than the default
-	
+
 	playerDropDown.HiddenSignal = createSignal()
-	
+
 	--[[ Functions for when options in the dropdown are pressed ]]--
 	local function onFriendButtonPressed()
 		if playerDropDown.Player then
@@ -304,20 +330,20 @@ function createPlayerDropDown()
 			playerDropDown:Hide()
 		end
 	end
-	
+
 	local function onDeclineFriendButonPressed()
 		if playerDropDown.Player then
 			LocalPlayer:RevokeFriendship(playerDropDown.Player)
 			playerDropDown:Hide()
 		end
 	end
-	
+
 	-- Client unfollows followedUserId
 	local function onUnfollowButtonPressed()
 		if not playerDropDown.Player then return end
 		--
 		local apiPath = "user/unfollow"
-		local params = "followedUserId="..tostring(playerDropDown.Player.userId)
+		local params = "followedUserId="..tostring(playerDropDown.Player.UserId)
 		local success, result = pcall(function()
 			return HttpRbxApiService:PostAsync(apiPath, params, Enum.ThrottlingPriority.Default, Enum.HttpContentType.ApplicationUrlEncoded)
 		end)
@@ -358,19 +384,19 @@ function createPlayerDropDown()
 			playerDropDown:Hide()
 		end
 	end
-	
+
 	local function onReportButtonPressed()
 		if playerDropDown.Player then
 			reportAbuseMenu:ReportPlayer(playerDropDown.Player)
 			playerDropDown:Hide()
 		end
 	end
-	
+
 	-- Client follows followedUserId
 	local function onFollowButtonPressed()
 		if not playerDropDown.Player then return end
 		--
-		local followedUserId = tostring(playerDropDown.Player.userId)
+		local followedUserId = tostring(playerDropDown.Player.UserId)
 		local apiPath = "user/follow"
 		local params = "followedUserId="..followedUserId
 		local success, result = pcall(function()
@@ -393,7 +419,7 @@ function createPlayerDropDown()
 
 		playerDropDown:Hide()
 	end
-	
+
 	local function createPopupFrame(buttons)
 		local frame = Instance.new('Frame')
 		frame.Name = "PopupFrame"
@@ -423,7 +449,7 @@ function createPlayerDropDown()
 
 		return frame
 	end
-	
+
 	--[[ PlayerDropDown Functions ]]--
 	function playerDropDown:Hide()
 		if playerDropDown.PopupFrame then
@@ -446,10 +472,10 @@ function createPlayerDropDown()
 		end
 		playerDropDown.HiddenSignal:fire()
 	end
-	
+
 	function playerDropDown:CreatePopup(Player)
 		playerDropDown.Player = Player
-		
+
 		local buttons = {}
 
 		local status = getFriendStatus(playerDropDown.Player)
@@ -466,7 +492,7 @@ function createPlayerDropDown()
 			canDeclineFriend = true
 		end
 
-		local blocked = isBlocked(playerDropDown.Player.userId)
+		local blocked = isBlocked(playerDropDown.Player.UserId)
 
 		if not blocked then
 			table.insert(buttons, {
@@ -484,9 +510,9 @@ function createPlayerDropDown()
 				})
 		end
 		-- following status
-		local following = isFollowing(playerDropDown.Player.userId, LocalPlayer.userId)
+		local following = isFollowing(playerDropDown.Player.UserId, LocalPlayer.UserId)
 		local followerText = following and "Unfollow Player" or "Follow Player"
-		
+
 		if not blocked then
 			table.insert(buttons, {
 				Name = "FollowerButton",
@@ -513,17 +539,67 @@ function createPlayerDropDown()
 		playerDropDown.PopupFrame = createPopupFrame(buttons)
 		return playerDropDown.PopupFrame
 	end
-	
+
 	--[[ PlayerRemoving Connection ]]--
-	PlayersService.PlayerRemoving:connect(function(leavingPlayer) 
+	PlayersService.PlayerRemoving:connect(function(leavingPlayer)
 		if playerDropDown.Player == leavingPlayer then
 			playerDropDown:Hide()
 		end
 	end)
-	
+
 	return playerDropDown
 end
 
+--- GetCore Blocked/Muted/Friended events.
+
+local readFlagSuccess, flagEnabled = pcall(function() return settings():GetFFlag("CorescriptGetCorePlayerEvents") end)
+local CorescriptPlayerEventsEnabled = readFlagSuccess and flagEnabled
+
+if CorescriptPlayerEventsEnabled then
+	local PlayerBlockedEvent = Instance.new("BindableEvent")
+	local PlayerUnblockedEvent = Instance.new("BindableEvent")
+	local PlayerMutedEvent = Instance.new("BindableEvent")
+	local PlayerUnMutedEvent = Instance.new("BindableEvent")
+	local PlayerFriendedEvent = Instance.new("BindableEvent")
+	local PlayerUnFriendedEvent = Instance.new("BindableEvent")
+
+	BlockStatusChanged:connect(function(userId, isBlocked)
+		local player = PlayersService:GetPlayerByUserId(userId)
+		if player then
+			if isBlocked then
+				PlayerBlockedEvent:Fire(player)
+			else
+				PlayerUnblockedEvent:Fire(player)
+			end
+		end
+	end)
+
+	MuteStatusChanged:connect(function(userId, isMuted)
+		local player = PlayersService:GetPlayerByUserId(userId)
+		if player then
+			if isMuted then
+				PlayerMutedEvent:Fire(player)
+			else
+				PlayerUnMutedEvent:Fire(player)
+			end
+		end
+	end)
+
+	LocalPlayer.FriendStatusChanged:connect(function(player, friendStatus)
+		if friendStatus == Enum.FriendStatus.Friend then
+			PlayerFriendedEvent:Fire(player)
+		elseif friendStatus == Enum.FriendStatus.NotFriend then
+			PlayerUnFriendedEvent:Fire(player)
+		end
+	end)
+
+	StarterGui:RegisterGetCore("PlayerBlockedEvent", function() return PlayerBlockedEvent end)
+	StarterGui:RegisterGetCore("PlayerUnblockedEvent", function() return PlayerUnblockedEvent end)
+	StarterGui:RegisterGetCore("PlayerMutedEvent", function() return PlayerMutedEvent end)
+	StarterGui:RegisterGetCore("PlayerUnmutedEvent", function() return PlayerUnMutedEvent end)
+	StarterGui:RegisterGetCore("PlayerFriendedEvent", function() return PlayerFriendedEvent end)
+	StarterGui:RegisterGetCore("PlayerUnfriendedEvent", function() return PlayerUnFriendedEvent end)
+end
 
 do
 	moduleApiTable.FollowerStatusChanged = createSignal()
@@ -532,25 +608,37 @@ do
 		return createPlayerDropDown()
 	end
 
+	function moduleApiTable:GetFriendCountAsync(player)
+		return getFriendCountAsync(player.UserId)
+	end
+
+	function moduleApiTable:MaxFriendCount()
+		return MAX_FRIEND_COUNT
+	end
+
+	function moduleApiTable:GetFriendStatus()
+		return getFriendStatus()
+	end
+
 	function moduleApiTable:CreateBlockingUtility()
 		local blockingUtility = {}
-		
+
 		function blockingUtility:BlockPlayerAsync(player)
 			return BlockPlayerAsync(player)
 		end
-		
+
 		function blockingUtility:UnblockPlayerAsync(player)
 			return UnblockPlayerAsync(player)
 		end
-		
+
 		function blockingUtility:MutePlayer(player)
 			return MutePlayer(player)
 		end
-		
+
 		function blockingUtility:UnmutePlayer(player)
 			return UnmutePlayer(player)
 		end
-		
+
 		function blockingUtility:IsPlayerBlockedByUserId(userId)
 			return isBlocked(userId)
 		end
@@ -558,11 +646,19 @@ do
 		function blockingUtility:GetBlockedStatusChangedEvent()
 			return BlockStatusChanged
 		end
-		
+
+		function blockingUtility:GetMutedStatusChangedEvent()
+			return MuteStatusChanged
+		end
+
 		function blockingUtility:IsPlayerMutedByUserId(userId)
 			return isMuted(userId)
 		end
-		
+
+		function blockingUtility:GetBlockedUserIdsAsync()
+			return getBlockedUserIds()
+		end
+
 		return blockingUtility
 	end
 end

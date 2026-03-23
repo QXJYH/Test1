@@ -1,5 +1,3 @@
-local AnalyticsService = game:GetService("RbxAnalyticsService")
-
 local Types = require(script.Parent.Parent.Types)
 local maybeAssert = require(script.Parent.Parent.Helpers.maybeAssert)
 local AddMessage = require(script.Parent.AddMessage)
@@ -18,12 +16,6 @@ local function addMessageWithTimeout(message)
 			store:dispatch(RemoveMessage(messages[userMessages[i]]))
 		end
 
-		AnalyticsService:ReportCounter("RoactBubbleChat-MessagesSent")
-		AnalyticsService:SendEventDeferred("client", "bubbleChatMetric", "messageAdded", {
-			placeId = game.PlaceId,
-			userId = message.userId,
-		})
-		
 		wait(settings.BubbleDuration)
 
 		store:dispatch(RemoveMessage(message))

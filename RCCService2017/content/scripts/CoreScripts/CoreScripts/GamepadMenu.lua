@@ -12,13 +12,16 @@ local InputService = game:GetService('UserInputService')
 local ContextActionService = game:GetService('ContextActionService')
 local HttpService = game:GetService('HttpService')
 local StarterGui = game:GetService('StarterGui')
+local Players = game:GetService('Players')
 local GuiRoot = CoreGuiService:WaitForChild('RobloxGui')
+local TextService = game:GetService('TextService')
 --[[ END OF SERVICES ]]
 
 --[[ MODULES ]]
 local tenFootInterface = require(GuiRoot.Modules.TenFootInterface)
 local utility = require(GuiRoot.Modules.Settings.Utility)
 local recordPage = require(GuiRoot.Modules.Settings.Pages.Record)
+local businessLogic = require(GuiRoot.Modules.BusinessLogic)
 
 --[[ VARIABLES ]]
 local gamepadSettingsFrame = nil
@@ -79,11 +82,11 @@ end
 
 local function setButtonEnabled(button, enabled)
 	if radialButtons[button]["Disabled"] == not enabled then return end
-	
+
 	if button:FindFirstChild("Selected").Visible == true then
 		setSelectedRadialButton(nil)
 	end
-	
+
 	if enabled then
 		button.Image = string.gsub(button.Image, "rbxasset://textures/ui/Settings/Radial/Empty", "rbxasset://textures/ui/Settings/Radial/")
 		button.ImageTransparency = 0
@@ -104,6 +107,44 @@ local function setButtonVisible(button, visible)
 	end
 end
 
+local kidSafeHint = nil;
+local function getVRKidSafeHint()
+	if not kidSafeHint then
+		local text = businessLogic.GetVisibleAgeForPlayer(Players.LocalPlayer)
+		local textSize = TextService:GetTextSize(text, 24, Enum.Font.SourceSansBold, Vector2.new(800,800))
+
+		local bubble = utility:Create'ImageLabel'
+		{
+			Name = "AccountTypeBubble";
+			Size = UDim2.new(0, textSize.x + 20, 0, 50);
+			Image = "rbxasset://textures/ui/TopBar/Round.png";
+			ScaleType = Enum.ScaleType.Slice;
+			SliceCenter = Rect.new(10, 10, 10, 10);
+			ImageTransparency = 0.3;
+			BackgroundTransparency = 1;
+			Parent = container;
+		}
+		bubble.Position = UDim2.new(0.5, -bubble.Size.X.Offset/2, 1, 10);
+
+		local accountTypeTextLabel = utility:Create'TextLabel'{
+			Name = "AccountTypeText";
+			Text = text;
+			Size = UDim2.new(1, -20, 1, -20);
+			Position = UDim2.new(0, 10, 0, 10);
+			Font = Enum.Font.SourceSansBold;
+			FontSize = Enum.FontSize.Size24;
+			BackgroundTransparency = 1;
+			TextColor3 = Color3.new(1,1,1);
+			TextYAlignment = Enum.TextYAlignment.Center;
+			TextXAlignment = Enum.TextXAlignment.Center;
+			Parent = bubble;
+		}
+		kidSafeHint = bubble
+	end
+
+	return kidSafeHint
+end
+
 local function enableVR()
 	local visibleButtons = {
 		Settings = true, LeaveGame = true,
@@ -115,6 +156,14 @@ local function enableVR()
 			setButtonVisible(button, visibleButtons[button.Name])
 		end
 	end
+
+	local hint = getVRKidSafeHint()
+	hint.Parent = gamepadSettingsFrame
+end
+
+local function disableVR()
+	local hint = getVRKidSafeHint()
+	hint.Parent = nil
 end
 
 local emptySelectedImageObject = utility:Create'ImageLabel'
@@ -126,7 +175,7 @@ local emptySelectedImageObject = utility:Create'ImageLabel'
 
 local function createRadialButton(name, text, slot, disabled, coreGuiType, activateFunc)
 	local slotImage, selectedSlotImage, slotIcon,
-			slotIconPosition, slotIconSize, mouseFrameSize, mouseFramePos = getImagesForSlot(slot) 
+			slotIconPosition, slotIconSize, mouseFrameSize, mouseFramePos = getImagesForSlot(slot)
 
 	local radialButton = utility:Create'ImageButton'
 	{
@@ -254,7 +303,7 @@ local function createGamepadMenuGui()
 
 	---------------------------------
 	-------- Player List ------------
-	local playerListFunc = function() 
+	local playerListFunc = function()
 		toggleCoreGuiRadial(true)
 		local PlayerListModule = require(GuiRoot.Modules.PlayerlistModule)
 		if not PlayerListModule:IsOpen() then
@@ -294,14 +343,14 @@ local function createGamepadMenuGui()
 	local backpackFunc = function()
 		toggleCoreGuiRadial(true)
 		local BackpackModule = require(GuiRoot.Modules.BackpackScript)
-		BackpackModule:OpenClose() 
+		BackpackModule:OpenClose()
 	end
 	local backpackRadial = createRadialButton("Backpack", "Backpack", 5, not StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Backpack), Enum.CoreGuiType.Backpack, backpackFunc)
 	backpackRadial.Parent = gamepadSettingsFrame
 
 	---------------------------------
 	------------ Chat ---------------
-	local chatFunc = function() 
+	local chatFunc = function()
 		toggleCoreGuiRadial()
 		local ChatModule = require(GuiRoot.Modules.ChatSelector)
 		ChatModule:ToggleVisibility()
@@ -387,9 +436,18 @@ local function createGamepadMenuGui()
 		end
 	end)
 
-	if InputService.VREnabled then
-		enableVR()
+	local function onVREnabled(prop)
+		if prop == "VREnabled" then
+			if InputService.VREnabled then
+				enableVR()
+			else
+				disableVR()
+			end
+		end
 	end
+	InputService.Changed:connect(onVREnabled)
+	onVREnabled("VREnabled")
+
 end
 
 local function isCoreGuiDisabled()
@@ -425,40 +483,40 @@ local function setupGamepadControls()
 		ContextActionService:UnbindCoreAction(freezeControllerActionName)
 		ContextActionService:UnbindCoreAction(thumbstick2RadialActionName)
 	end
-	
+
 	local radialButtonLayout = {	PlayerList = 	{
 														Range = {	Begin = 36,
 																	End = 96
 																}
 													},
-									Notifications = {	
+									Notifications = {
 														Range = {	Begin = 96,
 																	End = 156
 																}
 													},
-									LeaveGame = 	{	
+									LeaveGame = 	{
 														Range = {	Begin = 156,
 																	End = 216
 																}
-													},	
-									Backpack = 		{	
+													},
+									Backpack = 		{
 														Range = {	Begin = 216,
 																	End = 276
 																}
-													},			
-									Chat = 			{	
+													},
+									Chat = 			{
 														Range = {	Begin = 276,
 																	End = 336
 																}
-													},			
-									Settings = 		{	
+													},
+									Settings = 		{
 														Range = {	Begin = 336,
 																	End = 36
 																}
-													},															
+													},
 								}
-	
-	
+
+
 	local function getSelectedObjectFromAngle(angle, depth)
 		local closest = nil
 		local closestDistance = 30 -- threshold of 30 for selecting the closest radial button
@@ -469,7 +527,7 @@ local function setupGamepadControls()
 					if angle > buttonLayout.Range.Begin and angle <= buttonLayout.Range.End then
 						return gamepadSettingsFrame[radialKey]
 					end
-				else 
+				else
 					if angle > buttonLayout.Range.Begin or angle <= buttonLayout.Range.End then
 						return gamepadSettingsFrame[radialKey]
 					end
@@ -497,7 +555,7 @@ local function setupGamepadControls()
 		local selectedObject = nil
 
 		if inputVector.magnitude > 0.8 then
-			
+
 			local angle =  math.atan2(inputVector.X, inputVector.Y) * 180 / math.pi
 			if angle < 0 then
 				angle = angle + 360
@@ -547,7 +605,7 @@ local function setupGamepadControls()
 
 	function toggleCoreGuiRadial(goingToSettings)
 		isVisible = not gamepadSettingsFrame.Visible
-		
+
 		setVisibility()
 
 		if isVisible then
@@ -572,7 +630,7 @@ local function setupGamepadControls()
 				lastInputChangedCon:disconnect()
 				lastInputChangedCon = nil
 			end
-			
+
 			local settingsChildren = gamepadSettingsFrame:GetChildren()
 			for i = 1, #settingsChildren do
 				if settingsChildren[i]:IsA("GuiButton") then
@@ -580,7 +638,7 @@ local function setupGamepadControls()
 				end
 			end
 			gamepadSettingsFrame:TweenSizeAndPosition(UDim2.new(0,102,0,102), UDim2.new(0.5,-51,0.5,-51),
-														Enum.EasingDirection.Out, Enum.EasingStyle.Sine, 0.1, true, 
+														Enum.EasingDirection.Out, Enum.EasingStyle.Sine, 0.1, true,
 				function()
 					if not InputService.VREnabled then
 						setOverrideMouseIconBehavior(false)
@@ -615,7 +673,7 @@ local function setupGamepadControls()
 
 	doGamepadMenuButton = function(name, state, input)
 		if state ~= Enum.UserInputState.Begin then return end
-		
+
 		if game.IsLoaded then
 			if not toggleCoreGuiRadial() then
 				unbindAllRadialActions()
@@ -626,7 +684,7 @@ local function setupGamepadControls()
 	if InputService:GetGamepadConnected(Enum.UserInputType.Gamepad1) then
 		createGamepadMenuGui()
 	else
-		InputService.GamepadConnected:connect(function(gamepadEnum) 
+		InputService.GamepadConnected:connect(function(gamepadEnum)
 			if gamepadEnum == Enum.UserInputType.Gamepad1 then
 				createGamepadMenuGui()
 			end
@@ -656,23 +714,23 @@ local function setupGamepadControls()
 			end
 		end
 	end
-	
+
 	local loadedConnection
 	local function enableRadialMenu()
 		ContextActionService:BindCoreAction(toggleMenuActionName, doGamepadMenuButton, false, Enum.KeyCode.ButtonStart)
 		loadedConnection:disconnect()
 	end
-	
-	loadedConnection = game.Players.PlayerAdded:connect(function(plr) 
-		if game.Players.LocalPlayer and plr == game.Players.LocalPlayer then
+
+	loadedConnection = Players.PlayerAdded:connect(function(plr)
+		if Players.LocalPlayer and plr == Players.LocalPlayer then
 			enableRadialMenu()
 		end
 	end)
-	
-	if game.Players.LocalPlayer then
+
+	if Players.LocalPlayer then
 		enableRadialMenu()
 	end
-	
+
 	StarterGui.CoreGuiChangedSignal:connect(setRadialButtonEnabled)
 end
 

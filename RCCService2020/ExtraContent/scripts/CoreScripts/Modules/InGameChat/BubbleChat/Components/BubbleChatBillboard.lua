@@ -22,7 +22,7 @@ BubbleChatBillboard.validateProps = t.strictInterface({
 	userId = t.string,
 
 	-- RoactRodux
-	chatSettings = Types.IChatSettings,
+	chatSettings = t.table,
 	messages = t.map(t.string, Types.IMessage),
 	messageIds = t.array(t.string)
 })
@@ -172,7 +172,7 @@ function BubbleChatBillboard:getVerticalOffset(adornee)
 		local extents = adornee:GetExtentsSize()
 		return Vector3.new(0, extents.Y / 2, 0)
 	else
-		return Vector3.new(0, adornee.Size.Y / 2 + 0.5, 0)
+		return Vector3.new(0, adornee.Size.Y / 2, 0)
 	end
 end
 
@@ -226,9 +226,7 @@ function BubbleChatBillboard:render()
 		Adornee = adorneePart,
 		Size = UDim2.fromOffset(500, 200),
 		SizeOffset = Vector2.new(0, 0.5),
-		-- For other players, increase offset by 1 to prevent overlaps with the name display, same behavior as old bubble chat
-		StudsOffset = Vector3.new(0, self.props.userId == tostring(Players.LocalPlayer.UserId) and 0 or 1, 0),
-		StudsOffsetWorldSpace = self:getVerticalOffset(adornee),
+		StudsOffset = self:getVerticalOffset(adornee),
 		ResetOnSpawn = false,
 	}, {
 		DistantBubble = not self.state.isInsideMaximizeDistance and Roact.createElement(ChatBubbleDistant),

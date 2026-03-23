@@ -55,6 +55,12 @@ public class WebController2021 : ControllerBase
     {
         
     }
+
+    [HttpGet("/studio/e.png")]
+    public void ReportStudioAnalytics()
+    {
+     //lwk idek why the FUCK we need ts fuck studio   
+    }
 	
 	private static readonly MemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
 	private static readonly TimeSpan _cacheDur = TimeSpan.FromMinutes(2);

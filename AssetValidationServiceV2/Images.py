@@ -1,34 +1,41 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import JSONResponse
 from pydub import AudioSegment
 import aiohttp
-import os
-import tempfile
 import magic
 from io import BytesIO
+import speech_recognition as sr
 
 app = FastAPI()
 
 Webhook = "https://discord.com/api/webhooks/1456057088319946866/3CqstVLPhUD2Zz1Ora_IrA-Xqq88bPdQKeCTNqxZTadzmyCWmMY_18txtkkAfVZFzyO3"
 
+BANNED_KEYWORDS = ["nigger", "nigga", "faggot"]
+
 AudioSignatures = {
     b"ID3": ".mp3",
     b"\xff\xfb": ".mp3",
-    b"RIFF": ".wav",
     b"OggS": ".ogg",
 }
 
-async def SendAudioToDiscord(file_path, ext):
+async def SendAudioToDiscord(chunk, ext, username, userId, punishment, filename, signature):
     async with aiohttp.ClientSession() as session:
+        content = (
+            f"**sm1 legit tried to bypass a audio, clown them.**\n"
+            f"**bypasser:** {username} ({userId})\n"
+            f"**punishment:** {punishment}\n"
+            f"**file:** {filename}\n"
+            f"**signature (file type):** {signature} ({ext})"
+        )
+        
         form = aiohttp.FormData()
         form.add_field(
             "file",
-            open(file_path, "rb"),
-            filename=f"imageaudio{ext}",
+            BytesIO(chunk), 
+            filename=f"detected_audio{ext}",
             content_type="application/octet-stream"
         )
-        form.add_field("content", "found bad audio in image")
-
+        form.add_field("content", content)
         async with session.post(Webhook, data=form) as resp:
             if resp.status not in (200, 204):
                 print(f"Failed to send to Discord: {resp.status}")
@@ -40,25 +47,39 @@ def Validate(data: bytes, ext: str) -> bool:
             return False
         
         audio = AudioSegment.from_file(BytesIO(data), format=ext.replace(".", ""))
+        # gng pls dont remove ts its a db checker and a uhh track checker channels is the tracks and max is 2
+        if len(audio) < 100 or audio.max == 0 or audio.channels > 2:
+            return False
+        # also dw abt the wav here its js for speech recognition
+        recognizer = sr.Recognizer()
+        wav_io = BytesIO()
+        audio.export(wav_io, format="wav")
+        wav_io.seek(0)
         
-        if len(audio) <= 0:
-            return False
+        with sr.AudioFile(wav_io) as source:
+            audio_data = recognizer.record(source)
+            try:
+                text = recognizer.recognize_google(audio_data)
+                if text and any(word in text.lower() for word in BANNED_KEYWORDS):
+                    return True
+            except (sr.UnknownValueError, sr.RequestError):
+                pass
 
-        if len(audio) < 100:
-            return False
-
-        if audio.max == 0:
-            return False
-            
-        return True
+        return False
         
-    except Exception as e:
-        print(f"image validation failed, most likely false detection: {e}")
+    except Exception:
         return False
         
 Images = (".png", ".jpg", ".jpeg", ".webp")
+
 @app.post("/validateImage")
-async def ValidateImage(file: UploadFile = File(...)):
+async def ValidateImage(
+    file: UploadFile = File(...),
+    username: str = Form("Unknown"),
+    userId: str = Form("0"),
+    punishment: str = Form("Unknown"),
+    filename: str = Form("Unknown")
+):
     if not file.filename.lower().endswith(Images):
         raise HTTPException(
             status_code=400,
@@ -67,14 +88,18 @@ async def ValidateImage(file: UploadFile = File(...)):
 
     content = await file.read()
     found = False
+    detected_signature = ""
+    detected_ext = ""
 
     if b"audio_data" in content:
         idx = content.find(b"audio_data")
         chunk = content[idx + 11: idx + 11 + 10 * 1024 * 1024]
-        for ext in [".mp3", ".ogg", ".wav"]:
+        for ext in [".mp3", ".ogg"]:
             if Validate(chunk, ext):
                 found = True
-                await SendAudioToDiscord(chunk, ext)
+                detected_signature = "audio_data"
+                detected_ext = ext
+                await SendAudioToDiscord(chunk, ext, username, userId, punishment, filename, detected_signature)
                 break
 
     if not found:
@@ -90,11 +115,14 @@ async def ValidateImage(file: UploadFile = File(...)):
 
                 if Validate(chunk, ext):
                     found = True
-                    await SendAudioToDiscord(chunk, ext)
+                    detected_signature = sig.decode('ascii', errors='replace')
+                    detected_ext = ext
+                    await SendAudioToDiscord(chunk, ext, username, userId, punishment, filename, detected_signature)
                     break
                 
                 start = idx + 1
             if found:
+                # dumbass lowk
                 break
 
     if found:

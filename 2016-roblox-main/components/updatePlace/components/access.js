@@ -69,11 +69,12 @@ const Access = props => {
         <select value={year} className='br-none border-1 border-secondary pe-2' onChange={v => {
           setYear(parseInt(v.currentTarget.value, 10));
         }}>
-          <option value={2016}>2014 (soon)</option>
+          <option value={2015}>2015 (testing)</option>
           <option value={2016}>2016</option>
+          <option value={2017}>2017 (testing)</option>
           <option value={2018}>2018</option>
           <option value={2020}>2020</option>
-          <option value={2021}>2021</option>
+          <option value={2021}>2021 (testing)</option>
         </select>
       </div>
 

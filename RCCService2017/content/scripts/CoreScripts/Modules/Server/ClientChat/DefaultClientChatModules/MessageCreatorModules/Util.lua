@@ -36,6 +36,8 @@ local KEY_FADE_IN = "FadeInFunction"
 local KEY_FADE_OUT = "FadeOutFunction"
 local KEY_UPDATE_ANIMATION = "UpdateAnimFunction"
 
+local TextService = game:GetService("TextService")
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 while not LocalPlayer do
@@ -50,49 +52,15 @@ local module = {}
 local methods = {}
 methods.__index = methods
 
-local testLabel = Instance.new("TextLabel")
-testLabel.Selectable = false
-testLabel.TextWrapped = true
-testLabel.Position = UDim2.new(1, 0, 1, 0)
-
-function WaitUntilParentedCorrectly()
-	while not testLabel:IsDescendantOf(LocalPlayer) do
-		testLabel.AncestryChanged:wait()
-	end
-end
-
-local TextSizeCache = {}
 function methods:GetStringTextBounds(text, font, textSize, sizeBounds)
-	WaitUntilParentedCorrectly()
-	sizeBounds = sizeBounds or false
-	if not TextSizeCache[text] then
-		TextSizeCache[text] = {}
-	end
-	if not TextSizeCache[text][font] then
-		TextSizeCache[text][font] = {}
-	end
-	if not TextSizeCache[text][font][sizeBounds] then
-		TextSizeCache[text][font][sizeBounds] = {}
-	end
-	if not TextSizeCache[text][font][sizeBounds][textSize] then
-		testLabel.Text = text
-		testLabel.Font = font
-		testLabel.TextSize = textSize
-		if sizeBounds then
-			testLabel.TextWrapped = true;
-			testLabel.Size = sizeBounds
-		else
-			testLabel.TextWrapped = false;
-		end
-		TextSizeCache[text][font][sizeBounds][textSize] = testLabel.TextBounds
-	end
-	return TextSizeCache[text][font][sizeBounds][textSize]
+	sizeBounds = sizeBounds or Vector2.new(10000, 10000)
+	return TextService:GetTextSize(text, textSize, font, sizeBounds)
 end
 --// Above was taken directly from Util.GetStringTextBounds() in the old chat corescripts.
 
 function methods:GetMessageHeight(BaseMessage, BaseFrame, xSize)
 	xSize = xSize or BaseFrame.AbsoluteSize.X
-	local textBoundsSize = self:GetStringTextBounds(BaseMessage.Text, BaseMessage.Font, BaseMessage.TextSize, UDim2.new(0, xSize, 0, 1000))
+	local textBoundsSize = self:GetStringTextBounds(BaseMessage.Text, BaseMessage.Font, BaseMessage.TextSize, Vector2.new(xSize, 1000))
 	return textBoundsSize.Y
 end
 
@@ -106,6 +74,7 @@ function methods:CreateBaseMessage(message, font, textSize, chatColor)
 	local BaseFrame = self:GetFromObjectPool("Frame")
 	BaseFrame.Selectable = false
 	BaseFrame.Size = UDim2.new(1, 0, 0, 18)
+	BaseFrame.Visible = true
 	BaseFrame.BackgroundTransparency = 1
 
 	local messageBorder = 8
@@ -124,6 +93,7 @@ function methods:CreateBaseMessage(message, font, textSize, chatColor)
 	BaseMessage.TextColor3 = chatColor
 	BaseMessage.TextWrapped = true
 	BaseMessage.Text = message
+	BaseMessage.Visible = true
 	BaseMessage.Parent = BaseFrame
 
 	return BaseFrame, BaseMessage
@@ -144,16 +114,25 @@ function methods:AddNameButtonToBaseMessage(BaseMessage, nameColor, formatName, 
 	NameButton.TextStrokeTransparency = BaseMessage.TextStrokeTransparency
 	NameButton.TextColor3 = nameColor
 	NameButton.Text = formatName
+	NameButton.Visible = true
 	NameButton.Parent = BaseMessage
 
-	NameButton.MouseButton1Click:connect(function()
+	local clickedConn = NameButton.MouseButton1Click:connect(function()
 		self:NameButtonClicked(NameButton, playerName)
+	end)
+
+	local changedConn = nil
+	changedConn = NameButton.Changed:connect(function(prop)
+		if prop == "Parent" then
+			clickedConn:Disconnect()
+			changedConn:Disconnect()
+		end
 	end)
 
 	return NameButton
 end
 
-function methods:AddChannelButtonToBaseMessage(BaseMessage, formatChannelName)
+function methods:AddChannelButtonToBaseMessage(BaseMessage, channelColor, formatChannelName, channelName)
 	local channelNameSize = self:GetStringTextBounds(formatChannelName, BaseMessage.Font, BaseMessage.TextSize)
 	local ChannelButton = self:GetFromObjectPool("TextButton")
 	ChannelButton.Selectable = false
@@ -166,9 +145,23 @@ function methods:AddChannelButtonToBaseMessage(BaseMessage, formatChannelName)
 	ChannelButton.TextYAlignment = BaseMessage.TextYAlignment
 	ChannelButton.TextTransparency = BaseMessage.TextTransparency
 	ChannelButton.TextStrokeTransparency = BaseMessage.TextStrokeTransparency
-	ChannelButton.TextColor3 = BaseMessage.TextColor3
+	ChannelButton.TextColor3 = channelColor
 	ChannelButton.Text = formatChannelName
+	ChannelButton.Visible = true
 	ChannelButton.Parent = BaseMessage
+
+	local clickedConn = ChannelButton.MouseButton1Click:connect(function()
+		self:ChannelButtonClicked(ChannelButton, channelName)
+	end)
+
+	local changedConn = nil
+ 	changedConn = ChannelButton.Changed:connect(function(prop)
+		if prop == "Parent" then
+			clickedConn:Disconnect()
+			changedConn:Disconnect()
+		end
+	end)
+
 	return ChannelButton
 end
 
@@ -182,6 +175,7 @@ function methods:NameButtonClicked(nameButton, playerName)
 		if player and player ~= LocalPlayer then
 			local whisperChannel = "To " ..playerName
 			if self.ChatWindow:GetChannel(whisperChannel) then
+				self.ChatBar:ResetCustomState()
 				local targetChannelName = self.ChatWindow:GetTargetMessageChannel()
 				if targetChannelName ~= whisperChannel then
 					self.ChatWindow:SwitchCurrentChannel(whisperChannel)
@@ -193,6 +187,24 @@ function methods:NameButtonClicked(nameButton, playerName)
 				self.ChatBar:CaptureFocus()
 				self.ChatBar:SetText(whisperMessage)
 			end
+		end
+	end
+end
+
+function methods:ChannelButtonClicked(channelButton, channelName)
+	if not self.ChatWindow then
+		return
+	end
+
+	if ChatSettings.ClickOnChannelNameToSetMainChannel then
+		if self.ChatWindow:GetChannel(channelName) then
+			self.ChatBar:ResetCustomState()
+			local targetChannelName = self.ChatWindow:GetTargetMessageChannel()
+			if targetChannelName ~= channelName then
+				self.ChatWindow:SwitchCurrentChannel(channelName)
+			end
+			self.ChatBar:ResetText()
+			self.ChatBar:CaptureFocus()
 		end
 	end
 end
@@ -211,10 +223,6 @@ end
 
 function methods:RegisterObjectPool(objectPool)
 	self.ObjectPool = objectPool
-end
-
-function methods:RegisterGuiRoot(root)
-	testLabel.Parent = root
 end
 
 -- CreateFadeFunctions usage:
@@ -295,6 +303,12 @@ function methods:NewBindableEvent(name)
 	bindable.Name = name
 	return bindable
 end
+
+--- DEPRECATED METHODS:
+function methods:RegisterGuiRoot()
+	-- This is left here for compatibility with ChatScript versions lower than 0.5
+end
+--- End of Deprecated methods.
 
 function module.new()
 	local obj = setmetatable({}, methods)

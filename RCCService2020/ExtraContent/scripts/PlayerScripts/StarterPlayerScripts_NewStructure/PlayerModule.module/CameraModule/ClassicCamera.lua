@@ -26,7 +26,7 @@ end
 
 local FFlagUserCameraInputRefactor do
 	local success, result = pcall(function()
-		return UserSettings():IsUserFeatureEnabled("UserCameraInputRefactor2")
+		return UserSettings():IsUserFeatureEnabled("UserCameraInputRefactor")
 	end)
 	FFlagUserCameraInputRefactor = success and result
 end
@@ -298,7 +298,7 @@ function ClassicCamera:Update()
 					if FFlagUserCameraInputRefactor then
 						vecToSubject = self:CalculateNewLookFromArg(nil, rotateInput) * desiredDist
 					else
-						vecToSubject = self:CalculateNewLookVector() * desiredDist
+						vecToSubject = self:CalculateNewLook() * desiredDist
 					end
 					local newPos = cameraFocusP - vecToSubject
 					local desiredLookDir = camera.CFrame.lookVector
@@ -352,6 +352,10 @@ function ClassicCamera:Update()
 		else
 			self.lastSubjectCFrame = nil
 		end
+	end
+	
+	if FFlagUserCameraInputRefactor then	
+		CameraInput.resetInputForFrameEnd()
 	end
 
 	self.lastUpdate = now
