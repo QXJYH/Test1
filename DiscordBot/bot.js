@@ -329,6 +329,12 @@ const commands = [
                 .setDescription('The ID of the item to remove')
                 .setRequired(true)
         )
+        .addIntegerOption(option =>
+            option.setName('amount')
+                .setDescription('Amount of items to remove (defaults to 1)')
+                .setRequired(false)
+                .setMinValue(1)
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ].map(command => command.toJSON());
 
@@ -1299,17 +1305,18 @@ async function handleRemoveItem(interaction, options) {
     const targetRaw = options.getString('target');
     const target = targetRaw.replace(/[<@!>]/g, '');
     const itemId = options.getString('item_id');
+    const amount = options.getInteger('amount') || 1;
 
     try {
         const response = await apiClient.get('/botapi/discord/remove-item', {
-            params: { ID: target, assetId: itemId }
+            params: { ID: target, assetId: itemId, amount: amount }
         });
 
         if (response.data.success) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
                 .setTitle('Item Removed')
-                .setDescription(`Successfully removed item **${itemId}** from **${target}**`)
+                .setDescription(`Successfully removed **${amount}** item(s) of **${itemId}** from **${target}**`)
                 .setTimestamp();
             await interaction.editReply({ embeds: [embed] });
         } else {

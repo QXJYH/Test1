@@ -83,14 +83,14 @@ namespace Roblox.Website.Controllers
         }
 
         [HttpGetBypass("botapi/discord/remove-item")]
-        public async Task<dynamic> RemoveItem([FromQuery] string ID, [FromQuery] long assetId)
+        public async Task<dynamic> RemoveItem([FromQuery] string ID, [FromQuery] long assetId, [FromQuery] int amount = 1)
         {
             ValidateBotAuth();
             try
             {
                 var userId = await services.users.GetUserIdUniversal(ID);
-                await services.assets.RemoveAsset(userId, assetId);
-                return new { success = true, msg = "Item removed successfully." };
+                await services.assets.RemoveAsset(userId, assetId, amount);
+                return new { success = true, msg = $"Successfully removed {amount} item(s)." };
             }
             catch (Exception ex)
             {

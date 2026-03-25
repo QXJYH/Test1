@@ -1078,11 +1078,11 @@ public class AssetsService : ServiceBase, IService
 		});
 	}
 
-	public async Task RemoveAsset(long userId, long assetId)
+	public async Task RemoveAsset(long userId, long assetId, int amount = 1)
 	{
 		await db.ExecuteAsync(
-			"DELETE FROM user_asset WHERE user_id = :userId AND asset_id = :assetId",
-			new { userId, assetId }
+			"DELETE FROM user_asset WHERE id IN (SELECT id FROM user_asset WHERE user_id = :userId AND asset_id = :assetId LIMIT :amount)",
+			new { userId, assetId, amount }
 		);
 	}
 
