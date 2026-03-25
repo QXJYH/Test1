@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, PermissionFlagsBits, MessageType, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -30,6 +30,12 @@ const ALLOWED_USER_IDS = [
 
 const BOOSTS_FILE = path.join(__dirname, 'boosts.json');
 const REWARD_ITEM_IDS = [2069, 6608, 4505, 2617];
+const BOOST_MESSAGE_TYPES = [
+    MessageType.GuildBoost,
+    MessageType.GuildBoostTier1,
+    MessageType.GuildBoostTier2,
+    MessageType.GuildBoostTier3
+];
 
 function loadBoosts() {
     try {
@@ -394,7 +400,7 @@ client.on('messageCreate', async message => {
     }
 
     // Boost detection
-    if (message.type >= 8 && message.type <= 11) {
+    if (BOOST_MESSAGE_TYPES.includes(message.type)) {
         console.log(`Boost detected from ${message.author.tag}`);
         await handleBoost(message);
     }
@@ -1400,7 +1406,7 @@ async function handleBoost(message) {
                 .setTimestamp();
 
             if (itemsOwned.length > 0) {
-                embed.setFooter({ text: `items already owned: ${itemsOwned.join(', ')}` });
+                embed.addFields({ name: 'items already owned', value: itemsOwned.map(id => `\`${id}\``).join(', '), inline: false });
             }
 
             if (errors.length > 0) {
