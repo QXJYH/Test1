@@ -1068,6 +1068,16 @@ public class AssetsService : ServiceBase, IService
 		return count > 0;
 	}
 
+	public async Task GrantAsset(long userId, long assetId)
+	{
+		await InsertAsync("user_asset", new
+		{
+			asset_id = assetId,
+			user_id = userId,
+			serial = (int?)null,
+		});
+	}
+
     private async Task UpdateAsset(long assetId)
     {
         await db.ExecuteAsync("UPDATE asset SET updated_at = now() WHERE id = :id", new
