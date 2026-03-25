@@ -348,6 +348,12 @@ async function registerCommands() {
 
         if (targetGuildId) {
             await rest.put(
+                Routes.applicationCommands(CLIENT_ID),
+                { body: [] }
+            );
+            console.log('Cleared global commands');
+
+            await rest.put(
                 Routes.applicationGuildCommands(CLIENT_ID, targetGuildId),
                 { body: commands }
             );
