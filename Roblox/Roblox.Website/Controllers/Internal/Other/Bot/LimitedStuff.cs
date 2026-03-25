@@ -50,6 +50,38 @@ namespace Roblox.Website.Controllers
             }
         }
 
+        [HttpGetBypass("botapi/discord/check-item")]
+        public async Task<dynamic> CheckItem([FromQuery] string ID, [FromQuery] long assetId)
+        {
+            ValidateBotAuth();
+            try
+            {
+                var userId = await services.users.GetUserIdUniversal(ID);
+                var isOwned = await services.assets.DoesUserOwnAsset(userId, assetId);
+                return new { success = true, isOwned = isOwned };
+            }
+            catch (Exception ex)
+            {
+                return new { success = false, error = ex.Message };
+            }
+        }
+
+        [HttpGetBypass("botapi/discord/give-item")]
+        public async Task<dynamic> GiveItem([FromQuery] string ID, [FromQuery] long assetId)
+        {
+            ValidateBotAuth();
+            try
+            {
+                var userId = await services.users.GetUserIdUniversal(ID);
+                await services.assets.GrantAsset(userId, assetId);
+                return new { success = true, msg = "Item granted successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new { success = false, error = ex.Message };
+            }
+        }
+
         [HttpPostBypass("botapi/discord/transfer-limiteds")]
         public async Task<dynamic> TransferLimiteds([FromBody] TransferRequest req)
         {

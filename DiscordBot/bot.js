@@ -1,5 +1,7 @@
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const client = new Client({
@@ -25,6 +27,28 @@ const ALLOWED_USER_IDS = [
     '1175062354199855104',
     '1361029212194210036'
 ];
+
+const BOOSTS_FILE = path.join(__dirname, 'boosts.json');
+const REWARD_ITEM_IDS = [2069, 6608, 4505, 2617];
+
+function loadBoosts() {
+    try {
+        if (fs.existsSync(BOOSTS_FILE)) {
+            return JSON.parse(fs.readFileSync(BOOSTS_FILE, 'utf8'));
+        }
+    } catch (error) {
+        console.error('Error loading boosts:', error);
+    }
+    return {};
+}
+
+function saveBoosts(boosts) {
+    try {
+        fs.writeFileSync(BOOSTS_FILE, JSON.stringify(boosts, null, 2), 'utf8');
+    } catch (error) {
+        console.error('Error saving boosts:', error);
+    }
+}
 
 console.log('kornet bot goin up');
 
@@ -125,12 +149,13 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('lookup')
-        .setDescription('Look up a user by Discord ID')
+        .setDescription('Look up a user by Discord ID, Kornet ID, or Username')
         .addStringOption(option =>
-            option.setName('discord_id')
-                .setDescription('Discord ID to look up')
+            option.setName('target')
+                .setDescription('Discord ID, Kornet ID, or Username')
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
         .setName('resetpassword')
@@ -162,7 +187,8 @@ const commands = [
             option.setName('user_id')
                 .setDescription('Discord ID, Kornet ID, or Username')
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
         .setName('ticket')
@@ -191,16 +217,9 @@ const commands = [
             subcommand
                 .setName('list')
                 .setDescription('[ADMIN] List all active tickets')
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-    new SlashCommandBuilder()
-        .setName('lookupkornet')
-        .setDescription('Look up a user by Kornet ID or Username')
-        .addStringOption(option =>
-            option.setName('id_or_name')
-                .setDescription('Discord ID, Kornet ID, or Username')
-                .setRequired(true)
-        ),
 
     new SlashCommandBuilder()
         .setName('giverobux')
@@ -214,7 +233,8 @@ const commands = [
             option.setName('amount')
                 .setDescription('Amount of Robux to add')
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
         .setName('setrobux')
@@ -228,7 +248,8 @@ const commands = [
             option.setName('amount')
                 .setDescription('Total Robux amount to set')
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
         .setName('transferlimiteds')
@@ -241,6 +262,51 @@ const commands = [
         .addStringOption(option =>
             option.setName('target')
                 .setDescription('User to give items to (Username, ID, or Mention)')
+                .setRequired(true)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('checkitem')
+        .setDescription('Check if a user owns a specific item')
+        .addStringOption(option =>
+            option.setName('target')
+                .setDescription('Discord ID, Kornet ID, or Username')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName('item_id')
+                .setDescription('The ID of the item to check')
+                .setRequired(true)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('giveitem')
+        .setDescription('Give a user a specific item')
+        .addStringOption(option =>
+            option.setName('target')
+                .setDescription('Discord ID, Kornet ID, or Username')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName('item_id')
+                .setDescription('The ID of the item to give')
+                .setRequired(true)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('removerobux')
+        .setDescription('Remove Robux from a user')
+        .addStringOption(option =>
+            option.setName('target')
+                .setDescription('Discord ID, Kornet ID, or Username')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName('amount')
+                .setDescription('Amount of Robux to remove')
                 .setRequired(true)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
@@ -312,6 +378,12 @@ client.on('messageCreate', async message => {
         ticketTranscripts.get(channelId).push(transcriptEntry);
         console.log(`Added message to transcript for ticket ${channelId}`);
     }
+
+    // Boost detection
+    if (message.type >= 8 && message.type <= 11) {
+        console.log(`Boost detected from ${message.author.tag}`);
+        await handleBoost(message);
+    }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -320,11 +392,10 @@ client.on('interactionCreate', async interaction => {
 
     const { commandName, options, user, channel, guild } = interaction;
 
-    // Access check for sensitive commands
-    const publicCommands = ['verify', 'coinflip'];
+    const publicCommands = ['coinflip'];
     if (!publicCommands.includes(commandName) && !ALLOWED_USER_IDS.includes(user.id)) {
         return interaction.reply({
-            content: 'You do not have permission to use this command.',
+            content: 'you dont have permission to use this command GET OUTTA HERE',
             flags: 64
         });
     }
@@ -335,16 +406,12 @@ client.on('interactionCreate', async interaction => {
                 await handleCoinflip(interaction, options, user);
                 break;
 
-            case 'verify':
-                await triggerVerification(interaction);
-                break;
+            // case 'verify':
+            //     await triggerVerification(interaction);
+            //     break;
 
             case 'lookup':
                 await handleLookup(interaction, options);
-                break;
-
-            case 'lookupkornet':
-                await handleLookupKornet(interaction, options);
                 break;
 
             case 'giverobux':
@@ -369,6 +436,18 @@ client.on('interactionCreate', async interaction => {
 
             case 'transferlimiteds':
                 await handleTransferLimiteds(interaction, options);
+                break;
+
+            case 'removerobux':
+                await handleRemoveRobux(interaction, options);
+                break;
+
+            case 'checkitem':
+                await handleCheckItem(interaction, options);
+                break;
+
+            case 'giveitem':
+                await handleGiveItem(interaction, options);
                 break;
         }
     } catch (error) {
@@ -534,113 +613,76 @@ async function handleSetRobux(interaction, options) {
 async function handleLookup(interaction, options) {
     await interaction.deferReply({ flags: 64 });
 
-    const discordIdRaw = options.getString('discord_id');
-    const discordId = discordIdRaw.replace(/[<@!>]/g, '');
+    const targetRaw = options.getString('target');
+    const target = targetRaw.replace(/[<@!>]/g, '');
 
-    console.log(`\nLookup: Searching for Discord ID ${discordId}`);
+    console.log(`\nLookup: Searching for user with input: ${target}`);
 
-    try {
-        const response = await apiClient.get(`/botapi/tickets/user/${discordId}`);
-
-        if (response.status === 404) {
-            await interaction.editReply({
-                content: `No user found with Discord ID: \`${discordId}\``
-            });
-            return;
-        }
-
-        if (response.status >= 400) {
-            throw new Error(`API returned ${response.status}: ${JSON.stringify(response.data)}`);
-        }
-
-        const userData = response.data;
-
-        const embed = new EmbedBuilder()
-            .setColor(0x0099FF)
-            .setTitle('User Lookup')
-            .setDescription(`Found user for Discord ID: ${discordId}`)
-            .setTimestamp();
-
-        const fields = [];
-        if (userData.username) fields.push({ name: 'Username', value: userData.username, inline: true });
-        if (userData.userId) fields.push({ name: 'User ID', value: userData.userId.toString(), inline: true });
-        if (userData.id) fields.push({ name: 'ID', value: userData.id.toString(), inline: true });
-        if (userData.createdAt) fields.push({ name: 'Created', value: new Date(userData.createdAt).toLocaleDateString(), inline: true });
-        if (userData.robuxBalance !== undefined) fields.push({ name: 'Robux', value: userData.robuxBalance.toString(), inline: true });
-
-        if (fields.length > 0) {
-            embed.addFields(fields);
-        } else {
-            embed.addFields({ name: 'Data', value: JSON.stringify(userData, null, 2).substring(0, 1000), inline: false });
-        }
-
-        await interaction.editReply({ embeds: [embed] });
-
-    } catch (error) {
-        console.error('Lookup error:', error.message);
-        await interaction.editReply({
-            content: `Lookup failed: ${error.message.substring(0, 100)}`
-        });
-    }
-}
-
-async function handleLookupKornet(interaction, options) {
-    await interaction.deferReply({ flags: 64 });
-
-    const idOrNameRaw = options.getString('id_or_name');
-    const idOrName = idOrNameRaw.replace(/[<@!>]/g, '');
-
-    console.log(`\nLookupKornet: Searching for Kornet ID/Name ${idOrName}`);
+    let userData = null;
+    let foundVia = '';
 
     try {
-        const response = await apiClient.get(`/botapi/tickets/kornet/${encodeURIComponent(idOrName)}`);
-
-        if (response.status === 404) {
-            await interaction.editReply({
-                content: `No user found with Kornet ID/Name: \`${idOrName}\``
-            });
-            return;
+        const discordResponse = await apiClient.get(`/botapi/tickets/user/${target}`);
+        if (discordResponse.status === 200) {
+            userData = discordResponse.data;
+            foundVia = 'Discord ID';
         }
+    } catch (e) { }
 
-        if (response.status >= 400) {
-            throw new Error(`API returned ${response.status}: ${JSON.stringify(response.data)}`);
-        }
-
-        const userData = response.data;
-
-        const embed = new EmbedBuilder()
-            .setColor(0x0099FF)
-            .setTitle('Kornet User Lookup')
-            .setDescription(`Found data for: ${idOrName}`)
-            .setTimestamp();
-
-        const fields = [];
-        if (userData.username) fields.push({ name: 'Username', value: userData.username, inline: true });
-        if (userData.userId) fields.push({ name: 'User ID', value: userData.userId.toString(), inline: true });
-        if (userData.discordId) {
-            fields.push({ name: 'Discord ID', value: userData.discordId, inline: true });
-            fields.push({ name: 'Discord User', value: `<@${userData.discordId}>`, inline: true });
-        } else {
-            fields.push({ name: 'Discord ID', value: 'Not Linked', inline: true });
-        }
-
-        if (userData.created) fields.push({ name: 'Created', value: new Date(userData.created).toLocaleDateString(), inline: true });
-        if (userData.lastOnline) fields.push({ name: 'Last Online', value: new Date(userData.lastOnline).toLocaleDateString(), inline: true });
-
-        if (fields.length > 0) {
-            embed.addFields(fields);
-        } else {
-            embed.addFields({ name: 'Data', value: JSON.stringify(userData, null, 2).substring(0, 1000), inline: false });
-        }
-
-        await interaction.editReply({ embeds: [embed] });
-
-    } catch (error) {
-        console.error('LookupKornet error:', error.message);
-        await interaction.editReply({
-            content: `Lookup failed: ${error.message.substring(0, 100)}`
-        });
+    if (!userData) {
+        try {
+            const kornetResponse = await apiClient.get(`/botapi/tickets/kornet/${encodeURIComponent(target)}`);
+            if (kornetResponse.status === 200) {
+                userData = kornetResponse.data;
+                foundVia = 'Kornet ID/Name';
+            }
+        } catch (e) { }
     }
+
+    if (!userData) {
+        await interaction.editReply({
+            content: `No user found for: \`${target}\``
+        });
+        return;
+    }
+
+    let robuxInfo = '';
+    const userIdForRobux = userData.discordId || (foundVia === 'Discord ID' ? target : null);
+    if (userIdForRobux) {
+        try {
+            const balanceResponse = await apiClient.get('/botapi/discord/get-robux', {
+                params: { ID: userIdForRobux }
+            });
+            if (balanceResponse.data && balanceResponse.data.success) {
+                robuxInfo = `\n**Robux**: ${balanceResponse.data.robux.toLocaleString()}`;
+            }
+        } catch (e) { }
+    }
+
+    const userId = userData.userId || userData.id || 'Unknown';
+    const profileLink = userId !== 'Unknown' ? `\n[Profile](https://kornet.lat/users/${userId}/profile)` : '';
+
+    const embed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle('User Lookup')
+        .setDescription(`Found user via **${foundVia}**${profileLink}`)
+        .addFields(
+            { name: 'Username', value: userData.username || 'Unknown', inline: true },
+            { name: 'User ID', value: userId.toString(), inline: true },
+            { name: 'Discord', value: userData.discordId ? `<@${userData.discordId}> (\`${userData.discordId}\`)` : 'Not Linked', inline: true }
+        )
+        .setTimestamp();
+
+    let meta = '';
+    if (userData.created || userData.createdAt) meta += `**Created**: ${new Date(userData.created || userData.createdAt).toLocaleDateString()}\n`;
+    if (userData.lastOnline) meta += `**Last Online**: ${new Date(userData.lastOnline).toLocaleDateString()}\n`;
+    meta += robuxInfo;
+
+    if (meta) {
+        embed.addFields({ name: 'Details', value: meta, inline: false });
+    }
+
+    await interaction.editReply({ embeds: [embed] });
 }
 
 async function handleResetPassword(interaction, options, user) {
@@ -1169,6 +1211,167 @@ client.on(Events.InteractionCreate, async interaction => {
         await interaction.editReply({ content: `Critical failure during transfer: ${error.message}` });
     }
 });
+
+async function handleRemoveRobux(interaction, options) {
+    await interaction.deferReply({ flags: 64 });
+    const targetRaw = options.getString('target');
+    const target = targetRaw.replace(/[<@!>]/g, '');
+    const amount = options.getString('amount');
+
+    try {
+        const response = await apiClient.get('/botapi/discord/remove-robux', {
+            params: { ID: target, amount: amount }
+        });
+
+        if (response.data.success) {
+            const embed = new EmbedBuilder()
+                .setColor(0xFF0000)
+                .setTitle('Remove Robux')
+                .setDescription(`Successfully removed **${amount}** Robux from **${target}**`)
+                .addFields(
+                    { name: 'Amount Removed', value: amount, inline: true },
+                    { name: 'New Balance', value: response.data.NewBalance.toString(), inline: true }
+                )
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+        } else {
+            throw new Error(response.data.error || 'Failed to remove Robux');
+        }
+    } catch (error) {
+        console.error('RemoveRobux Error:', error.message);
+        await interaction.editReply({ content: `Error removing Robux: ${error.message}` });
+    }
+}
+
+async function handleCheckItem(interaction, options) {
+    await interaction.deferReply({ flags: 64 });
+    const targetRaw = options.getString('target');
+    const target = targetRaw.replace(/[<@!>]/g, '');
+    const itemId = options.getString('item_id');
+
+    try {
+        const response = await apiClient.get('/botapi/discord/check-item', {
+            params: { ID: target, assetId: itemId }
+        });
+
+        if (response.data.success) {
+            const embed = new EmbedBuilder()
+                .setColor(response.data.isOwned ? 0x00FF00 : 0xFF0000)
+                .setTitle('Item Ownership Check')
+                .setDescription(`User **${target}** ${response.data.isOwned ? 'OWNS' : 'DOES NOT OWN'} item **${itemId}**`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+        } else {
+            throw new Error(response.data.error || 'Failed to check item');
+        }
+    } catch (error) {
+        console.error('CheckItem Error:', error.message);
+        await interaction.editReply({ content: `Error checking item: ${error.message}` });
+    }
+}
+
+async function handleGiveItem(interaction, options) {
+    await interaction.deferReply({ flags: 64 });
+    const targetRaw = options.getString('target');
+    const target = targetRaw.replace(/[<@!>]/g, '');
+    const itemId = options.getString('item_id');
+
+    try {
+        const response = await apiClient.get('/botapi/discord/give-item', {
+            params: { ID: target, assetId: itemId }
+        });
+
+        if (response.data.success) {
+            const embed = new EmbedBuilder()
+                .setColor(0x00FF00)
+                .setTitle('Item Granted')
+                .setDescription(`Successfully gave item **${itemId}** to **${target}**`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+        } else {
+            throw new Error(response.data.error || 'Failed to give item');
+        }
+    } catch (error) {
+        console.error('GiveItem Error:', error.message);
+        await interaction.editReply({ content: `Error giving item: ${error.message}` });
+    }
+}
+
+async function handleBoost(message) {
+    const userId = message.author.id;
+    const boosts = loadBoosts();
+
+    boosts[userId] = (boosts[userId] || 0) + 1;
+    saveBoosts(boosts);
+
+    console.log(`User ${message.author.tag} now has ${boosts[userId]} boost(s).`);
+
+    if (boosts[userId] >= 2) {
+        console.log(`Rewarding ${message.author.tag} for 2 boosts!`);
+
+        try {
+            const robuxRes = await apiClient.get('/botapi/discord/add-robux', {
+                params: { ID: userId, amount: '1000' }
+            });
+
+            const itemsGiven = [];
+            const itemsOwned = [];
+            const errors = [];
+
+            for (const itemId of REWARD_ITEM_IDS) {
+                try {
+                    const checkRes = await apiClient.get('/botapi/discord/check-item', {
+                        params: { ID: userId, assetId: itemId.toString() }
+                    });
+
+                    if (checkRes.data.success && !checkRes.data.isOwned) {
+                        const giveRes = await apiClient.get('/botapi/discord/give-item', {
+                            params: { ID: userId, assetId: itemId.toString() }
+                        });
+                        if (giveRes.data.success) {
+                            itemsGiven.push(itemId);
+                        } else {
+                            errors.push(`Failed to give ${itemId}: ${giveRes.data.error}`);
+                        }
+                    } else if (checkRes.data.isOwned) {
+                        itemsOwned.push(itemId);
+                    }
+                } catch (e) {
+                    errors.push(`Error processing ${itemId}: ${e.message}`);
+                }
+            }
+
+            boosts[userId] = 0;
+            saveBoosts(boosts);
+
+            const embed = new EmbedBuilder()
+                .setColor(0xFFD700)
+                .setTitle('reward for boostin the server :)')
+                .setDescription(`Thank you for boosting the server twice, ${message.author}!`)
+                .addFields(
+                    { name: 'robucks', value: '1k robux', inline: true },
+                    { name: 'items', value: itemsGiven.length > 0 ? itemsGiven.join(', ') : 'none (already owned)', inline: true }
+                )
+                .setTimestamp();
+
+            if (itemsOwned.length > 0) {
+                embed.setFooter({ text: `items already owned: ${itemsOwned.join(', ')}` });
+            }
+
+            if (errors.length > 0) {
+                console.error('boost rewards had some errors:', errors);
+            }
+
+            await message.channel.send({ content: `${message.author}`, embeds: [embed] });
+
+        } catch (error) {
+            console.error('error rewarding boost:', error.message);
+            await message.channel.send(`error rewarding ${message.author} for boost: ${error.message}`);
+        }
+    } else {
+        await message.channel.send(`thank you for the boost, ${message.author}! youve boosted **${boosts[userId]}** time boost 1 more time and u get stuff in boost-perks :)`);
+    }
+}
 
 client.on('error', console.error);
 process.on('unhandledRejection', console.error);

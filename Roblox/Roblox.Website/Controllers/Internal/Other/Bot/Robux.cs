@@ -139,5 +139,44 @@ namespace Roblox.Website.Controllers
                 throw new RobloxException(500, 0, "Internal error");
             }
         }
+        
+        [HttpGetBypass("botapi/discord/remove-robux")]
+        public async Task<dynamic> RemoveRobux([FromQuery] string ID, [FromQuery] string amount)
+        {
+            ValidateBotAuth();
+            
+            try
+            {
+                if (!long.TryParse(amount, out long DecrementAmount))
+                {
+                    throw new RobloxException(400, 0, "Invalid amount");
+                }
+
+                var userId = await services.users.GetUserIdUniversal(ID);
+                await services.economy.DecrementCurrency(CreatorType.User, userId, CurrencyType.Robux, DecrementAmount);
+                var newBalance = await services.economy.GetUserRobux(userId);
+
+                return new 
+                {
+                    success = true,
+                    Status = $"Successfully removed {DecrementAmount} Robux",
+                    AmountRemoved = DecrementAmount,
+                    NewBalance = newBalance
+                };
+            }
+            catch (RecordNotFoundException)
+            {
+                throw new RobloxException(400, 0, "Account not found");
+            }
+            catch (RobloxException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"RemoveRobux error: {ex.Message}");
+                throw new RobloxException(500, 0, "Internal error");
+            }
+        }
     }
 }
