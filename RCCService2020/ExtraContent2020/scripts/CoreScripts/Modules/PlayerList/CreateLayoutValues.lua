@@ -190,6 +190,7 @@ return function(isTenFoot, isSmallTouchScreen)
 		[261] = "rbxassetid://105897927", -- shedlestky
 		[3] = "rbxassetid://5787", -- unknown
 		[2] = "rbxassetid://5788", -- aaroning
+		[1328] = "rbxassetid://8652", -- forza (donator)
 	}
 
 	LayoutValues.NeutralTeamColor = BrickColor.new("White")

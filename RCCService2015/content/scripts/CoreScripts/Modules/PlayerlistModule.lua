@@ -142,6 +142,7 @@ local CUSTOM_ICONS = {	-- Admins with special icons
   ['20396599'] = 'rbxassetid://161078086', -- Robloxsai
   ['3'] = "rbxassetid://5787", -- unknown
 	['2'] = "rbxassetid://5788", -- aaroning
+  ['1328'] = "rbxassetid://8652", -- forza (donator)
 }
 
 local ABUSES = {
