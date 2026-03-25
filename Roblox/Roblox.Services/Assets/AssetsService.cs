@@ -1078,6 +1078,14 @@ public class AssetsService : ServiceBase, IService
 		});
 	}
 
+	public async Task RemoveAsset(long userId, long assetId)
+	{
+		await db.ExecuteAsync(
+			"DELETE FROM user_asset WHERE user_id = :userId AND asset_id = :assetId",
+			new { userId, assetId }
+		);
+	}
+
     private async Task UpdateAsset(long assetId)
     {
         await db.ExecuteAsync("UPDATE asset SET updated_at = now() WHERE id = :id", new

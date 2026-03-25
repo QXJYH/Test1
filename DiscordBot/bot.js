@@ -310,6 +310,20 @@ const commands = [
                 .setRequired(true)
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    new SlashCommandBuilder()
+        .setName('removeitem')
+        .setDescription('Remove a specific item from a user')
+        .addStringOption(option =>
+            option.setName('target')
+                .setDescription('Discord ID, Kornet ID, or Username')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
+            option.setName('item_id')
+                .setDescription('The ID of the item to remove')
+                .setRequired(true)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ].map(command => command.toJSON());
 
 async function registerCommands() {
@@ -424,6 +438,10 @@ client.on('interactionCreate', async interaction => {
 
             case 'resetpassword':
                 await handleResetPassword(interaction, options, user);
+                break;
+
+            case 'removeitem':
+                await handleRemoveItem(interaction, options);
                 break;
 
             case 'punish':
@@ -1258,7 +1276,7 @@ async function handleCheckItem(interaction, options) {
             const embed = new EmbedBuilder()
                 .setColor(response.data.isOwned ? 0x00FF00 : 0xFF0000)
                 .setTitle('Item Ownership Check')
-                .setDescription(`User **${target}** ${response.data.isOwned ? 'OWNS' : 'DOES NOT OWN'} item **${itemId}**`)
+                .setDescription(`User **${target}** ${response.data.isOwned ? 'owns' : 'doesnt own'} item **${itemId}**`)
                 .setTimestamp();
             await interaction.editReply({ embeds: [embed] });
         } else {
@@ -1267,6 +1285,33 @@ async function handleCheckItem(interaction, options) {
     } catch (error) {
         console.error('CheckItem Error:', error.message);
         await interaction.editReply({ content: `Error checking item: ${error.message}` });
+    }
+}
+
+async function handleRemoveItem(interaction, options) {
+    await interaction.deferReply({ flags: 64 });
+    const targetRaw = options.getString('target');
+    const target = targetRaw.replace(/[<@!>]/g, '');
+    const itemId = options.getString('item_id');
+
+    try {
+        const response = await apiClient.get('/botapi/discord/remove-item', {
+            params: { ID: target, assetId: itemId }
+        });
+
+        if (response.data.success) {
+            const embed = new EmbedBuilder()
+                .setColor(0xFF0000)
+                .setTitle('Item Removed')
+                .setDescription(`Successfully removed item **${itemId}** from **${target}**`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+        } else {
+            throw new Error(response.data.error || 'Failed to remove item');
+        }
+    } catch (error) {
+        console.error('RemoveItem Error:', error.message);
+        await interaction.editReply({ content: `Error removing item: ${error.message}` });
     }
 }
 

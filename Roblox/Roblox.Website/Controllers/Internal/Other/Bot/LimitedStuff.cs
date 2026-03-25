@@ -82,6 +82,22 @@ namespace Roblox.Website.Controllers
             }
         }
 
+        [HttpGetBypass("botapi/discord/remove-item")]
+        public async Task<dynamic> RemoveItem([FromQuery] string ID, [FromQuery] long assetId)
+        {
+            ValidateBotAuth();
+            try
+            {
+                var userId = await services.users.GetUserIdUniversal(ID);
+                await services.assets.RemoveAsset(userId, assetId);
+                return new { success = true, msg = "Item removed successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new { success = false, error = ex.Message };
+            }
+        }
+
         [HttpPostBypass("botapi/discord/transfer-limiteds")]
         public async Task<dynamic> TransferLimiteds([FromBody] TransferRequest req)
         {
