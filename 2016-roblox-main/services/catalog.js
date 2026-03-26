@@ -21,7 +21,19 @@ export const getItemUrl = ({ assetId, name }) => {
   return `/catalog/${assetId}/${itemNameToEncodedName(name)}`;
 }
 
-export const searchCatalog = ({ category, subCategory, query, limit, cursor, sort, creatorType, creatorId, sortAggregation }) => {
+export const searchCatalog = ({
+  category,
+  subCategory = null,
+  query = null,
+  limit,
+  cursor = null,
+  sort,
+  creatorType = null,
+  creatorId = null,
+  creatorName = null,
+  includeNotForSale = null,
+  sortAggregation = null,
+}) => {
   let url = '/v1/search/items?category=' + category + '&limit=' + limit + '&sortType=' + sort;
   if (!sortAggregation && (sort === 1 || sort === 2)) {
     sortAggregation = 5; // AllTime
@@ -40,6 +52,12 @@ export const searchCatalog = ({ category, subCategory, query, limit, cursor, sor
   }
   if (creatorType && creatorId) {
     url += '&creatorTargetId=' + creatorId + '&creatorType=' + creatorType;
+  }
+  if (!creatorId && creatorName) {
+    url += '&creatorName=' + creatorName + '&creatorType=1';
+  }
+  if (includeNotForSale === true) {
+    url += '&includeNotForSale=true';
   }
   return request('GET', getFullUrl('catalog', url)).then(d => d.data);
 }

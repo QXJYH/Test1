@@ -1,11 +1,12 @@
-import React, {useEffect, useReducer, useState} from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import { createUseStyles } from "react-jss";
 import AdBanner from "../ad/adBanner";
 import OldVerticalTabs from "../oldVerticalTabs";
 import CreationsTab from './components/creationsTab';
+import Library from "./components/library"
 import NotAvailable from "./components/notAvailable";
 import authentication from "../../stores/authentication";
-import {getPermissionsForRoleset, getUserGroups} from "../../services/groups";
+import { getPermissionsForRoleset, getUserGroups } from "../../services/groups";
 
 const useStyles = createUseStyles({
   developerContainer: {
@@ -74,9 +75,9 @@ const Develop = props => {
         name: 'Group Creations',
         element: <CreationsTab id={props.id} group={true} groupId={groupId} groups={groups} setGroupId={setGroupId} />,
       },
-       {
+      {
         name: 'Library',
-        element: <NotAvailable />,
+        element: <Library />,
       },
       {
         name: 'Developer Exchange',
@@ -91,7 +92,7 @@ const Develop = props => {
     return null;
 
   return <div className='container'>
-    <AdBanner/>
+    <AdBanner />
     <div className={s.developerContainer}>
       <OldVerticalTabs options={options} default={tab} onChange={n => setTab(n.name)} />
     </div>
