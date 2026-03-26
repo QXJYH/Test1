@@ -68,7 +68,8 @@ const CatalogPageNavigation = () => {
         store.setCategory(category);
         store.setSubCategory(subCategory);
       }}
-      items={navigationItems} selected={store.category} textClass={title.text} />
+      title={<p className={`mb-0 mt-0 ${title.bottom}`}>Category</p>}
+      items={navigationItems} />
   </>
 }
 
