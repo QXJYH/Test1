@@ -21,51 +21,43 @@ export const getItemUrl = ({ assetId, name }) => {
   return `/catalog/${assetId}/${itemNameToEncodedName(name)}`;
 }
 
-export const searchCatalog = ({
-  category,
-  subCategory = null,
-  query = null,
-  limit,
-  cursor = null,
-  sort,
-  creatorType = null,
-  creatorId = null,
-  creatorName = null,
-  includeNotForSale = null,
-  sortAggregation = null,
-  genres = null,
-  assetType = null,
-}) => {
-  let url = '/v1/search/items?Category=' + category + '&Limit=' + limit + '&SortType=' + sort;
-  if (!sortAggregation && (sort === 1 || sort === 2)) {
-    sortAggregation = 5; // AllTime
-  }
-  if (sortAggregation) {
-    url += '&SortAggregation=' + sortAggregation;
-  }
+/**
+ * Adventures' code isn't working, so I decided to look into it and found some errors.
+ * Maps library category names to the backend's subcategory (asset type) values.
+ * The backend uses subcategory for asset type filtering via `Enum.TryParse`.
+ * If all goes to plan, this SHOULD finally work once and for all.
+ * - chris
+ * Hey gu
+ */
+const libraryCategoryToSubcategory = {
+  Models: 'Model',
+  Audio: 'Audio',
+  Videos: 'Video',
+  Decals: 'Decal',
+  Meshes: 'Mesh',
+  Plugins: 'Plugin',
+};
+
+export const searchCatalog = ({ category, subCategory, query, limit, cursor, sort, creatorType, creatorId, genreFilterCsv, includeNotForSale }) => {
+  const effectiveSubCategory = subCategory || libraryCategoryToSubcategory[category];
+  let url = '/v1/search/items?category=' + encodeURIComponent(category || '') + '&limit=' + limit + '&sortType=' + sort;
   if (cursor) {
-    url += '&Cursor=' + encodeURIComponent(cursor);
+    url += '&cursor=' + encodeURIComponent(cursor);
   }
   if (query) {
-    url += '&Keyword=' + encodeURIComponent(query);
+    url += '&keyword=' + encodeURIComponent(query);
   }
-  if (subCategory) {
-    url += '&Subcategory=' + encodeURIComponent(subCategory);
+  if (effectiveSubCategory) {
+    url += '&subcategory=' + encodeURIComponent(effectiveSubCategory);
   }
   if (creatorType && creatorId) {
-    url += '&CreatorTargetId=' + creatorId + '&CreatorType=' + creatorType;
+    url += '&creatorTargetId=' + creatorId + '&creatorType=' + creatorType;
   }
-  if (!creatorId && creatorName) {
-    url += '&CreatorName=' + creatorName + '&CreatorType=1';
+  if (genreFilterCsv) {
+    url += '&_genreFilterCsv=' + encodeURIComponent(genreFilterCsv);
   }
-  if (includeNotForSale === true) {
-    url += '&IncludeNotForSale=true';
-  }
-  if (Array.isArray(genres) && genres.length > 0) {
-    url += '&Genres=' + genres.join(',');
-  }
-  if (assetType) {
-    url += '&AssetTypeId=' + assetType;
+  if (includeNotForSale) {
+    url += '&includeNotForSale=true';
   }
   return request('GET', getFullUrl('catalog', url)).then(d => d.data);
 }
@@ -123,14 +115,6 @@ export const getPassessForPlace = async ({ placeId, limit = 10, cursor }) => {
 
 export const getComments = async ({ assetId, offset }) => {
   return request('GET', getBaseUrl() + 'comments/get-json?assetId=' + assetId + '&startIndex=' + offset + '&thumbnailWidth=100&thumbnailHeight=100&thumbnailFormat=PNG&cachebuster=' + Math.random()).then(d => d.data);
-}
-
-export const getAudio = async ({ audioId }) => {
-  return await request('GET', `${getBaseUrl()}/asset/?id=${audioId}`).then(d => d.data);
-}
-
-export const getAudioURL = async ({ audioId }) => {
-  return `${getBaseUrl()}/asset/?id=${audioId}`;
 }
 
 export const createComment = async ({ assetId, comment }) => {
