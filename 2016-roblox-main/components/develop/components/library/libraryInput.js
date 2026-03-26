@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createUseStyles } from "react-jss";
 import CatalogPageStore from "../../../../stores/libraryPage";
-import buttonStyles from '../../../../styles/buttons.module.css';
 import { getQueryParams } from "../../../../lib/getQueryParams";
 
 const useInputStyles = createUseStyles({
@@ -38,6 +37,12 @@ const useInputStyles = createUseStyles({
     height: '100%',
     width: 'auto',
     padding: '1px 8px',
+    border: '1px solid #444444',
+    color: '#000',
+    background: 'linear-gradient(0deg, rgba(224,224,224,1) 0%, rgba(255,255,255,1) 100%)',
+    "&:hover": {
+      background: 'linear-gradient(0deg, rgba(203,216,255,1) 0%, rgba(255,255,255,1) 100%)',
+    }
   },
   buttonContainer: {
     width: 'auto'
@@ -73,17 +78,17 @@ const CatalogPageInput = props => {
         {// in reverse order
         }
         <div className={`${s.col} ${s.buttonContainer}`}>
-          <button disabled={store.locked} className={`${buttonStyles.legacyButton} ${s.button}`} onClick={(e) => {
+          <button disabled={store.locked} className={`${s.button}`} onClick={(e) => {
             e.preventDefault();
             store.setQuery(input.current.value);
           }}>Search</button>
         </div>
         <div className={`col-6 col-md-3 ${s.col}`}>
           <select disabled={store.locked} className={s.select} value={category}
-          onChange={e => {setCategory(e.target.value)}}>
+            onChange={e => { setCategory(e.target.value) }}>
             <option value='Models'>Models</option>
             <option value='Audio'>Audio</option>
-            <option value='Videos'>Videos</option>
+            {/* <option value='Videos'>Videos</option> */}
             <option value='Decals'>Decals</option>
             <option value='Meshes'>Meshes</option>
             <option value='Plugins'>Plugins</option>
