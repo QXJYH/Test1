@@ -33,6 +33,7 @@ export const searchCatalog = ({
   creatorName = null,
   includeNotForSale = null,
   sortAggregation = null,
+  genres = null,
 }) => {
   let url = '/v1/search/items?category=' + category + '&limit=' + limit + '&sortType=' + sort;
   if (!sortAggregation && (sort === 1 || sort === 2)) {
@@ -58,6 +59,9 @@ export const searchCatalog = ({
   }
   if (includeNotForSale === true) {
     url += '&includeNotForSale=true';
+  }
+  if (Array.isArray(genres) && genres.length > 0) {
+    url += '&genres=' + genres.join(',');
   }
   return request('GET', getFullUrl('catalog', url)).then(d => d.data);
 }

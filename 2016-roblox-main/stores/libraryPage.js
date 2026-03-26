@@ -100,6 +100,7 @@ const LibraryStore = createContainer(() => {
       sort,
       creatorName,
       includeNotForSale: includeOffsale,
+      genres,
     })
       .then(result => {
         response = result;
@@ -125,7 +126,7 @@ const LibraryStore = createContainer(() => {
       .finally(() => {
         setLocked(false);
       })
-  }, [cursor, sort, category, subCategory, genres, query, limit]);
+  }, [cursor, sort, category, subCategory, genres, query, limit, includeOffsale, creatorName]);
 
   const clearStatesForNewQuery = () => {
     setCursor(null);
