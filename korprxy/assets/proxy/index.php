@@ -30,7 +30,7 @@ curl_setopt_array($ch, [
     CURLOPT_MAXREDIRS      => 10,
     CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_TIMEOUT        => 30,
-    CURLOPT_USERAGENT      => $_SERVER['HTTP_USER_AGENT'] ?? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    CURLOPT_USERAGENT      => 'Roblox/WinInet',
     CURLOPT_ENCODING       => '',
     CURLOPT_HEADER         => true,
     CURLOPT_HTTPHEADER     => [
