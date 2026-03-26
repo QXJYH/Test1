@@ -117,6 +117,14 @@ export const getComments = async ({ assetId, offset }) => {
   return request('GET', getBaseUrl() + 'comments/get-json?assetId=' + assetId + '&startIndex=' + offset + '&thumbnailWidth=100&thumbnailHeight=100&thumbnailFormat=PNG&cachebuster=' + Math.random()).then(d => d.data);
 }
 
+export const getAudio = async ({ audioId }) => {
+  return await request('GET', `${getBaseUrl()}/asset/?id=${audioId}`).then(d => d.data);
+}
+
+export const getAudioURL = async ({ audioId }) => {
+  return `${getBaseUrl()}/asset/?id=${audioId}`;
+}
+
 export const createComment = async ({ assetId, comment }) => {
   let result = await request('POST', getBaseUrl() + 'comments/post', {
     text: comment,
