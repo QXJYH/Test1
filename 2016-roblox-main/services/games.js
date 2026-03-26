@@ -4,6 +4,25 @@ import { itemNameToEncodedName } from "./catalog";
 const gamePage2015Enabled = getFlag('2015GameDetailsPageEnabled', false);
 const csrEnabled = getFlag('clientSideRenderingEnabled', false);
 
+export const isLibraryItem = ({ assetTypeId }) => {
+  switch (assetTypeId) {
+    case 62:
+    case 40:
+    case 38:
+    case 24:
+    case 21:
+    case 13:
+    case 10:
+    case 5:
+    case 4:
+    case 3:
+    case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
 export const getGameUrl = ({ placeId, name }) => {
   return `/games/${placeId}/${itemNameToEncodedName(name)}`;
 }

@@ -3,28 +3,33 @@ import { createContainer } from "unstated-next";
 import getFlag from "../lib/getFlag";
 import { getItemDetails, searchCatalog } from "../services/catalog";
 import {useRouter} from "next/dist/client/router";
+import { isLibraryItem } from "../services/games";
 
 const stringToCategory = str => {
+  return str;
+}
+
+const stringToAssetType = str => {
   if (typeof str === 'number') return str;
   switch (str.toLowerCase().trim()) {
     case 'models':
-      return 6;
-    case 'audio':
-      return 9;
-    case 'decals':
-      return 8;
-    case 'plugins':
-      return 7;
-    case 'meshes':
       return 10;
+    case 'audio':
+      return 3;
+    case 'decals':
+      return 13;
+    case 'plugins':
+      return 38;
+    case 'meshes':
+      return 4;
     case 'videos':
-      return 14;
+      return 62;
   }
-  return 6; // Default to Models
+  return 10; // Default to Models
 }
 
 const stringToSubCategory = str => {
-  return 0;
+  return str;
 }
 
 const LibraryStore = createContainer(() => {
@@ -51,7 +56,8 @@ const LibraryStore = createContainer(() => {
     let response = null;
     searchCatalog({
       category: stringToCategory(category),
-      subCategory,
+      assetType: stringToAssetType(category),
+      subCategory: stringToSubCategory(category),
       query,
       limit,
       cursor,
@@ -69,10 +75,11 @@ const LibraryStore = createContainer(() => {
       })
       .then(assetDetails => {
         let arr = [];
+        const targetedAssetType = stringToAssetType(category);
         // do it this way to preserve sort
         for (const item of response.data) {
           let details = assetDetails.data.data.find(v => v.id === item.id);
-          if (details) arr.push(details);
+          if (details && details.assetType === targetedAssetType) arr.push(details);
         }
         response.data = arr;
         setResults(response);

@@ -34,34 +34,38 @@ export const searchCatalog = ({
   includeNotForSale = null,
   sortAggregation = null,
   genres = null,
+  assetType = null,
 }) => {
-  let url = '/v1/search/items?category=' + category + '&limit=' + limit + '&sortType=' + sort;
+  let url = '/v1/search/items?Category=' + category + '&Limit=' + limit + '&SortType=' + sort;
   if (!sortAggregation && (sort === 1 || sort === 2)) {
     sortAggregation = 5; // AllTime
   }
   if (sortAggregation) {
-    url += '&sortAggregation=' + sortAggregation;
+    url += '&SortAggregation=' + sortAggregation;
   }
   if (cursor) {
-    url += '&cursor=' + encodeURIComponent(cursor);
+    url += '&Cursor=' + encodeURIComponent(cursor);
   }
   if (query) {
-    url += '&keyword=' + encodeURIComponent(query);
+    url += '&Keyword=' + encodeURIComponent(query);
   }
   if (subCategory) {
-    url += '&subcategory=' + encodeURIComponent(subCategory);
+    url += '&Subcategory=' + encodeURIComponent(subCategory);
   }
   if (creatorType && creatorId) {
-    url += '&creatorTargetId=' + creatorId + '&creatorType=' + creatorType;
+    url += '&CreatorTargetId=' + creatorId + '&CreatorType=' + creatorType;
   }
   if (!creatorId && creatorName) {
-    url += '&creatorName=' + creatorName + '&creatorType=1';
+    url += '&CreatorName=' + creatorName + '&CreatorType=1';
   }
   if (includeNotForSale === true) {
-    url += '&includeNotForSale=true';
+    url += '&IncludeNotForSale=true';
   }
   if (Array.isArray(genres) && genres.length > 0) {
-    url += '&genres=' + genres.join(',');
+    url += '&Genres=' + genres.join(',');
+  }
+  if (assetType) {
+    url += '&AssetTypeId=' + assetType;
   }
   return request('GET', getFullUrl('catalog', url)).then(d => d.data);
 }
