@@ -141,6 +141,14 @@ export const deleteFromInventory = ({ assetId }) => {
   })
 }
 
+export const getAudio = async ({ audioId }) => {
+  return await request('GET', `${getBaseUrl()}/asset/?id=${audioId}`).then(d => d.data);
+}
+
+export const getAudioURL = async ({ audioId }) => {
+  return `${getBaseUrl()}/asset/?id=${audioId}`;
+}
+
 export const getIsFavorited = async ({ assetId, userId }) => {
   return await request('GET', getFullUrl('catalog', '/v1/favorites/users/' + userId + '/assets/' + assetId + '/favorite')).then(d => d.data);
 }
