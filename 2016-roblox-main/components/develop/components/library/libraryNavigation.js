@@ -12,10 +12,10 @@ const navigationItems = [
     name: 'Audio',
     clickData: 'Audio,',
   },
-  // {
-  //   name: 'Videos',
-  //   clickData: 'Videos,',
-  // },
+  {
+    name: 'Videos',
+    clickData: 'Videos,',
+  },
   {
     name: 'Decals',
     clickData: 'Decals,',

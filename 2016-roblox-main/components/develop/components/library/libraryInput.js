@@ -88,7 +88,7 @@ const CatalogPageInput = props => {
             onChange={e => { setCategory(e.target.value) }}>
             <option value='Models'>Models</option>
             <option value='Audio'>Audio</option>
-            {/* <option value='Videos'>Videos</option> */}
+            <option value='Videos'>Videos</option>
             <option value='Decals'>Decals</option>
             <option value='Meshes'>Meshes</option>
             <option value='Plugins'>Plugins</option>

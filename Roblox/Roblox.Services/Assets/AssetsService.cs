@@ -1668,39 +1668,41 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
         // Sort
         if (!string.IsNullOrEmpty(request.sortType))
         {
-            var column = "updated_at";
+            var column = "created_at";
             var mode = "desc";
-            if (request.sortType == "0")
+            switch (request.sortType)
             {
-                // same as above
-            }
-            else if (request.sortType == "3")
-            {
-                // updated
-                column = "updated_at";
-            }
-            else if (request.sortType == "4")
-            {
-                // price: low to high
-                column = "price_robux";
-                mode = "asc";
-            }
-            else if (request.sortType == "5")
-            {
-                // price: high to low
-                column = "price_robux";
-            }
-            else if (request.sortType == "100")
-            {
-                // favorite count: high to low
+                case "0":
+                    // same as above
+                    break;
+                case "3":
+                    // updated
+                    column = "updated_at";
+                    break;
+                case "4":
+                    // price: low to high
+                    column = "CASE WHEN price_tix IS NOT NULL THEN price_tix / 10 ELSE price_robux END";
+                    mode = "asc";
+                    break;
+                case "5":
+                    // price: high to low 
+                    column = "CASE WHEN price_tix IS NOT NULL THEN price_tix / 10 ELSE price_robux END";
+                    break;
+                case "6":
+                    // RAP: low to high
+                    column = "CASE WHEN recent_average_price IS NULL THEN 0 ELSE 1 END, recent_average_price";
+                    mode = "asc";
+                    break;
+                case "7":
+                    // RAP: high to low
+                    column = "CASE WHEN recent_average_price IS NULL THEN 1 ELSE 0 END, recent_average_price";
+                    break;
+                case "100":
+                    // favorite count: high to low
+                    break;
             }
 
             builder.OrderBy(column + " " + mode);
-        }
-
-        if (!request.includeNotForSale)
-        {
-            builder.Where("(asset.is_for_sale = true OR asset.is_limited = true)");
         }
 
         // If community creations, exclude system account
@@ -1709,62 +1711,152 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
             builder.Where("creator_id != 1");
         }
 
+        if (request.sortType is "7" or "6") {
+            builder.Where("is_limited = TRUE");
+        }
+
         var cat = request.category?.ToLower();
         var sub = request.subcategory?.ToLower();
-        
-        if (cat is "bodyparts" or "bodypart")
+
+        bool libraryItem = false;
+        switch (cat)
         {
-            if (sub is "all" or null)
-            {
-                builder.Where(
-                    $"(asset.asset_type = {(int) Models.Assets.Type.Face} OR asset.asset_type = {(int) Models.Assets.Type.LeftArm} OR asset.asset_type = {(int) Models.Assets.Type.RightArm} OR asset.asset_type = {(int) Models.Assets.Type.LeftLeg} OR asset.asset_type = {(int) Models.Assets.Type.RightLeg} OR asset.asset_type = {(int) Models.Assets.Type.Head} OR asset.asset_type = {(int) Models.Assets.Type.Torso})");
-            }
-        }else if (cat is "gear" or "gears")
-        {
-            // we ignore subcategory for now. in the future, that will be the gear type (e.g. "ranged" or "explosive")
-            builder.Where(
-                $"(asset.asset_type = {(int) Models.Assets.Type.Gear})");
+            case "audio":
+            case "audios":
+            case "model":
+            case "models":
+            case "image":
+            case "images":
+            case "decal":
+            case "decals":
+            case "mesh":
+            case "meshes":
+            case "plugin":
+            case "plugins":
+            case "videos":
+            case "video":
+                libraryItem = true;
+                builder.Where("asset.creator_id != 2");
+                //builder.Where("asset.description != 'Shirt Image'");
+                break;
         }
-        
-        if (sub is "accessories" or "communitycreations")
+
+        if (!request.includeNotForSale && libraryItem == false)
         {
-            builder.Where(
-                $"(asset.asset_type = {(int) Models.Assets.Type.Hat} OR asset.asset_type = {(int) Models.Assets.Type.HairAccessory} OR asset.asset_type = {(int) Models.Assets.Type.FaceAccessory} OR asset.asset_type = {(int) Models.Assets.Type.FrontAccessory} OR asset.asset_type = {(int) Models.Assets.Type.BackAccessory} OR asset.asset_type = {(int) Models.Assets.Type.WaistAccessory} OR asset.asset_type = {(int) Models.Assets.Type.ShoulderAccessory} OR asset.asset_type = {(int) Models.Assets.Type.NeckAccessory})");
+            builder.Where("(asset.is_for_sale = true OR asset.is_limited = true)");
         }
-        else if (sub is "faces")
+        switch (cat)
         {
-            builder.Where($"asset.asset_type = {(int) Models.Assets.Type.Face}");
-        }
-        else if (sub is "clothing")
-        {
-            builder.Where(
-                $"(asset.asset_type = {(int) Models.Assets.Type.Shirt} OR asset.asset_type = {(int) Models.Assets.Type.Pants} OR asset.asset_type = {(int) Models.Assets.Type.TeeShirt})");
-        }
-        else if (sub is "bodyparts")
-        {
-            builder.Where(
-                $"(asset.asset_type = {(int) Models.Assets.Type.Face} OR asset.asset_type = {(int) Models.Assets.Type.LeftArm} OR asset.asset_type = {(int) Models.Assets.Type.RightArm} OR asset.asset_type = {(int) Models.Assets.Type.LeftLeg} OR asset.asset_type = {(int) Models.Assets.Type.RightLeg} OR asset.asset_type = {(int) Models.Assets.Type.Head} OR asset.asset_type = {(int) Models.Assets.Type.Torso})");
-        }
-        else if (sub is "packages" or "package")
-        {
-            builder.Where(
-                $"(asset.asset_type = {(int) Models.Assets.Type.Package})");
-        }
-        else if (sub != "collectibles")
-        {
-            Models.Assets.Type type;
-            if (Enum.TryParse<Models.Assets.Type>(request.subcategory, out type))
-            {
-                builder.Where($"asset.asset_type = {(int) type}");
-            }
-            else
-            {
-                var otherType = GetTypeFromPluralString(request.subcategory);
-                if (otherType != null)
+            case "bodyparts":
+            case "bodypart":
+                if (sub == "all" || sub == null)
                 {
-                    builder.Where($"asset.asset_type = {(int) otherType}");
+                    builder.Where(
+                        $"(asset.asset_type = {(int)Models.Assets.Type.Face} OR " +
+                        $"asset.asset_type = {(int)Models.Assets.Type.LeftArm} OR " +
+                        $"asset.asset_type = {(int)Models.Assets.Type.RightArm} OR " +
+                        $"asset.asset_type = {(int)Models.Assets.Type.LeftLeg} OR " +
+                        $"asset.asset_type = {(int)Models.Assets.Type.RightLeg} OR " +
+                        $"asset.asset_type = {(int)Models.Assets.Type.Head} OR " +
+                        $"asset.asset_type = {(int)Models.Assets.Type.Torso})");
                 }
-            }
+                break;
+            case "gear":
+            case "gears":
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Gear})");
+                break;
+            case "audio":
+            case "audios":
+                // we ignore subcategory for now.
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Audio})");
+                break;
+            case "video":
+            case "videos":
+                // we ignore subcategory for now.
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Video})");
+                break;
+            case "model":
+            case "models":
+                // we ignore subcategory for now.
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Model})");
+                break;
+            case "decal":
+            case "decals":
+            case "image":
+            case "images":
+                // we ignore subcategory for now.
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Image})");
+                break;
+            case "meshes":
+            case "mesh":
+                // we ignore subcategory for now.
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Mesh})");
+                break;
+            case "plugin":
+            case "plugins":
+                // we ignore subcategory for now.
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Plugin})");
+                break;
+            default:
+                break;
+        }
+
+        // end of library seciton
+
+        switch (sub)
+        {
+            case "accessories":
+            case "communitycreations":
+                builder.Where(
+                    $"(asset.asset_type = {(int)Models.Assets.Type.Hat} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.HairAccessory} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.FaceAccessory} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.FrontAccessory} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.BackAccessory} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.WaistAccessory} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.ShoulderAccessory} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.NeckAccessory})");
+                break;
+            case "faces":
+                builder.Where($"asset.asset_type = {(int)Models.Assets.Type.Face}");
+                break;
+            case "clothing":
+                builder.Where(
+                    $"(asset.asset_type = {(int)Models.Assets.Type.Shirt} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.Pants} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.TeeShirt})");
+                break;
+            case "bodyparts":
+                builder.Where(
+                    $"(asset.asset_type = {(int)Models.Assets.Type.Face} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.LeftArm} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.RightArm} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.LeftLeg} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.RightLeg} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.Head} OR " +
+                    $"asset.asset_type = {(int)Models.Assets.Type.Torso})");
+                break;
+            case "packages":
+            case "package":
+                builder.Where($"(asset.asset_type = {(int)Models.Assets.Type.Package})");
+                break;
+            case "collectibles":
+                break;
+            default:
+                Models.Assets.Type type;
+                if (Enum.TryParse<Models.Assets.Type>(request.subcategory, out type))
+                {
+                    builder.Where($"asset.asset_type = {(int)type}");
+                }
+                else
+                {
+                    var otherType = GetTypeFromPluralString(request.subcategory!);
+                    if (otherType != null)
+                    {
+                        builder.Where($"asset.asset_type = {(int)otherType}");
+                    }
+                }
+                break;
         }
 
         // Whether to sort the final results by ID in DESC order, after the function is over
@@ -1772,21 +1864,31 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
 
         if (!string.IsNullOrEmpty(request.category))
         {
-            if (cat is "communitycreations")
+            switch (cat)
             {
                 // TODO: This blocks groupId 1. Is that an issue?
-                builder.Where("(asset.creator_id != 1)");
-            }
-            else if (cat is "collectibles")
-            {
-                builder.Where("asset.is_limited = true");
-            }
-            else if (cat is "featured")
-            {
-                doIdSort = true;
-                builder.Where("asset.creator_id = 1").Where("asset.creator_type = 1");
-                // TODO: this used to have clothing filters but I got rid of them in the name of performance
-                // Exact filters are at /services/api/src/controllers/proxy/v1/Catalog.ts:862
+                case "communitycreations":
+                    builder.Where("(asset.creator_id != 1)");
+                    break;
+                case "collectibles":
+                    builder.Where("asset.is_limited = true");
+                    break;
+                case "featured":
+                    // TODO: this used to have clothing filters but I got rid of them in the name of performance
+                    // Exact filters are at /services/api/src/controllers/proxy/v1/Catalog.ts:862
+                    if (!string.IsNullOrEmpty(request.sortType) && request.sortType == "0")
+                    {
+                        doIdSort = true;
+                    }
+                    // If the keyword is empty, we are most likely on the front page so we only show non limiteds
+                    if (string.IsNullOrEmpty(request.keyword) && request.sortType != "7" && request.sortType != "6")
+                    {
+                        builder.Where($"(asset.is_limited = false AND asset.is_limited_unique = false AND asset.asset_type != {(int)Models.Assets.Type.Face} AND asset.asset_type != {(int)Models.Assets.Type.EmoteAnimation})");
+                    }
+                    builder.Where("asset.creator_id = 1").Where("asset.creator_type = 1");
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -1794,10 +1896,9 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
         {
             foreach (var item in request.genres)
             {
-                builder.Where($"asset.asset_genre = {(int) item}");
+                builder.Where($"asset.asset_genre = {(int)item}");
             }
         }
-        
         var totalResults =
             await db.QuerySingleOrDefaultAsync<Total>(countTemplate.RawSql, countTemplate.Parameters);
         if (totalResults.total != 0)
@@ -1813,7 +1914,7 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
         }
 
         if (resp.data == null)
-            return new SearchResponse() {keyword = request.keyword};
+            return new SearchResponse() { keyword = request.keyword };
 
         var sortedList = resp.data.ToList();
         if (doIdSort)

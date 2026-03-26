@@ -32,7 +32,7 @@ export const getItemUrl = ({ assetId, name }) => {
 const libraryCategoryToSubcategory = {
   Models: 'Model',
   Audio: 'Audio',
-  // Videos: 'Video',
+  Videos: 'Video',
   Decals: 'Decal',
   Meshes: 'Mesh',
   Plugins: 'Plugin',
