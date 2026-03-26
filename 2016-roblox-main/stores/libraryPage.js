@@ -85,7 +85,7 @@ const LibraryStore = createContainer(() => {
   const [sort, setSort] = useState(0);
   const [genres, setGenres] = useState([]);
   const [creatorName, setCreatorName] = useState(null);
-  const [includeOffsale, setIncludeOffsale] = useState(null);
+  const [includeOffsale, setIncludeOffsale] = useState(true);
 
 
   useEffect(() => {
