@@ -49,7 +49,7 @@ const GenreFilter = props => {
     }}>All Genres</p>
     {
       genresList.map(v => {
-        const id = 'catalog_genre_fitler_' + v.genre;
+        const id = 'catalog_genre_filter_' + v.genre;
         return <p className='mb-0' key={id}>
           <input id={id} type='checkbox' checked={store.genres.includes(v.genre)} onChange={(c) => {
             if (c.currentTarget.checked === false) {
@@ -63,8 +63,8 @@ const GenreFilter = props => {
       })
     }
     <div className='divider-top mt-4 mb-4 divider-light'></div>
-    <input id={'show_unavailable_items'} type='checkbox' checked={true} onChange={(c) => {}} disabled={true} />
-    <label htmlFor={'show_unavailable_items'} className={s.label} style={{fontSize: '11px', position: 'relative', top: '-3px'}}>Show unavailable items</label>
+    <input id={'show_unavailable_items'} type='checkbox' checked={true} onChange={(c) => { }} disabled={true} />
+    <label htmlFor={'show_unavailable_items'} className={s.label} style={{ fontSize: '11px', position: 'relative', top: '-3px' }}>Show unavailable items</label>
   </div>
 }
 
