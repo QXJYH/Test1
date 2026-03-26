@@ -16,6 +16,10 @@ export const getGroupGames = ({ groupId, cursor }) => {
   return request('GET', getFullUrl('games', `/v2/groups/${groupId}/games?cursor=${encodeURIComponent(cursor || '')}`)).then(d => d.data);
 }
 
+export const getLibraryItemUrl = ({ assetId, name }) => {
+  return `/library/${assetId}/${itemNameToEncodedName(name)}`;
+}
+
 export const getGameSorts = ({ gameSortsContext }) => {
   return request('GET', getFullUrl('games', `/v1/games/sorts?gameSortsContext=${encodeURIComponent(gameSortsContext || '')}`)).then(d => d.data)
 }
