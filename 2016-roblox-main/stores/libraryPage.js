@@ -5,68 +5,26 @@ import { getItemDetails, searchCatalog } from "../services/catalog";
 import {useRouter} from "next/dist/client/router";
 
 const stringToCategory = str => {
-  // these are from catalog.roblox.com/v1/search/navigation-menu-items
+  if (typeof str === 'number') return str;
   switch (str.toLowerCase().trim()) {
-    case 'collectible':
-    case 'collectibles':
-      return 2;
-    case 'featured':
-      return 0;
-    case 'accessories':
-      return 11;
-    case 'clothing':
-      return 3;
-    case 'gears':
-    case 'gear':
-      return 5;
-    case 'bodyparts':
-      return 4;
+    case 'models':
+      return 6;
+    case 'audio':
+      return 9;
+    case 'decals':
+      return 8;
+    case 'plugins':
+      return 7;
+    case 'meshes':
+      return 10;
+    case 'videos':
+      return 14;
   }
-  throw new Error('Invalid category "' + str + '"');
+  return 6; // Default to Models
 }
 
 const stringToSubCategory = str => {
-  // these are from catalog.roblox.com/v1/search/navigation-menu-items
-  switch (str.toLowerCase().trim()) {
-    case 'items':
-    case 'hats':
-      return 0; // todo: what do we put here?
-    case 'all':
-      return 0;
-    case 'face':
-    case 'faces':
-      return 10;
-    case 'packages':
-      return 37; // todo: is this correct?
-    case 'shirts':
-      return 12;
-    case 'tshirts':
-      return 13;
-    case 'pants':
-      return 14;
-    // gear categories
-    case 'gear':
-      return 0;
-    case 'building':
-      return 8;
-    case 'explosive':
-      return 3;
-    case 'melee':
-      return 1;
-    case 'musical':
-      return 6;
-    case 'navigation':
-      return 5;
-    case 'powerup':
-      return 4;
-    case 'ranged':
-      return 2;
-    case 'social':
-      return 7;
-    case 'transport':
-      return 9;
-  }
-  throw new Error('Invalid subcategory "' + str + '"');
+  return 0;
 }
 
 const LibraryStore = createContainer(() => {
@@ -74,7 +32,7 @@ const LibraryStore = createContainer(() => {
   const [query, setQuery] = useState(router.query.keyword || '');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(getFlag('catalogPageLimit', 28));
-  const [category, setCategory] = useState("Audio");
+  const [category, setCategory] = useState("Models");
   const [subCategory, setSubCategory] = useState('');
   const [locked, setLocked] = useState(false);
   const [results, setResults] = useState(null);
@@ -92,7 +50,7 @@ const LibraryStore = createContainer(() => {
     setLocked(true);
     let response = null;
     searchCatalog({
-      category,
+      category: stringToCategory(category),
       subCategory,
       query,
       limit,
