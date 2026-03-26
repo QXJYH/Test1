@@ -71,7 +71,7 @@ const NavigationLinks = props => {
         <LinkEntry url='games'>Games</LinkEntry>
         <LinkEntry url='catalog'>Avatar Shop</LinkEntry>
         <LinkEntry url='develop'>Create</LinkEntry>
-        <LinkEntry url='https://kornet.lat/download'>Download</LinkEntry>
+        <LinkEntry url='download'>Download</LinkEntry>
       </div>
     </div>
   </div>
