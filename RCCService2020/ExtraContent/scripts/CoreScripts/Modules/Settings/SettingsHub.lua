@@ -1693,7 +1693,6 @@ local function CreateSettingsHub()
 	this.GameSettingsPage = require(RobloxGui.Modules.Settings.Pages.GameSettings)
 	this.GameSettingsPage:SetHub(this)
 
-	
     this.ReportAbusePage = require(RobloxGui.Modules.Settings.Pages.ReportAbuseMenu)
     this.ReportAbusePage:SetHub(this)
 
