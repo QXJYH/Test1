@@ -1764,9 +1764,6 @@ local function CreateSettingsHub()
 		end
 	end)
 
-	local shouldShowDevConsole = not PolicyService:IsSubjectToChinaPolicies()
-
-	if shouldShowDevConsole then
 		-- Dev Console Connections
 		ContextActionService:BindCoreAction(DEV_CONSOLE_ACTION_NAME,
 			toggleDevConsole,
