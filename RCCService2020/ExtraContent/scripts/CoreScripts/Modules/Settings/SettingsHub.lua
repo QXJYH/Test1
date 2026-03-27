@@ -1699,9 +1699,7 @@ local function CreateSettingsHub()
 	this.HelpPage = require(RobloxGui.Modules.Settings.Pages.Help)
 	this.HelpPage:SetHub(this)
 
-	local shouldShowRecord = not PolicyService:IsSubjectToChinaPolicies()
-
-	if platform == Enum.Platform.Windows and shouldShowRecord then
+    if platform == Enum.Platform.Windows then
 		this.RecordPage = require(RobloxGui.Modules.Settings.Pages.Record)
 		this.RecordPage:SetHub(this)
 	end
