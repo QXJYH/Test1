@@ -140,7 +140,6 @@ public class AvatarService : ServiceBase, IService
 		Type.EmoteAnimation,
 	};
 
-    
     /// <summary>
     /// Filter the dirtyAssetIds. This will remove moderated/pending items, items the user doesn't own, invalid items, etc.
     /// </summary>
@@ -522,157 +521,94 @@ public class AvatarService : ServiceBase, IService
             return 0;
         });
     }
-	
-	private async Task<bool> ConfirmAssetSelectionIsOkForRender(long userId, IEnumerable<long> unknownAssetIds)
-	{
-		var assets = new AssetsService();
-		var assetIds = unknownAssetIds.ToList();
-		if (assetIds.Count == 0) return true;
-		var details = await assets.MultiGetInfoById(assetIds);
+// enforce asset drunkness ahahhahaha
+    private async Task<IEnumerable<long>> EnforceAssetLimits(long userId, IEnumerable<long> unknownAssetIds)
+    {
+        using var assets = ServiceProvider.GetOrCreate<AssetsService>(this);
+        var assetIds = unknownAssetIds.ToList();
+        if (assetIds.Count == 0) return assetIds;
+        var details = (await assets.MultiGetInfoById(assetIds)).ToList();
 
-		// vars
-		var gear = 0;
-		var face = 0;
-		var shirt = 0;
-		var pants = 0;
-		var tShirt = 0;
-		var accessories = 0;
-		var leftArm = 0;
-		var rightArm = 0;
-		var leftLeg = 0;
-		var rightLeg = 0;
-		var torso = 0;
-		var head = 0;
-		var animations = 0;
-		var emoteAnimations = 0;	
+        var seen = new Dictionary<Type, int>();
+        var limits = new Dictionary<Type, int>
+        {
+            { Type.TeeShirt, 1 },
+            { Type.Shirt, 1 },
+            { Type.Pants, 1 },
+            { Type.Face, 1 },
+            { Type.Gear, 1 },
+            { Type.Head, 1 },
+            { Type.Torso, 1 },
+            { Type.LeftArm, 1 },
+            { Type.RightArm, 1 },
+            { Type.LeftLeg, 1 },
+            { Type.RightLeg, 1 },
+            { Type.Hat, 6 },
+            { Type.FrontAccessory, 6 },
+            { Type.BackAccessory, 6 },
+            { Type.HairAccessory, 6 },
+            { Type.NeckAccessory, 6 },
+            { Type.ShoulderAccessory, 6 },
+            { Type.WaistAccessory, 6 },
+            { Type.FaceAccessory, 6 },
+            { Type.ClimbAnimation, 1 },
+            { Type.FallAnimation, 1 },
+            { Type.IdleAnimation, 1 },
+            { Type.JumpAnimation, 1 },
+            { Type.RunAnimation, 1 },
+            { Type.SwimAnimation, 1 },
+            { Type.WalkAnimation, 1 },
+            { Type.EmoteAnimation, 8 },
+        };
 
-		// track bad assets
-		var invalid = new List<string>();
-		var assetstype = new Dictionary<Type, List<long>>();
+        var accessoryTypes = new HashSet<Type>
+        {
+            Type.Hat, Type.FrontAccessory, Type.BackAccessory,
+            Type.HairAccessory, Type.NeckAccessory, Type.ShoulderAccessory,
+            Type.WaistAccessory, Type.FaceAccessory,
+        };
 
-		foreach (var item in details)
-		{
-			if (!assetstype.ContainsKey(item.assetType))
-			{
-				assetstype[item.assetType] = new List<long>();
-			}
-			assetstype[item.assetType].Add(item.id);
+        var animationTypes = new HashSet<Type>
+        {
+            Type.ClimbAnimation, Type.FallAnimation, Type.IdleAnimation,
+            Type.JumpAnimation, Type.RunAnimation, Type.SwimAnimation, Type.WalkAnimation,
+        };
 
-			switch (item.assetType)
-			{
-				case Models.Assets.Type.TeeShirt:
-					tShirt++;
-					if (tShirt > 1) invalid.Add($"too many T-Shirts (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Shirt:
-					shirt++;
-					if (shirt > 1) invalid.Add($"too many Shirts (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Pants:
-					pants++;
-					if (pants > 1) invalid.Add($"too many Pants (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.ClimbAnimation:
-				case Models.Assets.Type.FallAnimation:
-				case Models.Assets.Type.IdleAnimation:
-				case Models.Assets.Type.JumpAnimation:
-				case Models.Assets.Type.RunAnimation:
-				case Models.Assets.Type.SwimAnimation:
-				case Models.Assets.Type.WalkAnimation:
-					animations++;
-					if (animations > 7) invalid.Add($"too many AvatarAnimations (limit 7) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.EmoteAnimation:
-					emoteAnimations++;
-					if (emoteAnimations > 8) invalid.Add($"too many Emotes (limit 8) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Gear:
-					gear++;
-					if (gear > 1) invalid.Add($"too many Gears (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Face:
-					face++;
-					if (face > 1) invalid.Add($"too many Faces (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Hat:
-				case Models.Assets.Type.FrontAccessory:
-				case Models.Assets.Type.BackAccessory:
-				case Models.Assets.Type.HairAccessory:
-				case Models.Assets.Type.NeckAccessory:
-				case Models.Assets.Type.ShoulderAccessory:
-				case Models.Assets.Type.WaistAccessory:
-				case Models.Assets.Type.FaceAccessory:
-					accessories++;
-					if (accessories > 6) invalid.Add($"too many Accessories (limit 6) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Head:
-					head++;
-					if (head > 1) invalid.Add($"too many Heads (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.Torso:
-					torso++;
-					if (torso > 1) invalid.Add($"too many Torso accessories (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.LeftArm:
-					leftArm++;
-					if (leftArm > 1) invalid.Add($"too many left arms (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.RightArm:
-					rightArm++;
-					if (rightArm > 1) invalid.Add($"too many right arms (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.LeftLeg:
-					leftLeg++;
-					if (leftLeg > 1) invalid.Add($"too many left legs (limit 1) - Asset {item.id}");
-					break;
-				case Models.Assets.Type.RightLeg:
-					rightLeg++;
-					if (rightLeg > 1) invalid.Add($"too many right legs (limit 1) - Asset {item.id}");
-					break;
-				default:
-					invalid.Add($"bad asset type: {item.assetType} - Asset {item.id}");
-					break;
-			}
-		}
+        var result = new List<long>();
+        var accessoryCount = 0;
+        var animationCount = 0;
 
-		// send to webhook if any invalid cause people keep complaining and idek what it is so
-		// remove this later plz
-		if (invalid.Count > 0)
-		{
-			try
-			{
-				using var http = new HttpClient();
-				var message = $"Bad assets for user {userId}:\n{string.Join("\n", invalid.Take(10))}";
-				if (invalid.Count > 10)
-				{
-					message += $"\n...and {invalid.Count - 10} more errors";
-				}
+        foreach (var item in details)
+        {
+            var type = item.assetType;
 
-				var payload = new
-				{
-					content = message
-				};
-				// try catch cause it wouldn't fucking send the message and i couldn't figure out WHY...
-				var json = System.Text.Json.JsonSerializer.Serialize(payload);
-				var content = new StringContent(json, Encoding.UTF8, "application/json");
-				
-				var response = await http.PostAsync(Roblox.Configuration.Webhook, content);
-				
-				if (!response.IsSuccessStatusCode)
-				{
-					Console.WriteLine($"wh failed, bad status");
-				}
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"wh exception: {ex}");
-			}
-			
-			return false;
-		}
+            if (!limits.ContainsKey(type))
+                continue;
 
-		return true;
-	}
+            if (accessoryTypes.Contains(type))
+            {
+                if (accessoryCount >= 6) continue;
+                accessoryCount++;
+                result.Add(item.id);
+                continue;
+            }
+
+            if (animationTypes.Contains(type))
+            {
+                if (animationCount >= 7) continue;
+                animationCount++;
+                result.Add(item.id);
+                continue;
+            }
+
+            seen.TryGetValue(type, out var count);
+            if (count >= limits[type]) continue;
+            seen[type] = count + 1;
+            result.Add(item.id);
+        }
+
+        return result;
+    }
 
     private bool IsColorValid(int color)
     {
@@ -726,15 +662,13 @@ public class AvatarService : ServiceBase, IService
         if (!AreColorsOk(colors))
             throw new RobloxException(400, 0, "Colors are invalid");
 
-
         if (assetIds.Count != 0)
         {
             assetIds = (await FilterAssetsForRender(userId, assetIds)).ToList();
         }
 
-        var assetsOk = await ConfirmAssetSelectionIsOkForRender(userId, assetIds);
-        if (!assetsOk)
-            throw new RobloxException(400, 0, "One or more assets are invalid");
+        assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
+
         // Now, update the avatar. This returns a hash
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
         // Get our image urls
@@ -780,7 +714,7 @@ public class AvatarService : ServiceBase, IService
             playerAvatarType = "R6",
         };
         // Sane timeout of 30 seconds. If a render takes longer than this, something's probably broken
-		 using var cancellation = new CancellationTokenSource();
+		using var cancellation = new CancellationTokenSource();
 		cancellation.CancelAfter(TimeSpan.FromSeconds(30));
 		
 		// Run thumbnail first so it shows up in the editor faster
@@ -827,19 +761,13 @@ public class AvatarService : ServiceBase, IService
         if (!AreColorsOk(colors))
             throw new RobloxException(400, 0, "Colors are invalid");
 
-
         if (assetIds.Count != 0)
         {
             assetIds = (await FilterAssetsForRender(userId, assetIds)).ToList();
         }
 
-		var assetsOk = await ConfirmAssetSelectionIsOkForRender(userId, assetIds);
-		if (!assetsOk)
-		{
-			// if fails, set to the old avatar thumbnail
-			await UpdateUserAvatarImages(userId, currentHeadshot, currentThumbnail);
-			throw new RobloxException(400, 0, "One or more assets are invalid");
-		}
+        assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
+
         // Now, update the avatar. This returns a hash
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
         // Get our image urls
