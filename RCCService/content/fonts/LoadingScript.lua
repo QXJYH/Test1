@@ -24,7 +24,7 @@ local COLORS = {
 local IMAGES = {
 	BACKGROUND_THUMBNAIL_VIGNETTE = 'rbxasset://textures/loading/loadingvignette.png',
 	ROBLOX_LOGO_256 = 'rbxasset://textures/loading/robloxlogo.png',
-	GAME_THUMBNAIL =  'http://www.roblox.com/Thumbs/Asset.ashx?format=png&width=420&height=230&assetId=',
+	GAME_THUMBNAIL =  'http://www.kornet.lat/Thumbs/Asset.ashx?format=png&width=420&height=230&assetId=',
 	GAME_BACKGROUND = 'rbxasset://textures/loading/loadingTexture.png'
 }
 
