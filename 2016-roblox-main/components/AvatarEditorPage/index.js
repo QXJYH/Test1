@@ -167,6 +167,11 @@ const useStyles = createUseStyles({
             color: 'white !important',
         }
     },
+    limitError: {
+        marginTop: 6,
+        fontSize: 13,
+        color: "#d9534f",
+    },
 });
 
 // REF: https://youtu.be/iXI3aut2UWs
@@ -326,6 +331,9 @@ function AvatarEditor() {
                         </div>
                     </div>
                 </div>
+                {
+                    store.limitError && <p className={s.limitError}>{store.limitError}</p>
+                }
                 <div className={`flex justify-content-between ${s.redrawContainer} ${s.firstRedraw}`}>
                     <span>Avatar isn't updated?</span>
                     <ActionButton onClick={async () => {

@@ -1,7 +1,5 @@
 import {createContainer} from "unstated-next";
 import {useEffect, useRef, useState} from "react";
-//import FeedbackStore from "../../../stores/feedback";
-//import {FeedbackType} from "../../../models/feedback";
 import { multiGetUserThumbnails } from "../../../services/thumbnails";
 import AuthenticationStore from "../../../stores/authentication";
 import {
@@ -26,7 +24,6 @@ import request from "../../../lib/request";
  */
 
 const AvatarInfoStore = createContainer(() => {
-    // CURRENT STUFF
     /** @type {WearingAsset[]} */
     const [wearingAssets, setWearingAssets] = useState(null);
     const [bodyColors, setBodyColors] = useState(null);
@@ -38,19 +35,15 @@ const AvatarInfoStore = createContainer(() => {
     const [avRules, setAvRules] = useState(false);
     const [loadingAvatar, setLoadingAvatar] = useState(true);
     const [canForce, setCanForce] = useState(true);
+    const [limitError, setLimitError] = useState(null);
     
-    // changed assetId is number of which asset id has been changed
-    // denoted by whether its positive or negative integer
     const [modifiedAsset, setModifiedAsset] = useState(null);
-    // the rest of these should correspond to the actual value name in the API to get avatars
-    // so modified scaling would be { height: 0.5 }
     const [modifiedBC, setModifiedBC] = useState(null);
     const [modifiedScaling, setModifiedScaling] = useState(null);
     const [modifiedRigType, setModifiedRigType] = useState(null);
     
     const debo = useRef(false);
 
-    //const feedback = FeedbackStore.useContainer();
     const auth = AuthenticationStore.useContainer();
     
     function AddAsset(asset) {
@@ -129,7 +122,6 @@ const AvatarInfoStore = createContainer(() => {
         }
         stopwatch.Stop();
         if (attempts > 10 && avThumb == null)
-            //feedback.addFeedback("Could not get new avatar render. Please try again later.", FeedbackType.ERROR);
 			console.error("Could not get new avatar render. Please try again later.");
         console.log(`Got avatar render in ${stopwatch.ElapsedMilliseconds()}ms, in ${attempts} attempts.`);
         
@@ -154,6 +146,7 @@ const AvatarInfoStore = createContainer(() => {
         
         applyScaling().then();
     }, [modifiedScaling]);
+
     useEffect(() => {
         if (!modifiedBC) return;
         
@@ -171,6 +164,7 @@ const AvatarInfoStore = createContainer(() => {
         
         applyBC().then();
     }, [modifiedBC]);
+
     useEffect(() => {
         if (!modifiedRigType) return;
         let newRigType = modifiedRigType;
@@ -184,13 +178,13 @@ const AvatarInfoStore = createContainer(() => {
         
         applyRigType().then();
     }, [modifiedRigType]);
+
     useEffect(() => {
         if (!modifiedAsset || wearingAssets === null) return;
         /** @type SortedItem */
         let newAsset = modifiedAsset;
         setModifiedAsset(null);
         
-        // Limiting
         if (!IsNegative(newAsset.assetId)) {
             if (AssetTypeCategory.LimitToOne.includes(newAsset.assetType)) {
                 for (const assetType of AssetTypeCategory.LimitToOne) {
@@ -205,18 +199,16 @@ const AvatarInfoStore = createContainer(() => {
                 let accessories = wearingAssets.filter(/** @param {WearingAsset} asset */ asset =>
                     AssetTypeCategory.Accessories.includes(asset.assetType)
                 );
-                if (accessories.length > 15) {
-                    //feedback.addFeedback("Too many accessories equipped", FeedbackType.ERROR);
-					console.error("Too many accessories equipped");
+                if (accessories.length >= 6) {
+                    setLimitError("You have too many accessories equipped. Some may not appear on your avatar.");
                     return;
                 }
             } else if (AssetTypeCategory.Emotes.includes(newAsset.assetType)) {
                 let emotes = wearingAssets.filter(/** @param {WearingAsset} asset */ asset =>
                     AssetTypeCategory.Emotes.includes(asset.assetType)
-                )
-                if (emotes.length > 8) {
-                    //feedback.addFeedback("Too many emotes equipped", FeedbackType.ERROR);
-					console.error("Too many emotes equipped");
+                );
+                if (emotes.length >= 8) {
+                    setLimitError("You have too many emotes equipped.");
                     return;
                 }
             }
@@ -246,14 +238,12 @@ const AvatarInfoStore = createContainer(() => {
     }, []);
     
     return {
-        // Functions
         AddAsset,
         RemoveAsset,
         ForceRender,
         GetUpdatedAvatar,
         ReloadAvatar,
         
-        // States (all United)
         wearingAssets,
         
         bodyColors,
@@ -280,6 +270,9 @@ const AvatarInfoStore = createContainer(() => {
          * @type AvatarRules
          */
         avRules,
+
+        limitError,
+        setLimitError,
     }
 })
 
@@ -287,8 +280,8 @@ const AvatarInfoStore = createContainer(() => {
  * @type {{Accessories: number[], Emotes: number[], LimitToOne: number[], Unlimited: number[], All: number[]}}
  */
 export const AssetTypeCategory = {
-    Accessories: [8, 41, 42, 43, 44, 45, 46, 47], // all limit of 15
-    Emotes: [61], // all limit of 8
+    Accessories: [8, 41, 42, 43, 44, 45, 46, 47],
+    Emotes: [61],
     LimitToOne: [50, 51, 52, 53, 54, 55, 17, 27, 28, 29, 30, 31, 18, 19, 12, 11, 2],
     Unlimited: [24],
     All: [50, 51, 52, 53, 54, 55, 17, 27, 28, 29, 30, 31, 32, 18, 19, 12, 11, 2, 24, 61, 8, 41, 42, 43, 44, 45, 46, 47]
