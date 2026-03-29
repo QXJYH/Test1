@@ -725,10 +725,8 @@ namespace Roblox.Website.Controllers
 			// 0 = available
 			// 1 = taken
 			// 2 = invalid
-			
-			// debug username to test forms
-			if (username?.Equals("TheJongu", StringComparison.OrdinalIgnoreCase) == true)
-				return Content("{\"data\":0}", "application/json");
+			// dumbass harry added a debug username for some reason
+			// couldve fucked up our sign up im pretty sure
 
 			if (string.IsNullOrWhiteSpace(username))
 				return Content("{\"data\":2}", "application/json");
