@@ -361,7 +361,7 @@ public class UsersService : ServiceBase, IService
             "kike", 
             "goy", 
             "gay",
-            "betch"
+            "betch",
             "bitch", 
             "b1tch", 
             "dick", 
@@ -375,7 +375,7 @@ public class UsersService : ServiceBase, IService
             "cock", 
             "c0ck", 
             "hitler", 
-            "hitier" 
+            "hitier"
         };
 
         if (filter.Any(lowerName.Contains)) 
