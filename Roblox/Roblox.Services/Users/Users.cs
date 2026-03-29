@@ -347,29 +347,40 @@ public class UsersService : ServiceBase, IService
             if (normalizedName[i-1] == ' ' && normalizedName[i] == ' ') return false;
         }
 
-        // word filter, removing spaces and other words
         var lowerName = string.Join("", nameToCheck.ToLower().Split(" "));
-        if (lowerName.Contains("nigg") || lowerName.Contains("n1gg") || lowerName.Contains("niigg") || lowerName.Contains("n11gg"))
+
+        string[] filter = { 
+            "nigg", 
+            "n1gg", 
+            "niigg", 
+            "n11gg", 
+            "gga", 
+            "gger", 
+            "porn", 
+            "p0rn", 
+            "kike", 
+            "goy", 
+            "gay",
+            "betch"
+            "bitch", 
+            "b1tch", 
+            "dick", 
+            "d1ck", 
+            "fuck", 
+            "f1ck", 
+            "tranny", 
+            "fag", 
+            "goblina", 
+            "dyke", 
+            "cock", 
+            "c0ck", 
+            "hitler", 
+            "hitier" 
+        };
+
+        if (filter.Any(lowerName.Contains)) 
             return false;
-        if (lowerName.Contains("fuck"))
-            return false;
-        if (lowerName.Contains("b1tch") || lowerName.Contains("bitch"))
-            return false;
-        if (lowerName.Contains("sh1t") || lowerName.Contains("shit"))
-            return false;
-        if (lowerName.Contains("ass") || lowerName.Contains("4ss") || lowerName.Contains("a55"))
-            return false;
-        if (lowerName.Contains("sex") || lowerName.Contains("s3x") || lowerName.Contains("5ex"))
-            return false;
-        if (lowerName.Contains("cum"))
-            return false;
-        if (lowerName.Contains("porn") || lowerName.Contains("p0rn"))
-            return false;
-        if (lowerName.Contains("kike") || lowerName.Contains("goy"))
-            return false;
-        if (lowerName.Contains("tranny") || lowerName.Contains("fag") || lowerName.Contains("goblina") || lowerName.Contains("dyke") || lowerName.Contains("dick") || lowerName.Contains("cock") || lowerName.Contains("c0ck") || lowerName.Contains("d1ck") || lowerName.Contains("hitler") || lowerName.Contains("hitier"))
-            return false;
-        
+
         // mod blocked
         var blocked = await IsBadUsername(nameToCheck);
         if (blocked)
