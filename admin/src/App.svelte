@@ -74,7 +74,7 @@
 
 <Router {url}>
 	{#await rank.promise then result}
-		{#if result.requiresTwoFactor}
+		{#if result?.requiresTwoFactor}
 			<TwoFactorPrompt />
 		{:else}
 			<Route path="/admin">
