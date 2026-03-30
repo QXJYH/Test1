@@ -12,7 +12,7 @@ using Roblox.Logging;
 using System.Net;
 using System.Xml;
 using Roblox;
-// i suck at rendering :broken_heart: also this the only comment cuz i always remove commeents ehehheheheehheehehehe cuz skids cant steal teh code
+
 namespace Roblox.Rendering
 {
     public static class CommandHandler
@@ -80,6 +80,7 @@ namespace Roblox.Rendering
 
         private static async Task ListenForMessages()
         {
+            // allocate 8mb
             using var memory = MemoryPool<byte>.Shared.Rent(1024 * 1024 * 8);
 
             while (true)
@@ -109,6 +110,7 @@ namespace Roblox.Rendering
                         data = null,
                     };
 
+                    // data is null when statusCode != 200
                     if (decoded.data != null)
                     {
                         var bytes = Convert.FromBase64String(decoded.data);
@@ -183,9 +185,11 @@ namespace Roblox.Rendering
             var res = new TaskCompletionSource<RenderResponse<Stream>>();
             var responseMutex = new Mutex();
             
+            // Setup listener
             mux.WaitOne();
             resultListeners[id] = stream =>
             {
+                //Console.WriteLine("[info] SendCommand() over");
                 lock (responseMutex)
                 {
                     res.SetResult(stream);
@@ -194,10 +198,11 @@ namespace Roblox.Rendering
                 return 0; 
             };
             mux.ReleaseMutex();
-
+            // Send message
             var bits = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cmd));
             while (ws is not {State: WebSocketState.Open})
             {
+                //Writer.Info(LogGroup.GeneralRender, "Ws not available, retry in a second");
 #if DEBUG 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken  ?? CancellationToken.None);
 #else
@@ -213,6 +218,8 @@ namespace Roblox.Rendering
                 mux.WaitOne();
                 resultListeners.Remove(id);
                 mux.ReleaseMutex();
+                // TODO: Would be nice if we could send a message to WS telling it to cancel the task
+                // TrySetCanceled instead of SetCanceled due to WEB-35
                 lock (responseMutex)
                 {
                     if (res.TrySetCanceled(cancellationToken.Value) && command != "Cancel")
@@ -368,12 +375,14 @@ namespace Roblox.Rendering
 				NSManager.AddNamespace("ns1", "http://roblox.com/");
 				
 				var resNodes = xmlDoc.SelectNodes("//soap:Envelope/soap:Body/ns1:OpenJobResponse/ns1:OpenJobResult", NSManager);
+				using var httpClient = new HttpClient();
 				foreach (XmlNode resultNode in resNodes)
 				{
 					var typeNode = resultNode.SelectSingleNode("ns1:type", NSManager);
 					var valueNode = resultNode.SelectSingleNode("ns1:value", NSManager);
 					
 					if (typeNode != null && valueNode != null && 
+						// tstring contains the actual b64 render
 						typeNode.InnerText == "LUA_TSTRING" && 
 						!string.IsNullOrEmpty(valueNode.InnerText))
 					{
@@ -399,87 +408,6 @@ namespace Roblox.Rendering
 			}
 		}
 
-		private static async Task<Stream> RenderR15Headshot(long userId, CancellationToken? cancellationToken = null)
-		{
-			var port = await StartRccService();
-			var jobId = Guid.NewGuid().ToString();
-			var baseUrl = Roblox.Configuration.BaseUrl;
-			var charApp = $"{baseUrl}/v1.1/avatar-fetch?placeId=0&userId={userId}";
-
-			var luaScript = File.ReadAllText(
-				Path.Combine(Roblox.Configuration.RccService2020Path, "internalscripts", "Avatar_R15_Headshot.lua")
-			);
-
-			var XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-		<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
-		   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
-		   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-			<soap:Body>
-				<OpenJob xmlns=""http://roblox.com/"">
-					<job>
-						<id>{jobId}</id>
-						<expirationInSeconds>60</expirationInSeconds>
-						<category>0</category>
-						<cores>1</cores>
-					</job>
-					<script>
-						<name>GameServer</name>
-						<script>{System.Security.SecurityElement.Escape(luaScript)}</script>
-					</script>
-					<arguments>
-						<LuaValue><type>LUA_TSTRING</type><value>{System.Security.SecurityElement.Escape(baseUrl)}</value></LuaValue>
-						<LuaValue><type>LUA_TSTRING</type><value>{System.Security.SecurityElement.Escape(charApp)}</value></LuaValue>
-						<LuaValue><type>LUA_TSTRING</type><value>Png</value></LuaValue>
-						<LuaValue><type>LUA_TNUMBER</type><value>420</value></LuaValue>
-						<LuaValue><type>LUA_TNUMBER</type><value>420</value></LuaValue>
-					</arguments>
-				</OpenJob>
-			</soap:Body>
-		</soap:Envelope>";
-
-			try
-			{
-				var res = await SendSoapRequest(port, "http://roblox.com/OpenJob", XML);
-
-				var xmlDoc = new XmlDocument();
-				xmlDoc.LoadXml(res);
-
-				var NSManager = new XmlNamespaceManager(xmlDoc.NameTable);
-				NSManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/");
-				NSManager.AddNamespace("ns1", "http://roblox.com/");
-
-				var resNodes = xmlDoc.SelectNodes("//soap:Envelope/soap:Body/ns1:OpenJobResponse/ns1:OpenJobResult", NSManager);
-				foreach (XmlNode resultNode in resNodes)
-				{
-					var typeNode  = resultNode.SelectSingleNode("ns1:type",  NSManager);
-					var valueNode = resultNode.SelectSingleNode("ns1:value", NSManager);
-
-					if (typeNode != null && valueNode != null &&
-						typeNode.InnerText == "LUA_TSTRING" &&
-						!string.IsNullOrEmpty(valueNode.InnerText))
-					{
-						try
-						{
-							var imgBytes = Convert.FromBase64String(valueNode.InnerText);
-							await SendCloseJobRequest(port, jobId);
-							return new MemoryStream(imgBytes);
-						}
-						catch (FormatException)
-						{
-							continue;
-						}
-					}
-				}
-
-				throw new Exception("no b64 found in RCC headshot response");
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"R15 headshot rendering failed: {ex.Message}");
-				throw;
-			}
-		}
-
 		public static async Task<Stream> RequestPlayerThumbnailR15(long userId, CancellationToken? cancellationToken = null)
 		{
 			await R15RenderLock.WaitAsync(cancellationToken ?? CancellationToken.None);
@@ -499,6 +427,7 @@ namespace Roblox.Rendering
             if (data.playerAvatarType != "R6")
                 throw new Exception("Invalid PlayerAvatarType");
             
+            // todo: do we need to get assetTypeId here, or can we just expect caller to get it for us?
             var w = new Stopwatch();
             w.Start();
             
@@ -518,15 +447,11 @@ namespace Roblox.Rendering
 
         public static async Task<Stream> RequestPlayerHeadshot(AvatarData data, CancellationToken? cancellationToken = null)
         {
-            await R15RenderLock.WaitAsync(cancellationToken ?? CancellationToken.None);
-            try
-            {
-                return await RenderR15Headshot(data.userId, cancellationToken);
-            }
-            finally
-            {
-                R15RenderLock.Release();
-            }
+            if (data.playerAvatarType != "R6")
+                throw new Exception("Invalid PlayerAvatarType");
+            
+            // todo: do we need to get assetTypeId here, or can we just expect caller to get it for us?
+            return await SendCmdWithErrHandlingAsync("GenerateThumbnailHeadshot", new List<dynamic> {data}, cancellationToken);
         }
 
         public static async Task<Stream> RequestTextureThumbnail(long assetId, int assetTypeId, CancellationToken? cancellationToken = null)
@@ -545,6 +470,7 @@ namespace Roblox.Rendering
                 assetId, 
             }, cancellationToken);
         }
+        
 
         public static async Task<Stream> RequestHeadThumbnail(long assetId, CancellationToken? cancellationToken = null)
         {
@@ -599,3 +525,4 @@ namespace Roblox.Rendering
         }
     }
 }
+
