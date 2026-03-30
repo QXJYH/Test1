@@ -74,6 +74,13 @@ public class AdminApiController : ControllerBase
         return base.userSession != null;
     }
 
+    private async Task<bool> IsTwoFactorVerfied()
+    {
+        var key = $"Admin2FAVerifycation:{userSession.userId}";
+        var val = await redis.StringGetAsync(key);
+        return val == "true";
+    }
+
     private new UserSession userSession
     {
         get
@@ -128,6 +135,9 @@ public class AdminApiController : ControllerBase
         var permissions = await services.users.GetStaffPermissions(userSession.userId);
         var isAdmin = isOwner;
         var isMod = isAdmin;
+        
+        var requiresTwoFactor = await services.twoFactor.IsEnabled(userSession.userId) && !await IsTwoFactorVerfied();
+
         return new
         {
             rank = new
@@ -142,8 +152,20 @@ public class AdminApiController : ControllerBase
                 permissions = isOwner
                     ? Enum.GetValues<Access>()
                     : permissions.Select(c => c.permission),
-            }
+            },
+            requiresTwoFactor
         };
+    }
+
+    [HttpPost("2fa/verify")]
+    public async Task VerifyTwoFactor([FromBody] Admin2FAVerifyRequest request)
+    {
+        var isValid = await services.twoFactor.VerifyCode(userSession.userId, request.code);
+        if (!isValid)
+            throw new StaffException("Invalid 2FA code");
+
+        var key = $"Admin2FAVerifycation:{userSession.userId}";
+        await redis.StringSetAsync(key, "true", TimeSpan.FromMinutes(10));
     }
 
     [HttpGet("staff/list"), StaffFilter(Access.SetPermissions)]
@@ -5106,4 +5128,9 @@ Thank you for your understanding,
 			Message = $"Cleaned up {Cleaned} orphaned servers"
 		};
 	}
+}
+
+public class Admin2FAVerifyRequest
+{
+	public string code { get; set; }
 }

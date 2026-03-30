@@ -10,6 +10,7 @@ interface IRankResponse {
 		permissions: string[];
 	}
 	restrictions: Record<string, boolean>;
+	requiresTwoFactor: boolean;
 }
 const lsKey = 'v.1_adm_rank_data';
 const store: Writable<IRankResponse> = writable(localStorage.getItem(lsKey) && JSON.parse(localStorage.getItem(lsKey)) || null);

@@ -101,6 +101,23 @@ public class StaffFilter : ActionFilterAttribute, IAsyncActionFilter
             return;
         }
         //Console.WriteLine("[info] admin authorized user {0} for {1}", userInfo.userId, permission);
+
+        using var ts = ServiceProvider.GetOrCreate<TwoFactorService>();
+        if (await ts.IsEnabled(userInfo.userId))
+        {
+            var key = $"Admin2FAVerifycation:{userInfo.userId}";
+            var redis = Roblox.Services.Cache.distributed;
+            var val = await redis.StringGetAsync(key);
+            if (val != "true")
+            {
+                context.Result = new Microsoft.AspNetCore.Mvc.ObjectResult(new
+                {
+                    errors = new List<dynamic> { new { message = "TWO_FACTOR_REQUIRED", code = 403 } }
+                }) { StatusCode = 403 };
+                return;
+            }
+        }
+
         await next();
     }
 }

@@ -59,6 +59,7 @@
 	import CopyUGC from "./pages/CopyUGC.svelte";
 	import PossibleAlts from "./pages/PossibleAlts.svelte";
 	import UploadCustomItem from "./pages/UploadCustomItem.svelte";
+	import TwoFactorPrompt from "./components/TwoFactorPrompt.svelte";
 	// import 'bootstrap';
 
 	var pushState = history.pushState;
@@ -73,7 +74,10 @@
 
 <Router {url}>
 	{#await rank.promise then result}
-		<Route path="/admin">
+		{#if result.requiresTwoFactor}
+			<TwoFactorPrompt />
+		{:else}
+			<Route path="/admin">
 			<Index />
 		</Route>
 		<Route path="/admin/global-messages">
@@ -235,8 +239,9 @@
 		<Route path="/admin/reports">
 			<AbuseReports />
 		</Route>
-		<Route path="/admin/resolve-url">
-			<ResolveAsset />
-		</Route>
+			<Route path="/admin/resolve-url">
+				<ResolveAsset />
+			</Route>
+		{/if}
 	{/await}
 </Router>
