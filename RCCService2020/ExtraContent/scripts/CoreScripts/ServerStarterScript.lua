@@ -241,7 +241,7 @@ if game:GetService("Chat").LoadDefaultChat then
 end
 
 
-local mommydaddypanty = 9383
+local mypants = 9383
 
 local function isBodyNaked(bodyColors)
     return bodyColors.HeadColor == bodyColors.TorsoColor and
@@ -252,29 +252,40 @@ local function isBodyNaked(bodyColors)
 end
 
 local function applyDefaultClothing(character)
+    character:WaitForChild("Humanoid")
+    
     local humanoidDescription = character.Humanoid:GetAppliedDescription()
+    
+    if humanoidDescription.Pants ~= 0 then
+        return
+    end
+    
     local bodyColors = {
-        HeadColor = humanoidDescription.HeadColor3,
-        TorsoColor = humanoidDescription.TorsoColor3,
-        LeftArmColor = humanoidDescription.LeftArmColor3,
-        RightArmColor = humanoidDescription.RightArmColor3,
-        LeftLegColor = humanoidDescription.LeftLegColor3,
-        RightLegColor = humanoidDescription.RightLegColor3
+        HeadColor = humanoidDescription.HeadColor,
+        TorsoColor = humanoidDescription.TorsoColor,
+        LeftArmColor = humanoidDescription.LeftArmColor,
+        RightArmColor = humanoidDescription.RightArmColor,
+        LeftLegColor = humanoidDescription.LeftLegColor,
+        RightLegColor = humanoidDescription.RightLegColor
     }
     
-    if isBodyNaked(bodyColors) and humanoidDescription.Pants == 0 then
-        humanoidDescription.Pants = mommydaddypanty
+    if isBodyNaked(bodyColors) then
+        humanoidDescription.Pants = mypants
         character.Humanoid:ApplyDescription(humanoidDescription)
     end
 end
 
 playersService.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
-        character:WaitForChild("Humanoid")
         applyDefaultClothing(character)
     end)
 end)
 
+for _, player in ipairs(playersService:GetPlayers()) do
+    if player.Character then
+        applyDefaultClothing(player.Character)
+    end
+end
 local freeCameraFlagSuccess, freeCameraFlagValue = pcall(function()
 	return settings():GetFFlag("FreeCameraForAdmins")
 end)
