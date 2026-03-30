@@ -650,7 +650,7 @@ public class AvatarService : ServiceBase, IService
     }
 
     public async Task RedrawAvatar(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null,
-        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = true, bool enforceDefaultPants = true)
+        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = true)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
@@ -746,7 +746,7 @@ public class AvatarService : ServiceBase, IService
 	}
 	
 	public async Task RedrawAvatarR15(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null, 
-		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = true, bool enforceDefaultPants = true)
+		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = true)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
