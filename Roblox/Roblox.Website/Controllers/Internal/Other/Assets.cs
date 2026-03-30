@@ -342,8 +342,6 @@ namespace Roblox.Website.Controllers
                 case Models.Assets.Type.WalkAnimation:
                 case Models.Assets.Type.PoseAnimation:
 				case Models.Assets.Type.EmoteAnimation:
-                case Models.Assets.Type.Video:
-                    break;
                 case Models.Assets.Type.SolidModel:
                     if (latestVersion.contentUrl is null)
                         throw new RobloxException(400, 0, "Content URL is null"); // todo: should we log this?
@@ -357,6 +355,8 @@ namespace Roblox.Website.Controllers
                     {
                         assetContent = await services.assets.GetAssetContent(latestVersion.contentUrl);
                     }
+                    break;
+                case Models.Assets.Type.Video:
                     break;
                 default:
                     // anything else requires auth

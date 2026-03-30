@@ -14,29 +14,29 @@
 // {
 //     [MVC.ApiController]
 //     [MVC.Route("/")]
-//     public class Bubbamons : ControllerBase
+//     public class Kormons : ControllerBase
 //     {
-// 		private static readonly ConcurrentDictionary<string, BBMonsAuthData> UserAuthCodes = new();
+// 		private static readonly ConcurrentDictionary<string, KormonsAuthData> UserAuthCodes = new();
 		
 // 		private void ValidateApiKey()
 //         {
 // #if DEBUG == false
-// 	        if (Request.Headers["apiKey"].ToString() != Roblox.Configuration.BubbamonsApiKey)
+// 	        if (Request.Headers["apiKey"].ToString() != Roblox.Configuration.KormonsApiKey)
 // 	        {
 // 		        throw new RobloxException(400, 0, "Code not found");
 // 	        }
 // #endif
 //         }
 		
-// 		private class BBMonsAuthData
+// 		private class KormonsAuthData
 // 		{
 // 			public long userId { get; set; }
 // 			public string username { get; set; }
 // 			public DateTime createdAt { get; set; }
 // 		}
 
-// 		[HttpGetBypass("bbmons/login")]
-// 		public async Task<MVC.IActionResult> BubbamonsLogin()
+// 		[HttpGetBypass("kormons/login")]
+// 		public async Task<MVC.IActionResult> KormonsLogin()
 // 		{
 // 			if (userSession == null)
 // 			{
@@ -46,17 +46,17 @@
 // 			var code = GenerateCallbackCode(32);
 // 			var user = await services.users.GetUserById(userSession.userId);
 
-// 			UserAuthCodes[code] = new BBMonsAuthData
+// 			UserAuthCodes[code] = new KormonsAuthData
 // 			{
 // 				userId = userSession.userId,
 // 				username = user.username,
 // 				createdAt = DateTime.UtcNow
 // 			};
-// 			return Redirect($"https://bbmons.org/login/callback?code={code}");
+// 			return Redirect($"https://kormons.kornet.lat/login/callback?code={code}");
 // 		}
 
-// 		[HttpGetBypass("bbmons/usercheck")]
-// 		public async Task<dynamic> BubbamonsCheck([System.ComponentModel.DataAnnotations.Required] string code)
+// 		[HttpGetBypass("kormons/usercheck")]
+// 		public async Task<dynamic> KormonsCheck([System.ComponentModel.DataAnnotations.Required] string code)
 // 		{
 // 			ValidateApiKey();
 // 			Cleanup();
