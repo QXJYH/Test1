@@ -24,18 +24,16 @@ public class AvatarService : ServiceBase, IService
         Type.TeeShirt,
         Type.Pants,
     };
-
-    private async Task<bool> UserHasClothingType(long userId, Type type)
+    
+        private async Task<bool> UserHasClothingType(long userId, Type type)
     {
         var assets = await GetWornAssets(userId);
+        var assetList = assets.ToList();
+        if (assetList.Count == 0) return false;
+        
         using var assetsService = ServiceProvider.GetOrCreate<AssetsService>(this);
-        foreach (var assetId in assets)
-        {
-            var info = await assetsService.GetInfoById(assetId);
-            if (info.assetType == type)
-                return true;
-        }
-        return false;
+        var info = await assetsService.MultiGetInfoById(assetList);
+        return info.Any(c => c.assetType == type);
     }
 
     private async Task<(bool hasShirt, bool hasPants)> GetUserClothingStatus(long userId)
