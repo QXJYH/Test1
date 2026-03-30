@@ -226,43 +226,42 @@ public class GameServerService : ServiceBase
             });
         if (latestSession != null)
         {
-            await db.ExecuteAsync("UPDATE asset_play_history SET ended_at = now() WHERE id = :id", new
-            {
-                id = latestSession.id,
-            });
-            
-            if (latestSession.createdAt.Year != DateTime.UtcNow.Year) return;
-            
-            var playTimeMinutes = (long)Math.Truncate((DateTime.UtcNow - latestSession.createdAt).TotalMinutes);
-            var earnedTickets = Math.Min(playTimeMinutes * 10, 60); // temp cap, might reduce in the future?
-            // cap is 10k tickets per 12 hours (about 1k robux)
-            const long maxEarningsPerPeriod = 10000;
-            using (var ec = ServiceProvider.GetOrCreate<EconomyService>(this))
-            {
-                var earningsToday =
-                    await ec.CountTransactionEarningsOfType(userId, PurchaseType.PlayingGame, null, TimeSpan.FromHours(12));
-                
-                if (earningsToday >= maxEarningsPerPeriod)
-                    return;
-            }
-            
-            await InTransaction(async _ =>
-            {
-                using var ec = ServiceProvider.GetOrCreate<EconomyService>(this);
-                await ec.IncrementCurrency(userId, CurrencyType.Tickets, earnedTickets);
-                await InsertAsync("user_transaction", new
-                {
-                    amount = earnedTickets,
-                    currency_type = CurrencyType.Tickets,
-                    user_id_one = userId,
-                    user_id_two = 1,
-                    type = PurchaseType.PlayingGame,
-                    // store id of the game they played as well
-                    asset_id = placeId,
-                });
+			await db.ExecuteAsync("UPDATE asset_play_history SET ended_at = now() WHERE id = :id", new
+			{
+				id = latestSession.id,
+			});
 
-                return 0;
-            });
+			if (latestSession.createdAt.Year != DateTime.UtcNow.Year) return;
+
+		var playTimeMinutes = (long)Math.Truncate((DateTime.UtcNow - latestSession.createdAt).TotalMinutes);
+		var earnedRobux = Math.Min((long)(playTimeMinutes * 0.5), 3); 
+		const long maxEarningsPerPeriod = 1000;
+
+		using (var ec = ServiceProvider.GetOrCreate<EconomyService>(this))
+		{
+			var earningsToday =
+				await ec.CountTransactionEarningsOfType(userId, PurchaseType.PlayingGame, null, TimeSpan.FromHours(12));
+
+			if (earningsToday >= maxEarningsPerPeriod)
+				return;
+		}
+
+		await InTransaction(async _ =>
+		{
+			using var ec = ServiceProvider.GetOrCreate<EconomyService>(this);
+			await ec.IncrementCurrency(userId, CurrencyType.Robux, earnedRobux);
+			await InsertAsync("user_transaction", new
+			{
+				amount = earnedRobux,
+				currency_type = CurrencyType.Robux,
+				user_id_one = userId,
+				user_id_two = 1,
+				type = PurchaseType.PlayingGame,
+				asset_id = placeId,
+			});
+
+			return 0;
+		});
         }
     }
 

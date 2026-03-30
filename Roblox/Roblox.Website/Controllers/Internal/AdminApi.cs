@@ -1148,14 +1148,15 @@ public class AdminApiController : ControllerBase
 
     private async Task AwardCommissionForModeration()
     {
+        var robuxAmount = 1;
+
         // give commission
-        await services.economy.IncrementCurrency(userSession.userId, CurrencyType.Tickets, 5);
+        await services.economy.IncrementCurrency(userSession.userId, CurrencyType.Robux, robuxAmount);
         await services.users.InsertAsync("user_transaction", new
         {
             type = PurchaseType.Commission,
-            currency_type = CurrencyType.Tickets,
-			// Stupid
-            amount = 5,
+            currency_type = CurrencyType.Robux,
+            amount = robuxAmount,
             // details
             sub_type = TransactionSubType.StaffAssetModeration,
             // user data
@@ -1166,14 +1167,15 @@ public class AdminApiController : ControllerBase
 
     private async Task AwardCommissionForApplicationReview()
     {
+        var robuxAmount = 1;
+
         // give commission
-        await services.economy.IncrementCurrency(userSession.userId, CurrencyType.Tickets, 5);
+        await services.economy.IncrementCurrency(userSession.userId, CurrencyType.Robux, robuxAmount);
         await services.users.InsertAsync("user_transaction", new
         {
             type = PurchaseType.Commission,
             currency_type = CurrencyType.Robux,
-			// fuck you. NOTHING. we don't use apps anymore
-            amount = 5,
+            amount = robuxAmount,
             // details
             sub_type = TransactionSubType.StaffApplicationReview,
             // user data
