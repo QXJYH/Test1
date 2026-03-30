@@ -251,8 +251,8 @@ namespace Roblox.Website.Controllers
 			}
 		}
 		
-		[HttpPostBypass("moderation/v2/filtertext/")]
-        [HttpPostBypass("moderation/filtertext/")]
+		[HttpPostBypass("moderation/v2/filtertext")]
+        [HttpPostBypass("moderation/filtertext")]
         public dynamic GetModerationText()
         {
             var text = services.filter.FilterText(HttpContext.Request.Form["text"].ToString());

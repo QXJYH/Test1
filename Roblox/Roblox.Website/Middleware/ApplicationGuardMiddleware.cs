@@ -54,6 +54,8 @@ public class ApplicationGuardMiddleware
 		"/game/gamepass/gamepasshandler.ashx",
 		"/game/luawebservice/handlesocialrequest.ashx",
         "/api/moderation/filtertext",
+        "/moderation/v2/filtertext",
+        "/moderation/filtertext",
 		"/api/thumbnail",
 		"/kormons/usercheck",
 		"/kormons/login",

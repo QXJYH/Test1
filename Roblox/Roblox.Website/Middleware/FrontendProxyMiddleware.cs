@@ -101,6 +101,8 @@ public class FrontendProxyMiddleware
         "/gs/shutdown",
         "/gs/players/report",
         "/api/moderation/filtertext",
+        "/moderation/v2/filtertext",
+        "/moderation/filtertext",
         // hubs
         "/chat",
         "/chat/negotiate",
