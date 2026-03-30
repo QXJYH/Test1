@@ -496,7 +496,7 @@ public class AvatarService : ServiceBase, IService
                 left_arm_color_id = outfitDetails.details.leftArmColorId,
                 right_arm_color_id = outfitDetails.details.rightArmColorId,
                 left_leg_color_id = outfitDetails.details.leftLegColorId,
-                right__color_id = outfitDetails.details.rightLegColorId,
+                right_leg_color_id = outfitDetails.details.rightLegColorId,
                 avatar_type = AvatarType.R6,
                 headshot_thumbnail_url = headshotUrl,
                 thumbnail_url = thumbnailUrl,
@@ -650,7 +650,7 @@ public class AvatarService : ServiceBase, IService
     }
 
     public async Task RedrawAvatar(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null,
-        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = true)
+        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = true, bool enforceDefaultPants = true)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
@@ -675,11 +675,13 @@ public class AvatarService : ServiceBase, IService
 
         assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
 
+        var (hasShirt, hasPants) = await GetUserClothingStatus(userId);
         var isNaked = IsBodyNaked(colors);
 
-        if (isNaked && enforceDefaultShirt)
+        if (!hasShirt && enforceDefaultShirt) 
             assetIds.Add(DefaultShirtAssetId);
-        if (isNaked && enforceDefaultPants)
+
+        if (!hasPants && isNaked && enforceDefaultPants) 
             assetIds.Add(DefaultPantsAssetId);
 
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
@@ -744,7 +746,7 @@ public class AvatarService : ServiceBase, IService
 	}
 	
 	public async Task RedrawAvatarR15(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null, 
-		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = true)
+		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = true, bool enforceDefaultPants = true)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
@@ -767,11 +769,13 @@ public class AvatarService : ServiceBase, IService
 
         assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
 
+        var (hasShirt, hasPants) = await GetUserClothingStatus(userId);
         var isNaked = IsBodyNaked(colors);
 
-        if (isNaked && enforceDefaultShirt)
+        if (!hasShirt && enforceDefaultShirt) 
             assetIds.Add(DefaultShirtAssetId);
-        if (isNaked && enforceDefaultPants)
+
+        if (!hasPants && isNaked && enforceDefaultPants) 
             assetIds.Add(DefaultPantsAssetId);
 
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
