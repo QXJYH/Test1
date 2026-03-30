@@ -3645,7 +3645,6 @@ Thank you for your understanding,
         return asset;
     }
 	
-	// this is for Not a Bad Bubba
 	// basically does the same thing as copy ugc but with a custom RBXM the user uploads
 	[HttpPost("asset/create-custom-asset")]
 	[StaffFilter(Access.CreateAsset)]
