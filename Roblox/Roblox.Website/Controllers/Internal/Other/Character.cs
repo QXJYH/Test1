@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,7 +11,7 @@ using Roblox.Website.Middleware;
 using Roblox.Services.App.FeatureFlags;
 using MVC = Microsoft.AspNetCore.Mvc;
 using Type = Roblox.Models.Assets.Type;
-// i fuck comments now ahahhahah
+
 namespace Roblox.Website.Controllers 
 {
     [MVC.ApiController]
@@ -34,6 +33,7 @@ namespace Roblox.Website.Controllers
 				}
 				catch
 				{
+					// if we can't get asset info for some reason, just include it anyway
 					filtered.Add(assetId);
 				}
 			}
@@ -45,38 +45,20 @@ namespace Roblox.Website.Controllers
 		{
 			var assets = (await services.avatar.GetWornAssets(userId)).ToList();
 			
-			var avatar = await services.avatar.GetAvatar(userId);
-			var wornAssets = await services.avatar.GetWornAssets(userId);
-			var assetInfo = await services.assets.MultiGetInfoById(wornAssets);
-			
-			bool hasShirt = assetInfo.Any(c => c.assetType == Type.Shirt || c.assetType == Type.TeeShirt);
-			bool hasPants = assetInfo.Any(c => c.assetType == Type.Pants);
-			
-			bool isNaked = avatar.headColorId == avatar.torsoColorId &&
-						   avatar.torsoColorId == avatar.leftArmColorId &&
-						   avatar.leftArmColorId == avatar.rightArmColorId &&
-						   avatar.rightArmColorId == avatar.leftLegColorId &&
-						   avatar.leftLegColorId == avatar.rightLegColorId;
-			
+			// filter out gears if the FFlag is disabled
 			if (!FeatureFlags.IsEnabled(FeatureFlag.GearsEnabled))
 			{
 				return await FilterOutGears(assets, userId);
 			}
 			
+			// if game has gears enabled, then include them and if not then it filters them out
 			var gearsEnabled = await services.games.AreGearsEnabled(placeId);
 			if (!gearsEnabled)
 			{
 				return await FilterOutGears(assets, userId);
 			}
 			
-			var result = $"{Configuration.BaseUrl}/Asset/BodyColors.ashx?userId={userId};{string.Join(";", assets.Select(c => Configuration.BaseUrl + "/Asset/?id=" + c))}";
-			
-			if (!hasPants && isNaked)
-			{
-				result += $";{Configuration.BaseUrl}/Asset/?id=9383";
-			}
-			
-			return result;
+			return $"{Configuration.BaseUrl}/Asset/BodyColors.ashx?userId={userId};{string.Join(";", assets.Select(c => Configuration.BaseUrl + "/Asset/?id=" + c))}";
 		}
 
         [HttpGetBypass("Asset/BodyColors.ashx")]
@@ -96,6 +78,7 @@ namespace Roblox.Website.Controllers
             robloxRoot.Add(new XElement("External", "nil"));
             var items = new XElement("Item", new XAttribute("class", "BodyColors"));
             var properties = new XElement("Properties");
+            // set colors
             properties.Add(new XElement("int", new XAttribute("name", "HeadColor"), colors.headColorId.ToString()));
             properties.Add(new XElement("int", new XAttribute("name", "LeftArmColor"), colors.leftArmColorId.ToString()));
             properties.Add(new XElement("int", new XAttribute("name", "LeftLegColor"), colors.leftLegColorId.ToString()));
@@ -104,8 +87,10 @@ namespace Roblox.Website.Controllers
             properties.Add(new XElement("int", new XAttribute("name", "RightLegColor"), colors.rightLegColorId.ToString()));
             properties.Add(new XElement("int", new XAttribute("name", "TorsoColor"), colors.torsoColorId.ToString()));
             properties.Add(new XElement("bool", new XAttribute("name", "archivable"), "true"));
+            // add
             items.Add(properties);
             robloxRoot.Add(items);
+            // return as string
             return new XDocument(robloxRoot).ToString();
         }
 		
@@ -131,21 +116,16 @@ namespace Roblox.Website.Controllers
 					gearsEnabled = await services.games.AreGearsEnabled(placeId.Value);
 				}
 			}
-            bool hasShirt = assetInfo.Any(c => c.assetType == Type.Shirt || c.assetType == Type.TeeShirt);
-			bool hasPants = assetInfo.Any(c => c.assetType == Type.Pants);
-			bool isNaked = avatar.headColorId == avatar.torsoColorId &&
-						   avatar.torsoColorId == avatar.leftArmColorId &&
-						   avatar.leftArmColorId == avatar.rightArmColorId &&
-						   avatar.rightArmColorId == avatar.leftLegColorId &&
-						   avatar.leftLegColorId == avatar.rightLegColorId;
             dynamic bodyColors = new
             {
-				headColorId = avatar.headColorId,
+				// 2020+
+                headColorId = avatar.headColorId,
                 leftArmColorId = avatar.leftArmColorId,
                 leftLegColorId = avatar.leftLegColorId,
                 rightArmColorId = avatar.rightArmColorId,
                 rightLegColorId = avatar.rightLegColorId,
                 torsoColorId = avatar.torsoColorId,
+				// 2018
                 HeadColor = avatar.headColorId,
                 LeftArmColor = avatar.leftArmColorId,
                 LeftLegColor = avatar.leftLegColorId,
@@ -172,8 +152,10 @@ namespace Roblox.Website.Controllers
 			Dictionary<string, long> animations = new Dictionary<string, long>();
 			int emotePos = 1;
 
-			foreach (var catinfo in assetInfo)
+			foreach (long assetId in wornAssets)
 			{
+				var catinfo = await services.assets.GetAssetCatalogInfo(assetId);
+
 				if (catinfo.assetType == Type.Gear)
 				{
 					if (gearsEnabled)
@@ -189,42 +171,48 @@ namespace Roblox.Website.Controllers
 				switch (catinfo.assetType)
 				{
 					case Type.ClimbAnimation:
-						animationAssetIds["climb"] = catinfo.id;
-						animations["climb"] = catinfo.id;
+						animationAssetIds["climb"] = assetId;
+						animations["climb"] = assetId;
 						break;
 					case Type.FallAnimation:
-						animationAssetIds["fall"] = catinfo.id;
-						animations["fall"] = catinfo.id;
+						animationAssetIds["fall"] = assetId;
+						animations["fall"] = assetId;
 						break;
 					case Type.IdleAnimation:
-						animationAssetIds["idle"] = catinfo.id;
+						animationAssetIds["idle"] = assetId;
+						// Only default R15 Idle works in 2018 cause all the other ones just make the player have parkinsons
+						//animations["idle"] = assetId;
 						break;
 					case Type.JumpAnimation:
-						animationAssetIds["jump"] = catinfo.id;
-						animations["jump"] = catinfo.id;
+						animationAssetIds["jump"] = assetId;
+						animations["jump"] = assetId;
 						break;
 					case Type.RunAnimation:
-						animationAssetIds["run"] = catinfo.id;
-						animations["run"] = catinfo.id;
+						animationAssetIds["run"] = assetId;
+						animations["run"] = assetId;
 						break;
 					case Type.SwimAnimation:
-						animationAssetIds["swim"] = catinfo.id;
-						animations["swim"] = catinfo.id;
+						animationAssetIds["swim"] = assetId;
+						animations["swim"] = assetId;
 						break;
 					case Type.WalkAnimation:
-						animationAssetIds["walk"] = catinfo.id;
-						animations["walk"] = catinfo.id;
+						animationAssetIds["walk"] = assetId;
+						animations["walk"] = assetId;
 						break;
 					case Type.EmoteAnimation:
 						emotes.Add(new
 						{
-							assetId = catinfo.id,
+							assetId = assetId,
 							assetName = catinfo.name,
 							position = emotePos++
 						});
-						break;
+                break;
 				}
 			}
+/* 			if (userAgent != "Roblox/Win2020")
+			{
+				equippedGearVersionIds = new List<long>();
+			} */
 			var result = new
 			{
 				resolvedAvatarType = AvatarType,
@@ -242,16 +230,11 @@ namespace Roblox.Website.Controllers
 				scales,
 				bodyColorsUrl = $"{Configuration.BaseUrl}/Asset/BodyColors.ashx?userId={userId}",
 				bodyColors,
-				emotes,
-				hasShirt,
-				hasPants,
-				isNaked,
-				needsDefaultPants = !hasPants && isNaked
+				emotes
 			};
 
 			string jsonString = JsonConvert.SerializeObject(result);
 			return Content(jsonString, "application/json");
 		}
 	}
-}
-// oops
+}	
