@@ -24,8 +24,8 @@ public class AvatarService : ServiceBase, IService
         Type.TeeShirt,
         Type.Pants,
     };
-    
-        private async Task<bool> UserHasClothingType(long userId, Type type)
+
+    private async Task<bool> UserHasClothingType(long userId, Type type)
     {
         var assets = await GetWornAssets(userId);
         var assetList = assets.ToList();
@@ -41,6 +41,15 @@ public class AvatarService : ServiceBase, IService
         var hasShirt = await UserHasClothingType(userId, Type.Shirt) || await UserHasClothingType(userId, Type.TeeShirt);
         var hasPants = await UserHasClothingType(userId, Type.Pants);
         return (hasShirt, hasPants);
+    }
+
+    private bool IsBodyNaked(ColorEntry colors)
+    {
+        return colors.headColorId == colors.torsoColorId &&
+               colors.torsoColorId == colors.leftArmColorId &&
+               colors.leftArmColorId == colors.rightArmColorId &&
+               colors.rightArmColorId == colors.leftLegColorId &&
+               colors.leftLegColorId == colors.rightLegColorId;
     }
 
     public async Task<IEnumerable<long>> GetWornAssets(long userId)
@@ -115,7 +124,6 @@ public class AvatarService : ServiceBase, IService
         };
     }
 	
-	// Get previous avatar images in case render fails
 	public async Task<AvatarImages> GetAvatarImages(long userId)
 	{
 		var result = await db.QuerySingleOrDefaultAsync<AvatarImages>(
@@ -166,27 +174,18 @@ public class AvatarService : ServiceBase, IService
 		Type.EmoteAnimation,
 	};
 
-    /// <summary>
-    /// Filter the dirtyAssetIds. This will remove moderated/pending items, items the user doesn't own, invalid items, etc.
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="dirtyAssetIds"></param>
-    /// <returns></returns>
     public async Task<IEnumerable<long>> FilterAssetsForRender(long userId, IEnumerable<long> dirtyAssetIds)
     {
         var assetIds = dirtyAssetIds.ToList();
         if (assetIds.Count != 0)
         {
             using var assets = ServiceProvider.GetOrCreate<AssetsService>();
-            // Get the moderation status for each item
             var moderationStatus = (await db.QueryAsync<AssetModerationEntry>(
                 "SELECT moderation_status as moderationStatus, id as assetId, asset_type as assetType FROM asset WHERE id = ANY(:ids)", new
                 {
                     ids = assetIds,
                 })).ToList();
-            // Duplicate the list so we can mutate it
             var safeModList = moderationStatus.ToList();
-            // Add package contents, if required
             foreach (var item in moderationStatus)
             {
                 if (item.assetType == Type.Package)
@@ -204,7 +203,6 @@ public class AvatarService : ServiceBase, IService
                     }
                 }
             }
-            // Filter items by moderation status - we only want to render ReviewApproved
             assetIds = assetIds.Where(c =>
             {
                 var hasEntry = safeModList.Find(v => v.assetId == c);
@@ -213,8 +211,6 @@ public class AvatarService : ServiceBase, IService
                 if (hasEntry.moderationStatus != ModerationStatus.ReviewApproved) return false;
                 return true;
             }).ToList();
-            // Finally, confirm user actually owns each assetId
-            // goodAssetIds is a list of assets the user owns
             var goodAssetIds = new List<long>();
             foreach (var id in assetIds)
             {
@@ -236,7 +232,7 @@ public class AvatarService : ServiceBase, IService
 
         return assetIds;
     }
-	// add these to dto lateer
+
 	public class AvatarTypeEntry
 	{
 		public bool isR15 { get; set; }
@@ -257,7 +253,7 @@ public class AvatarService : ServiceBase, IService
 			"SELECT r15 as isR15 FROM user_avatar_type WHERE user_id = :user_id",
 			new { user_id = userId });
 		
-		return result ?? new AvatarTypeEntry { isR15 = false }; // default to r6 if bugged
+		return result ?? new AvatarTypeEntry { isR15 = false };
 	}
 
 	public async Task<ScaleEntry> GetAvatarScales(long userId)
@@ -266,7 +262,6 @@ public class AvatarService : ServiceBase, IService
 			"SELECT height, width, head, proportion, body_type as bodyType FROM user_avatar_type WHERE user_id = :user_id",
 			new { user_id = userId });
 		
-		// default values if bugged
 		return result ?? new ScaleEntry 
 		{ 
 			height = 100, 
@@ -311,7 +306,7 @@ public class AvatarService : ServiceBase, IService
 	
 	public async Task UpdateAvatarType(long userId, int playerAvatarType)
 	{
-		var isR15 = playerAvatarType == 2; // 2 = R15, 1 = R6
+		var isR15 = playerAvatarType == 2;
 		
 		await db.ExecuteAsync(@"
 			INSERT INTO user_avatar_type (user_id, r15) 
@@ -339,7 +334,6 @@ public class AvatarService : ServiceBase, IService
 
     private async Task<IEnumerable<long>> MultiGetAssetVersionsFromAssetIds(IEnumerable<long> assetIds)
     {
-        // todo: make this more efficient :(
         var ids = new List<long>();
         using var assets = ServiceProvider.GetOrCreate<AssetsService>(this);
         foreach (var id in assetIds.Distinct())
@@ -350,9 +344,6 @@ public class AvatarService : ServiceBase, IService
         return ids.Distinct();
     }
 
-    /// <summary>
-    /// Update the userId's avatar. Returns a hash. This does not render or validate anything.
-    /// </summary>
     public async Task<string> UpdateUserAvatar(long userId, ColorEntry colors, IEnumerable<long> assetIds)
     {
         var idsList = assetIds.ToList();
@@ -454,7 +445,6 @@ public class AvatarService : ServiceBase, IService
             throw new OutfitNameTooShortException();
         if (name.Length > 25)
             throw new OutfitNameTooLongException();
-        // image check
         if (string.IsNullOrWhiteSpace(thumbnailUrl) || string.IsNullOrWhiteSpace(headshotUrl))
             throw new NoImageUrlException();
 
@@ -464,16 +454,13 @@ public class AvatarService : ServiceBase, IService
             {
                 name = name,
                 user_id = userId,
-                // colors
                 head_color_id = outfitDetails.details.headColorId,
                 torso_color_id = outfitDetails.details.torsoColorId,
                 left_arm_color_id = outfitDetails.details.leftArmColorId,
                 right_arm_color_id = outfitDetails.details.rightArmColorId,
                 left_leg_color_id = outfitDetails.details.leftLegColorId,
                 right_leg_color_id = outfitDetails.details.rightLegColorId,
-                // type
                 avatar_type = AvatarType.R6,
-                // images
                 headshot_thumbnail_url = headshotUrl,
                 thumbnail_url = thumbnailUrl,
             });
@@ -497,7 +484,6 @@ public class AvatarService : ServiceBase, IService
             throw new OutfitNameTooShortException();
         if (name.Length > 25)
             throw new OutfitNameTooLongException();
-        // image check
         if (string.IsNullOrWhiteSpace(thumbnailUrl) || string.IsNullOrWhiteSpace(headshotUrl))
             throw new NoImageUrlException();
         await InTransaction(async (trx) =>
@@ -505,16 +491,13 @@ public class AvatarService : ServiceBase, IService
             await UpdateAsync("user_outfit", outfitId, new
             {
                 name = name,
-                // colors
                 head_color_id = outfitDetails.details.headColorId,
                 torso_color_id = outfitDetails.details.torsoColorId,
                 left_arm_color_id = outfitDetails.details.leftArmColorId,
                 right_arm_color_id = outfitDetails.details.rightArmColorId,
                 left_leg_color_id = outfitDetails.details.leftLegColorId,
-                right_leg_color_id = outfitDetails.details.rightLegColorId,
-                // type
+                right__color_id = outfitDetails.details.rightLegColorId,
                 avatar_type = AvatarType.R6,
-                // images
                 headshot_thumbnail_url = headshotUrl,
                 thumbnail_url = thumbnailUrl,
             });
@@ -547,7 +530,7 @@ public class AvatarService : ServiceBase, IService
             return 0;
         });
     }
-// enforce asset drunkness ahahhahaha
+
     private async Task<IEnumerable<long>> EnforceAssetLimits(long userId, IEnumerable<long> unknownAssetIds)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>(this);
@@ -667,7 +650,7 @@ public class AvatarService : ServiceBase, IService
     }
 
     public async Task RedrawAvatar(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null,
-        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true)
+        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = false)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
@@ -692,10 +675,11 @@ public class AvatarService : ServiceBase, IService
 
         assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
 
-        var (hasShirt, hasPants) = await GetUserClothingStatus(userId);
-        if (!hasShirt)
+        var isNaked = IsBodyNaked(colors);
+
+        if (isNaked && enforceDefaultShirt)
             assetIds.Add(DefaultShirtAssetId);
-        if (!hasPants)
+        if (isNaked && enforceDefaultPants)
             assetIds.Add(DefaultPantsAssetId);
 
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
@@ -760,7 +744,7 @@ public class AvatarService : ServiceBase, IService
 	}
 	
 	public async Task RedrawAvatarR15(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null, 
-		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true)
+		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = false)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
@@ -783,10 +767,11 @@ public class AvatarService : ServiceBase, IService
 
         assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
 
-        var (hasShirt, hasPants) = await GetUserClothingStatus(userId);
-        if (!hasShirt)
+        var isNaked = IsBodyNaked(colors);
+
+        if (isNaked && enforceDefaultShirt)
             assetIds.Add(DefaultShirtAssetId);
-        if (!hasPants)
+        if (isNaked && enforceDefaultPants)
             assetIds.Add(DefaultPantsAssetId);
 
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
