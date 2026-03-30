@@ -27,31 +27,28 @@
 <div class="container mt-5">
 	<div class="row justify-content-center">
 		<div class="col-md-6">
-			<div class="card shadow">
-				<div class="card-body p-5 text-center">
-					<h3 class="mb-4">2FA Verfication</h3>
-					<p class="text-muted mb-4">Enter your 2FA code to enter the admin panel.</p>
-					
-					{#if error}
-						<div class="alert alert-danger">{error}</div>
-					{/if}
-
-					<form on:submit|preventDefault={submit}>
-						<div class="mb-4">
-							<input
-								type="text"
-								class="form-control form-control-lg text-center"
-								placeholder="000000"
-								maxlength="6"
-								bind:value={code}
-								disabled={loading}
-							/>
-						</div>
-						<button class="btn btn-primary btn-lg w-100" type="submit" disabled={loading}>
-							{loading ? "verifying..." : "what are u waiting for, enter my guy."}
-						</button>
-					</form>
-				</div>
+			<div class="card-body p-5 text-center">
+				<h3 class="mb-4">2FA Verfication</h3>
+				<p class="text-muted mb-4">Enter your 2FA code to enter the admin panel.</p>
+				
+				{#if error}
+					<div class="alert alert-danger">{error}</div>
+				{/if}
+				<form on:submit|preventDefault={submit}>
+					<div class="mb-4">
+						<input
+							type="text"
+							class="form-control form-control-lg text-center"
+							placeholder="000000"
+							maxlength="6"
+							bind:value={code}
+							disabled={loading}
+						/>
+					</div>
+					<button class="btn btn-primary btn-lg w-100" type="submit" disabled={loading}>
+						{loading ? "verifying..." : "submit"}
+					</button>
+				</form>
 			</div>
 		</div>
 	</div>
