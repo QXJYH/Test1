@@ -43,6 +43,14 @@ namespace Roblox.Website.Controllers
             return new { success = true, code = code };
         }
 
+        [HttpGetBypass("botapi/kickuser")]
+        public async Task<dynamic> KickPlayerFromBot(long userId)
+        {
+            ValidateBotAuth();
+            await services.gameServer.KickPlayer(userId);
+            return new { success = true, message = "Kicked" };
+        } 
+
         [HttpGetBypass("botapi/discord/verify-check")]
         public async Task<dynamic> VerifyCheck([FromQuery] string ID, [FromQuery] string code)
         {
