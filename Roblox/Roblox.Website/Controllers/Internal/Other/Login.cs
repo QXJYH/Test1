@@ -667,6 +667,16 @@ namespace Roblox.Website.Controllers
 				var userres = await httpClient.GetAsync("https://discord.com/api/users/@me");
 				var userinfo = await userres.Content.ReadFromJsonAsync<DiscordUser>();
 
+				if (ulong.TryParse(userinfo.id, out var snowflake))
+				{
+					var discordEpoch = new DateTimeOffset(2015, 1, 1, 0, 0, 0, TimeSpan.Zero);
+					var accountCreatedAt = discordEpoch.AddMilliseconds((long)(snowflake >> 22));
+					if ((DateTimeOffset.UtcNow - accountCreatedAt).TotalDays < 7)
+					{
+						return Redirect("/?signupmsg=Your Discord account must be at least 7 days old.");
+					}
+				}
+
 				if (await services.users.IsDiscordIdUsed(userinfo.id))
 				{
 					return Redirect("/?signupmsg=This Discord account is already linked to another Kornet account.");
@@ -674,8 +684,8 @@ namespace Roblox.Website.Controllers
 				
 				// this is so retarded please change this later (this should match validatesignupcookie)
 				var key = Roblox.Configuration.DiscordKey;
-				var token = $"BBSignUp|{DateTime.UtcNow:yyyyMMddHHmmss}|KeyValidation";
-				var IDtoken = $"BBSignUp|{userinfo.id}|DiscordId";
+				var token = $"KornetSignUp|{DateTime.UtcNow:yyyyMMddHHmmss}|KeyValidation";
+				var IDtoken = $"KornetSignUp|{userinfo.id}|DiscordId";
 				var encryptedtoken = EncryptWithKey(token, key);
 				var encryptedId = EncryptWithKey(IDtoken, key);
 				
@@ -783,7 +793,7 @@ namespace Roblox.Website.Controllers
 			try
 			{
 				var decrypted = DecryptWithKey(cookie, key);
-				if (!decrypted.StartsWith("BBSignUp|") || 
+				if (!decrypted.StartsWith("KornetSignUp|") || 
 					!decrypted.EndsWith("|KeyValidation"))
 				return false;
 				
@@ -827,7 +837,7 @@ namespace Roblox.Website.Controllers
 			try
 			{
 				var decrypted = DecryptWithKey(cookie, key);
-				if (!decrypted.StartsWith("BBSignUp|") || 
+				if (!decrypted.StartsWith("KornetSignUp|") || 
 					!decrypted.EndsWith("|DiscordId"))
 					return null;
 				

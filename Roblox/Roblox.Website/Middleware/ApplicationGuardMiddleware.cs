@@ -55,8 +55,8 @@ public class ApplicationGuardMiddleware
 		"/game/luawebservice/handlesocialrequest.ashx",
         "/api/moderation/filtertext",
 		"/api/thumbnail",
-		"/bbmons/usercheck",
-		"/bbmons/login",
+		"/kormons/usercheck",
+		"/kormons/login",
         // for forums or they don't work properly
     };
 
