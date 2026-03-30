@@ -240,52 +240,6 @@ if game:GetService("Chat").LoadDefaultChat then
 	require(game:GetService("CoreGui").RobloxGui.Modules.Server.ServerChat.ChatServiceInstaller)()
 end
 
-
-local mypants = 9383
-
-local function isBodyNaked(bodyColors)
-    return bodyColors.HeadColor == bodyColors.TorsoColor and
-           bodyColors.TorsoColor == bodyColors.LeftArmColor and
-           bodyColors.LeftArmColor == bodyColors.RightArmColor and
-           bodyColors.RightArmColor == bodyColors.LeftLegColor and
-           bodyColors.LeftLegColor == bodyColors.RightLegColor
-end
-
-local function applyDefaultClothing(character)
-    character:WaitForChild("Humanoid")
-    
-    local humanoidDescription = character.Humanoid:GetAppliedDescription()
-    
-    if humanoidDescription.Pants ~= 0 then
-        return
-    end
-    
-    local bodyColors = {
-        HeadColor = humanoidDescription.HeadColor,
-        TorsoColor = humanoidDescription.TorsoColor,
-        LeftArmColor = humanoidDescription.LeftArmColor,
-        RightArmColor = humanoidDescription.RightArmColor,
-        LeftLegColor = humanoidDescription.LeftLegColor,
-        RightLegColor = humanoidDescription.RightLegColor
-    }
-    
-    if isBodyNaked(bodyColors) then
-        humanoidDescription.Pants = mypants
-        character.Humanoid:ApplyDescription(humanoidDescription)
-    end
-end
-
-playersService.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        applyDefaultClothing(character)
-    end)
-end)
-
-for _, player in ipairs(playersService:GetPlayers()) do
-    if player.Character then
-        applyDefaultClothing(player.Character)
-    end
-end
 local freeCameraFlagSuccess, freeCameraFlagValue = pcall(function()
 	return settings():GetFFlag("FreeCameraForAdmins")
 end)
