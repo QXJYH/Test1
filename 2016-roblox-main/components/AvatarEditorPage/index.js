@@ -111,8 +111,8 @@ const useStyles = createUseStyles({
         padding: 9,
         fontSize: 18,
         margin: 0,
-		backgroundColor: '#02b757',
-		color: '#fff',
+        backgroundColor: '#02b757',
+        color: '#fff',
     },
     iconDown: {
         backgroundPosition: "0 -204px",
@@ -138,7 +138,7 @@ const useStyles = createUseStyles({
         }
     },
     redrawBtn: {
-		color: '#fff',
+        color: '#fff',
         backgroundColor: '#6c6c6c',
         padding: 4,
         fontSize: 14,
@@ -161,14 +161,14 @@ const useStyles = createUseStyles({
             marginBottom: 8,
         }
     },
-	dropdownItem: {
+    dropdownItem: {
         '&:hover': {
             backgroundColor: '#6c757d !important',
             color: 'white !important',
         }
     },
     limitError: {
-        marginTop: 6,
+        margin: "6px 0 0 0",
         fontSize: 13,
         color: "#d9534f",
     },
@@ -304,36 +304,34 @@ function AvatarEditor() {
                                             <span style={{ color: 'inherit' }}>{CapitalizeVariable(key)}</span>
                                             <span>{Math.round(store.bodyScales[key] * 100)}%</span>
                                         </div>
-										<Slider
-											className={s.sliderInput}
-											min={value.min}
-											max={value.max}
-											step={value.increment * 5}
-											value={store.bodyScales[key]}
-											setValue={(val) => {
-												if (isRendering) return;
-												store.setBodyScales(prev => ({
-													...prev,
-													[key]: Number(val.target.value)
-												}));
-											}}
-											changeValue={(val) => {
-												if (isRendering) return;
-												store.setModifiedScaling({
-													[key]: Number(val.target.value),
-												});
-											}}
-											disabled={store.bodyRigType === "R6" || isRendering}
-										/>
+                                        <Slider
+                                            className={s.sliderInput}
+                                            min={value.min}
+                                            max={value.max}
+                                            step={value.increment * 5}
+                                            value={store.bodyScales[key]}
+                                            setValue={(val) => {
+                                                if (isRendering) return;
+                                                store.setBodyScales(prev => ({
+                                                    ...prev,
+                                                    [key]: Number(val.target.value)
+                                                }));
+                                            }}
+                                            changeValue={(val) => {
+                                                if (isRendering) return;
+                                                store.setModifiedScaling({
+                                                    [key]: Number(val.target.value),
+                                                });
+                                            }}
+                                            disabled={store.bodyRigType === "R6" || isRendering}
+                                        />
                                     </>
                                 ))
                             }
                         </div>
                     </div>
                 </div>
-                {
-                    store.limitError && <p className={s.limitError}>{store.limitError}</p>
-                }
+                {store.limitError && <p className={s.limitError}>{store.limitError}</p>}
                 <div className={`flex justify-content-between ${s.redrawContainer} ${s.firstRedraw}`}>
                     <span>Avatar isn't updated?</span>
                     <ActionButton onClick={async () => {

@@ -122,7 +122,7 @@ const AvatarInfoStore = createContainer(() => {
         }
         stopwatch.Stop();
         if (attempts > 10 && avThumb == null)
-			console.error("Could not get new avatar render. Please try again later.");
+            console.error("Could not get new avatar render. Please try again later.");
         console.log(`Got avatar render in ${stopwatch.ElapsedMilliseconds()}ms, in ${attempts} attempts.`);
         
         setIsRendering(false);
@@ -200,7 +200,7 @@ const AvatarInfoStore = createContainer(() => {
                     AssetTypeCategory.Accessories.includes(asset.assetType)
                 );
                 if (accessories.length >= 6) {
-                    setLimitError("You have too many accessories equipped. Some may not appear on your avatar.");
+                    setLimitError("You have too many accessories equipped.");
                     return;
                 }
             } else if (AssetTypeCategory.Emotes.includes(newAsset.assetType)) {
@@ -214,6 +214,7 @@ const AvatarInfoStore = createContainer(() => {
             }
         }
         
+        setLimitError(null);
         setWearingAssets(prev => {
             let updated;
             if (IsNegative(newAsset.assetId)) {
