@@ -3,7 +3,7 @@ import { createUseStyles } from "react-jss";
 import LoginModalStore from "../../../stores/loginModal";
 import LoginModal from "../../loginModal";
 import getFlag from "../../../lib/getFlag";
-import {useRouter} from "next/dist/client/router";
+import { useRouter } from "next/dist/client/router";
 
 const useLoginAreaStyles = createUseStyles({
   text: {
@@ -35,11 +35,19 @@ const LoginArea = props => {
   const loginModalStore = LoginModalStore.useContainer();
 
   return <div className='row'>
-    <div className='col-6 offset-6'>
+    <div className='col-6 offset-6' style={{ marginTop: '3px' }}>
       <div className='row'>
         <div className='col-6'>
           <p className={s.text}>
-            <a className={s.link} >
+            <a className={s.link} onClick={(e) => {
+              e.preventDefault();
+              if (getFlag('clientSideRenderingEnabled', false)) {
+                Router.push('/');
+              } else {
+                window.location.href = '/';
+              }
+              return;
+            }}>
               Sign Up
             </a>
           </p>
@@ -48,15 +56,12 @@ const LoginArea = props => {
           <p className={s.text}>
             <a className={s.link} onClick={(e) => {
               e.preventDefault();
-              if (getFlag('requireLoginThroughCookie', false)) {
-                if (getFlag('clientSideRenderingEnabled', false)) {
-                  Router.push('/login');
-                }else{
-                  window.location.href = '/login';
-                }
-                return;
+              if (getFlag('clientSideRenderingEnabled', false)) {
+                Router.push('/auth');
+              } else {
+                window.location.href = '/auth';
               }
-              loginModalStore.setOpen(!loginModalStore.open);
+              return;
             }}>
               Login
             </a>
