@@ -145,11 +145,11 @@ const MyDashboard = props => {
             return <GameRow key={v.token} title={v.displayName} games={v.games} icons={icons} />
           })
         }
-        {getFlag('userFeedEnabled', true) ? <div className='row mt-4'>
+        {getFlag('userFeedEnabled', false) ? <div className='row mt-4'>
           <div className='col-12 col-md-6'>
             <div className={cardStyles.card}>
               <div className='p-2'>
-                <h3 className={s.subHeader}>MY FEED</h3>
+                <h3 className={s.subHeader}>will be deleted soon</h3>
                 <MyFeed />
               </div>
             </div>
