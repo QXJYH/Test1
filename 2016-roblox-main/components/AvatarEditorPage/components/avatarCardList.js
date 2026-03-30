@@ -1,7 +1,7 @@
 import {createUseStyles} from "react-jss";
 import Link from "../../link";
 import AvatarPageStore from "../stores/avatarPageStore";
-import AvatarInfoStore from "../stores/avatarInfoStore";
+import AvatarInfoStore, {AssetTypeCategory} from "../stores/avatarInfoStore";
 import ActionButton from "../../actionButton";
 import React, {useEffect, useRef, useState} from "react";
 import {wait} from "../../../lib/utils";
@@ -9,22 +9,20 @@ import buttonStyles from "../../../styles/buttonStyles";
 import useButtonStyles from "../../../styles/buttonStyles";
 
 const useAvCardStyles = createUseStyles({
-	avatarCardWrapper: {
-		borderRadius: 3,
-		display: "flex",
-		flexDirection: "column",
-		width: "100%",
-	},
+    avatarCardWrapper: {
+        borderRadius: 3,
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+    },
     avatarCardContainer: {
         width: "100%",
-        //height: "100%",
         flexDirection: "column",
         display: "flex",
         backgroundColor: "#fff",
         position: "relative",
         boxShadow: "0 1px 4px 0 rgba(25,25,25,0.3)",
         borderRadius: 3,
-        //maxWidth: 150,
         transition: "box-shadow 200ms ease",
         "-webkit-transition": "box-shadow 200ms ease",
         "&:hover": {
@@ -40,9 +38,9 @@ const useAvCardStyles = createUseStyles({
         borderBottom: "1px solid #e3e3e3",
         position: "relative",
         "& img": {
-			width: "100%",
-			height: "100%",
-			objectFit: "cover",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
             borderTopLeftRadius: 3,
             borderTopRightRadius: 3,
             minWidth: "85px",
@@ -112,24 +110,34 @@ export function ThumbnailFromState(thumbnail, state) {
 /**
  * @param {SortedItem} asset
  * @param {boolean} equipped
+ * @param {boolean} atLimit
  * @returns {JSX.Element}
  * @constructor
  */
-function AvatarCard({asset, equipped}) {
+function AvatarCard({asset, equipped, atLimit}) {
     const s = useAvCardStyles();
     const store = AvatarInfoStore.useContainer();
+    const isBlocked = !equipped && atLimit;
     
     return <div className={`${s.avatarCardWrapper}`}>
         <div className={`${s.avatarCardContainer}`}>
-			<div className={s.avatarCardImage} onClick={() => {
-				if (store.isRendering) return;
-				if (equipped) {
-					store.RemoveAsset(asset);
-				} else {
-					store.AddAsset(asset);
-				}
-			}}>
-                <img src={ThumbnailFromState(asset.thumbnail, asset.thumbnailState)} alt={asset.name} style={{ filter: store.isRendering ? "grayscale(100%) opacity(0.5)" : "none", pointerEvents: store.isRendering ? "none" : "auto" }}/>
+            <div className={s.avatarCardImage} onClick={() => {
+                if (store.isRendering || isBlocked) return;
+                if (equipped) {
+                    store.RemoveAsset(asset);
+                } else {
+                    store.AddAsset(asset);
+                }
+            }}>
+                <img
+                    src={ThumbnailFromState(asset.thumbnail, asset.thumbnailState)}
+                    alt={asset.name}
+                    style={{
+                        filter: store.isRendering || isBlocked ? "grayscale(100%) opacity(0.5)" : "none",
+                        pointerEvents: store.isRendering || isBlocked ? "none" : "auto",
+                        cursor: isBlocked ? "not-allowed" : "pointer",
+                    }}
+                />
                 <div className={s.restrictionsContainer}>
                     {
                         asset?.isLimitedUnique
@@ -196,6 +204,14 @@ function AvatarCardList() {
     useEffect(() => {
         setWearingAssets(store.wearingAssets);
     }, [store.wearingAssets]);
+
+    const accessoryCount = wearingAssets?.filter(a =>
+        AssetTypeCategory.Accessories.includes(a.assetType)
+    ).length ?? 0;
+
+    const emoteCount = wearingAssets?.filter(a =>
+        AssetTypeCategory.Emotes.includes(a.assetType)
+    ).length ?? 0;
     
     return <div className={s.avatarListContainer}>
         {
@@ -205,7 +221,11 @@ function AvatarCardList() {
         {
             page.listItems.map(item => {
                 const isEquipped = wearingAssets?.length && wearingAssets.map(d => d.assetId).includes(item.assetId);
-                return <AvatarCard asset={item} equipped={isEquipped}/>
+                const atLimit = !isEquipped && (
+                    (AssetTypeCategory.Accessories.includes(item.assetType) && accessoryCount >= 6) ||
+                    (AssetTypeCategory.Emotes.includes(item.assetType) && emoteCount >= 8)
+                );
+                return <AvatarCard key={item.assetId} asset={item} equipped={isEquipped} atLimit={atLimit}/>
             })
         }
         {
