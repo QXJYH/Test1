@@ -2038,7 +2038,8 @@ public class UsersService : ServiceBase, IService
         foreach (var item in presenceData)
         {
             var userId = item.userId;
-            var isOnline = item.onlineAt >= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(5));
+            var onlineAtUtc = item.onlineAt.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(item.onlineAt, DateTimeKind.Utc) : item.onlineAt.ToUniversalTime();
+            var isOnline = onlineAtUtc >= DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(5));
             var placeId = item.currentPlaceId;
             var universeId = item.currentUniverseId;
             var jobId = item.currentJobId;
@@ -2053,7 +2054,7 @@ public class UsersService : ServiceBase, IService
                 gameId = universeId,
                 jobId = jobId?.ToString(),
                 placeId = placeId,
-                lastOnline = placeId != null ? DateTime.UtcNow : item.onlineAt,
+                lastOnline = placeId != null ? DateTime.UtcNow : onlineAtUtc,
             };
             results.Add(result);
         }
@@ -2061,14 +2062,14 @@ public class UsersService : ServiceBase, IService
         return results;
     }
 
-    public async Task EarnDailyTickets(long userId)
+    public async Task EarnDailyRobux(long userId)
     {
-        // todo: config: daily tickets and timespan should be configurable via appsettings
-        var dailyTickets = 10;
+        // todo: config: daily robux and timespan should be configurable via appsettings
+        var dailyRobux = 1;
         var stipendTimespan = TimeSpan.FromDays(1);
 
         // redis is faster than opening a transaction on every page visit, so we need to check that first
-        var redisKey = "dailytickets:v1:" + userId;
+        var redisKey = "dailyrobux:v1:" + userId;
         if ((await redis.StringGetAsync(redisKey)) == null)
         {
             // User already got daily robux in the past timespan, so do nothing
@@ -2076,7 +2077,7 @@ public class UsersService : ServiceBase, IService
         }
         
         // WEB-36
-        var l = "TicketsStipendLockV1:" + userId;
+        var l = "RobuxStipendLockV1:" + userId;
         await using var robuxLock = await Cache.redLock.CreateLockAsync(l, TimeSpan.FromSeconds(5));
         if (!robuxLock.IsAcquired) return;
 
@@ -2087,7 +2088,7 @@ public class UsersService : ServiceBase, IService
                 "SELECT COUNT(*) AS total FROM user_transaction WHERE user_id_one = :id AND type = :type AND created_at >= :time", new
                 {
                     id = userId,
-                    type = PurchaseType.TicketsStipend,
+                    type = PurchaseType.RobuxStipend,
                     time = time.Subtract(stipendTimespan),
                 }, transaction: trx);
 
@@ -2095,14 +2096,14 @@ public class UsersService : ServiceBase, IService
             {
                 // increment balance, create transaction
                 using var ec = ServiceProvider.GetOrCreate<EconomyService>(this);
-                await ec.IncrementCurrency(userId, CurrencyType.Tickets, dailyTickets);
+                await ec.IncrementCurrency(userId, CurrencyType.Robux, dailyRobux);
                 await InsertAsync("user_transaction", new
                 {
-                    type = PurchaseType.TicketsStipend,
+                    type = PurchaseType.RobuxStipend,
                     user_id_one = userId,
                     user_id_two = 1,
                     currency_type = 1,
-                    amount = dailyTickets,
+                    amount = dailyRobux,
                 });
                 // redis
                 await redis.StringSetAsync(redisKey, "{}", stipendTimespan);

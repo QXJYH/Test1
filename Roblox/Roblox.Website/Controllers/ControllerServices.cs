@@ -28,5 +28,6 @@ namespace Roblox.Website.Controllers
         public ChatService chat { get; } = new();
 		public GameJoinService gameJoin { get; } = new();
         public RequestItemService requestItem { get; } = new();
+        public FilterService filter { get; } = new();
     }
 }

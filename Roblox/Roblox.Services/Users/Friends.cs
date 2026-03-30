@@ -93,7 +93,7 @@ public class FriendsService : ServiceBase, IService
             id = c.id,
             name = c.name,
             displayName = c.name,
-            isOnline = (bool)(((DateTime)c.online_at).Add(TimeSpan.FromMinutes(5)) > DateTime.UtcNow),
+            isOnline = (((DateTime)c.online_at).Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind((DateTime)c.online_at, DateTimeKind.Utc) : ((DateTime)c.online_at).ToUniversalTime()).Add(TimeSpan.FromMinutes(5)) > DateTime.UtcNow,
             isDeleted = c.status == AccountStatus.Deleted || c.status == AccountStatus.Forgotten,
             isBanned = c.status != AccountStatus.Ok && c.status != AccountStatus.MustValidateEmail,
 			isVerified = c.isVerified

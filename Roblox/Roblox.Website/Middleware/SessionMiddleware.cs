@@ -294,7 +294,7 @@ public class SessionMiddleware
 						if (!currentPath.StartsWith("/thumbs/") && !currentPath.StartsWith("/images/"))
 						{
 							await users.EarnDailyRobuxNoVirusNoScamHindiSubtitles(userInfo.userId, await StaffFilter.IsStaff(userInfo.userId));
-							await users.EarnDailyTickets(userInfo.userId);
+							await users.EarnDailyRobux(userInfo.userId);
 							if (users.TrySetOnlineTimeUpdated(userInfo.userId))
 							{
 								await users.UpdateOnlineStatus(userInfo.userId);

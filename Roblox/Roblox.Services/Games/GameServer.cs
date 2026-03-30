@@ -161,7 +161,7 @@ public class GameServerService : ServiceBase
                 await InsertAsync("user_transaction", new
                 {
                     amount = 10,
-                    currency_type = CurrencyType.Tickets,
+                    currency_type = CurrencyType.Robux,
                     user_id_one = (long?)null,
                     user_id_two = userId,
                     group_id_one = placeDetails.creatorTargetId,
@@ -172,11 +172,11 @@ public class GameServerService : ServiceBase
             }
             else
             {
-                await ec.IncrementCurrency(placeDetails.creatorTargetId, CurrencyType.Tickets, 1);
+                await ec.IncrementCurrency(placeDetails.creatorTargetId, CurrencyType.Robux, 1);
                 await InsertAsync("user_transaction", new
                 {
                     amount = 10,
-                    currency_type = CurrencyType.Tickets,
+                    currency_type = CurrencyType.Robux,
                     user_id_one = placeDetails.creatorTargetId,
                     user_id_two = userId,
                     type = PurchaseType.PlaceVisit,
@@ -356,6 +356,73 @@ public class GameServerService : ServiceBase
         );
         
         return result == Guid.Empty ? "" : result.ToString();
+    }
+
+    public async Task EvictPlayer(string jobId, long userId)
+    {
+        var rccConnection = await db.QueryFirstOrDefaultAsync<string>(
+            "SELECT RCCConnection FROM asset_server WHERE id = :id::uuid",
+            new { id = jobId }
+        );
+
+        if (string.IsNullOrEmpty(rccConnection))
+        {
+            Console.WriteLine($"[GS] Could not find RCCConnection for jobId {jobId}");
+            return;
+        }
+
+        string luaScript = $@"
+            pcall(function()
+                local player = game:GetService('Players'):GetPlayerByUserId({userId})
+                if player then
+                    player:Kick('You have been kicked by an administrator.')
+                end
+            end)
+        ";
+
+        string xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            <soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+                xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+                xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+                <soap:Body>
+                    <Execute xmlns=""http://roblox.com/"">
+                        <jobID>{jobId}</jobID>
+                        <script>
+                            <name>{Guid.NewGuid()}</name>
+                            <script>
+                                <![CDATA[
+                                {luaScript}
+                                ]]>
+                            </script>
+                        </script>
+                    </Execute>
+                </soap:Body>
+            </soap:Envelope>";
+
+        bool success = await SendSoapRequestToRcc($"http://{rccConnection}", xml, "Execute", 2);
+        if (!success)
+        {
+            await SendSoapRequestToRcc2021($"http://{rccConnection}", xml, "Execute", 2);
+        }
+    }
+
+    public async Task KickPlayer(long userId, string? jobId = null)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(jobId))
+            {
+                jobId = await GetJobIdByUserId(userId);
+            }
+            if (!string.IsNullOrEmpty(jobId))
+            {
+                await EvictPlayer(jobId, userId);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error getting jobId for user {userId}: {e.Message}");
+        }
     }
     
     public static long GetUserPlaceId(long userId) // get user game is in

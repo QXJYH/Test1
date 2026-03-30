@@ -361,6 +361,10 @@ public class ChatService : ServiceBase, IService
             throw new RobloxException(403, 3,
                 "Failed to send GRPC request.\r\n\tService: roblox.chat.chatgateway.v1.ChatGatewayAPI\r\n\tMethod: SendMessageV3\r\n\tHost: 10.0.27.165:22105\r\n\tStatus: PermissionDenied (User is not part of the conversation. UserId: "+userId+". ConversationId: "+conversationId+". Context: None.)\r\n");
         
+        // Filter
+        using var filterSvc = ServiceProvider.GetOrCreate<FilterService>();
+        message = filterSvc.FilterText(message);
+
         // Insert
         var messageId = Guid.NewGuid().ToString();
         var created = DateTime.UtcNow;

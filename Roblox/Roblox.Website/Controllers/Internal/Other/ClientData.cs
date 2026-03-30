@@ -52,7 +52,15 @@ namespace Roblox.Website.Controllers
 				"97e93df61c3357531585cebb22d2edff",
 				"053974fb1131dda3fc75534b08576b67",
 				"2e71951cc3566e2ab558b9f8a8f1c510",
-				"0f84ee329a636e6c23829514d1adc89c"
+				"0f84ee329a636e6c23829514d1adc89c",
+				"abc9d2132ef2c21101804d8e25e0413f", //2017L Prod
+                "bba43f967698feff49038f51b391b48e", //2018L Prod
+                "4022369076d608d1a99b7b3d250e4de5", //2018L RAGELoader Debug
+                "9d7975454cee0e948e35cdc1fb55f92a", //2019E Prod
+                "15c69e21a90ed1d10e686db71d62c955", //2019M Prod
+                "ff693c76d9c15e7e97eb09e133942412", //2020L Prod
+                "7da7086e7f3a739873fa5970ef586e98", //2021M Prod
+                "1fd6e7becff68acc140b2db17e24c86e", //2021M June 6,
             };
 
             return new { data = allowedList };
@@ -64,11 +72,19 @@ namespace Roblox.Website.Controllers
             List<string> allowedList = new List<string>()
             {  	
 				"0.463.0pcplayer",
+				"0.450.0pcplayer",
+				"0.395.0pcplayer",
+				"0.376.0pcplayer",
+				"0.355.0pcplayer",
+				"2.355.0iosapp",
+				"0.314.0pcplayer",
 				"0.300.1pcplayer",
 				"0.300.0pcplayer",
 				"0.285.0pcplayer",
 				"0.283.0pcplayer",
 				"0.275.0pcplayer",
+				"0.235.0pcplayer",
+				"0.206.0pcplayer",
 				"0.201.0pcplayer",
 				"INTERNALandroidapp",
 				"INTERNALiosapp",
@@ -211,8 +227,7 @@ namespace Roblox.Website.Controllers
 				var placeId = HttpContext.Request.Headers["placeId"].ToString();
 				var gameInstanceId = HttpContext.Request.Headers["gameInstanceID"].ToString();
 
-				// Apply content filter
-				var filteredText = FilterOffensiveWords(text);
+				var filteredText = services.filter.FilterText(text);
 				
 				return new
 				{
@@ -236,94 +251,57 @@ namespace Roblox.Website.Controllers
 			}
 		}
 		
-		// Content filter helper method
-		private string FilterOffensiveWords(string text)
-		{
-			if (string.IsNullOrWhiteSpace(text))
-				return text;
-			
-			// List of banned words (normalized form)
-			var bannedWords = new[] { "nigga", "nigger", "nigg" };
-			
-			// Split into words
-			var words = text.Split(' ');
-			
-			for (int i = 0; i < words.Length; i++)
-			{
-				var word = words[i];
-				var normalized = NormalizeWord(word);
-				
-				// Check if word contains banned content
-				foreach (var bannedWord in bannedWords)
-				{
-					if (normalized.Contains(bannedWord))
-					{
-						// Replace with hashtags of same length
-						words[i] = new string('#', word.Length);
-						break;
-					}
-				}
-			}
-			
-			return string.Join(" ", words);
-		}
-		
-		// Normalize text for matching (handles character substitutions)
-		private string NormalizeWord(string word)
-		{
-			if (string.IsNullOrEmpty(word))
-				return word;
-			
-			// Convert to lowercase
-			word = word.ToLower();
-			
-			// Replace common character substitutions
-			word = word.Replace("1", "i")
-					   .Replace("!", "i")
-					   .Replace("3", "e")
-					   .Replace("@", "a")
-					   .Replace("0", "o")
-					   .Replace("$", "s");
-			
-			// Remove non-alphanumeric characters
-			word = System.Text.RegularExpressions.Regex.Replace(word, "[^a-z0-9]", "");
-			
-			return word;
-		}
-		
-		// Make an actual filter function later
-		[HttpPostBypass("moderation/filtertext")]
+		[HttpPostBypass("moderation/v2/filtertext/")]
+        [HttpPostBypass("moderation/filtertext/")]
         public dynamic GetModerationText()
         {
-            //var text = FilterFunction(HttpContext.Request.Form["text"].ToString());
-			var text = HttpContext.Request.Form["text"].ToString();
+            var text = services.filter.FilterText(HttpContext.Request.Form["text"].ToString());
             return new
-            {
-                success = true,
-                data = new 
-                {
-                    white = text,
-                    black = text
-                }
-            };
-        }
-		
-        [HttpPostBypass("moderation/v2/filtertext")]
-        public dynamic GetModerationTextV2()
-        {
-            //var text = FilterFunction(HttpContext.Request.Form["text"].ToString());
-			var text = HttpContext.Request.Form["text"].ToString();
-            var json = new
             {
                 success = true,
                 data = new
                 {
                     AgeUnder13 = text,
                     Age13OrOver = text,
+                    white = text,
+                    black = text
                 }
             };
-            string jsonString = JsonConvert.SerializeObject(json);
-            return Content(jsonString, "application/json");
         }
+
+		// // Make an actual filter function later
+		// [HttpPostBypass("moderation/filtertext")]
+        // public dynamic GetModerationText()
+        // {
+        //     //var text = FilterFunction(HttpContext.Request.Form["text"].ToString());
+		// 	var text = HttpContext.Request.Form["text"].ToString();
+        //     return new
+        //     {
+        //         success = true,
+        //         data = new 
+        //         {
+        //             white = text,
+        //             black = text
+        //         }
+        //     };
+        // }
+		
+        // [HttpPostBypass("moderation/v2/filtertext")]
+        // public dynamic GetModerationTextV2()
+        // {
+        //     //var text = FilterFunction(HttpContext.Request.Form["text"].ToString());
+		// 	var text = HttpContext.Request.Form["text"].ToString();
+        //     var json = new
+        //     {
+        //         success = true,
+        //         data = new
+        //         {
+        //             AgeUnder13 = text,
+        //             Age13OrOver = text,
+        //         }
+        //     };
+        //     string jsonString = JsonConvert.SerializeObject(json);
+        //     return Content(jsonString, "application/json");
+        // }
 	}
 }	

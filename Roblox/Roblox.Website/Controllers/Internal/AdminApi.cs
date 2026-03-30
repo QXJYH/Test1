@@ -695,6 +695,12 @@ public class AdminApiController : ControllerBase
 		return result;
 	}
 
+	[HttpPost("user/kick"), StaffFilter(Access.BanUser)]
+	public async Task KickPlayer(long userId)
+	{
+		await services.gameServer.KickPlayer(userId);
+	}
+
 	[HttpPost("asset/moderate"), StaffFilter(Access.SetAssetModerationStatus)]
 	public async Task ModerateAsset([Required, FromBody] ModerateAssetRequest request)
 	{

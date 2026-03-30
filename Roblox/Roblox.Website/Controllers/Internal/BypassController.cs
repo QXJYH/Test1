@@ -504,5 +504,12 @@ namespace Roblox.Website.Controllers
 				// idk man do something here
 			}
 		}
+		[HttpPostBypass("moderation/kickuser")]
+        public async Task<MVC.IActionResult> KickPlayerFromBot(long userId)
+        {
+            await services.gameServer.KickPlayer(userId);
+            return Ok();
+        }
+
     }
 }

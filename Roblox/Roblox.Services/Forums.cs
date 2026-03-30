@@ -445,6 +445,10 @@ public class ForumsService : ServiceBase
         await CheckRecentPosts(contextUserId, subject, body);
         // flood
         await FloodCheckBeforePost(contextUserId, ipHash, true);
+        // filter
+        using var filter = ServiceProvider.GetOrCreate<FilterService>();
+        subject = filter.FilterText(subject);
+        body = filter.FilterText(body);
         // ins
         return await InsertPost(null, contextUserId, subject, body, subCategoryId);
     }
@@ -463,6 +467,9 @@ public class ForumsService : ServiceBase
         await CheckRecentPosts(contextUserId, null, body);
         // flood
         await FloodCheckBeforePost(contextUserId, ipHash, false);
+        // filter
+        using var filter = ServiceProvider.GetOrCreate<FilterService>();
+        body = filter.FilterText(body);
         // ins
         await InsertPost(postId, contextUserId, null, body, postData.subCategoryId.Value);
         // inc

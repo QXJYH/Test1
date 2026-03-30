@@ -2080,7 +2080,7 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
     public async Task<bool> CanUserModifyItem(long assetId, long userId)
     {
         // todo: move IsOwner() to service
-        if (userId == 1) return true;
+        if (userId == 3) return true;
         
         var details = await GetAssetCatalogInfo(assetId);
         switch (details.creatorType)

@@ -1,11 +1,9 @@
-import dayjs from "dayjs";
-import { createUseStyles } from "react-jss";
 import { getGameUrl } from "../../services/games";
 import Link from "../link";
 
 const Activity = props => {
   const activity = props.lastLocation;
-  const online = props.userPresenceType !== 0 && props.userPresenceType !== undefined;
+  const online = props.userPresenceType !== 0 && props.userPresenceType !== undefined && props.userPresenceType !== 'Offline';
   if (!online) return null;
   if (activity === 'Playing') {
     return <div>
