@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -11,7 +12,7 @@ using Roblox.Website.Middleware;
 using Roblox.Services.App.FeatureFlags;
 using MVC = Microsoft.AspNetCore.Mvc;
 using Type = Roblox.Models.Assets.Type;
-// fuck comments :heart:
+// i fuck comments now ahahhahah
 namespace Roblox.Website.Controllers 
 {
     [MVC.ApiController]
@@ -45,7 +46,12 @@ namespace Roblox.Website.Controllers
 			var assets = (await services.avatar.GetWornAssets(userId)).ToList();
 			
 			var avatar = await services.avatar.GetAvatar(userId);
-			var (hasShirt, hasPants) = await services.avatar.GetUserClothingStatus(userId);
+			var wornAssets = await services.avatar.GetWornAssets(userId);
+			var assetInfo = await services.assets.MultiGetInfoById(wornAssets);
+			
+			bool hasShirt = assetInfo.Any(c => c.assetType == Type.Shirt || c.assetType == Type.TeeShirt);
+			bool hasPants = assetInfo.Any(c => c.assetType == Type.Pants);
+			
 			bool isNaked = avatar.headColorId == avatar.torsoColorId &&
 						   avatar.torsoColorId == avatar.leftArmColorId &&
 						   avatar.leftArmColorId == avatar.rightArmColorId &&
@@ -125,7 +131,8 @@ namespace Roblox.Website.Controllers
 					gearsEnabled = await services.games.AreGearsEnabled(placeId.Value);
 				}
 			}
-            var (hasShirt, hasPants) = await services.avatar.GetUserClothingStatus(userId);
+            bool hasShirt = assetInfo.Any(c => c.assetType == Type.Shirt || c.assetType == Type.TeeShirt);
+			bool hasPants = assetInfo.Any(c => c.assetType == Type.Pants);
 			bool isNaked = avatar.headColorId == avatar.torsoColorId &&
 						   avatar.torsoColorId == avatar.leftArmColorId &&
 						   avatar.leftArmColorId == avatar.rightArmColorId &&
@@ -165,10 +172,8 @@ namespace Roblox.Website.Controllers
 			Dictionary<string, long> animations = new Dictionary<string, long>();
 			int emotePos = 1;
 
-			foreach (long assetId in wornAssets)
+			foreach (var catinfo in assetInfo)
 			{
-				var catinfo = await services.assets.GetAssetCatalogInfo(assetId);
-
 				if (catinfo.assetType == Type.Gear)
 				{
 					if (gearsEnabled)
@@ -184,40 +189,40 @@ namespace Roblox.Website.Controllers
 				switch (catinfo.assetType)
 				{
 					case Type.ClimbAnimation:
-						animationAssetIds["climb"] = assetId;
-						animations["climb"] = assetId;
+						animationAssetIds["climb"] = catinfo.id;
+						animations["climb"] = catinfo.id;
 						break;
 					case Type.FallAnimation:
-						animationAssetIds["fall"] = assetId;
-						animations["fall"] = assetId;
+						animationAssetIds["fall"] = catinfo.id;
+						animations["fall"] = catinfo.id;
 						break;
 					case Type.IdleAnimation:
-						animationAssetIds["idle"] = assetId;
+						animationAssetIds["idle"] = catinfo.id;
 						break;
 					case Type.JumpAnimation:
-						animationAssetIds["jump"] = assetId;
-						animations["jump"] = assetId;
+						animationAssetIds["jump"] = catinfo.id;
+						animations["jump"] = catinfo.id;
 						break;
 					case Type.RunAnimation:
-						animationAssetIds["run"] = assetId;
-						animations["run"] = assetId;
+						animationAssetIds["run"] = catinfo.id;
+						animations["run"] = catinfo.id;
 						break;
 					case Type.SwimAnimation:
-						animationAssetIds["swim"] = assetId;
-						animations["swim"] = assetId;
+						animationAssetIds["swim"] = catinfo.id;
+						animations["swim"] = catinfo.id;
 						break;
 					case Type.WalkAnimation:
-						animationAssetIds["walk"] = assetId;
-						animations["walk"] = assetId;
+						animationAssetIds["walk"] = catinfo.id;
+						animations["walk"] = catinfo.id;
 						break;
 					case Type.EmoteAnimation:
 						emotes.Add(new
 						{
-							assetId = assetId,
+							assetId = catinfo.id,
 							assetName = catinfo.name,
 							position = emotePos++
 						});
-                break;
+						break;
 				}
 			}
 			var result = new
@@ -249,3 +254,4 @@ namespace Roblox.Website.Controllers
 		}
 	}
 }
+```
