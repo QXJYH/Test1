@@ -15,10 +15,38 @@ namespace Roblox.Services;
 
 public class AvatarService : ServiceBase, IService
 {
+    private const long DefaultShirtAssetId = 9350;
+    private const long DefaultPantsAssetId = 9322;
+
+    private static readonly Type[] ClothingTypes = new[]
+    {
+        Type.Shirt,
+        Type.TeeShirt,
+        Type.Pants,
+    };
+
+    private async Task<bool> UserHasClothingType(long userId, Type type)
+    {
+        var assets = await GetWornAssets(userId);
+        using var assetsService = ServiceProvider.GetOrCreate<AssetsService>(this);
+        foreach (var assetId in assets)
+        {
+            var info = await assetsService.GetInfoById(assetId);
+            if (info.assetType == type)
+                return true;
+        }
+        return false;
+    }
+
+    private async Task<(bool hasShirt, bool hasPants)> GetUserClothingStatus(long userId)
+    {
+        var hasShirt = await UserHasClothingType(userId, Type.Shirt) || await UserHasClothingType(userId, Type.TeeShirt);
+        var hasPants = await UserHasClothingType(userId, Type.Pants);
+        return (hasShirt, hasPants);
+    }
+
     public async Task<IEnumerable<long>> GetWornAssets(long userId)
     {
-        // useless inner join is intentional:
-        // it's so that we filter out items the user no longer owns.
         return (await db.QueryAsync<AssetId>(
             "SELECT distinct(ua.asset_id) as assetId FROM user_avatar_asset av INNER JOIN user_asset ua ON ua.user_id = av.user_id AND ua.asset_id = av.asset_id WHERE av.user_id = :user_id", new
             {
@@ -643,10 +671,8 @@ public class AvatarService : ServiceBase, IService
     public async Task RedrawAvatar(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null,
         AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true)
     {
-        // required services
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
-        // params
         avatarType ??= AvatarType.R6;
 
         await using var redLock =
@@ -655,7 +681,6 @@ public class AvatarService : ServiceBase, IService
 
         var assetIds = newAssetIds?.ToList();
 
-        // If list provided is null, then the caller wants us to grab the items ourselves
         assetIds ??= (await GetWornAssets(userId)).ToList();
         colors ??= await GetAvatarColors(userId);
 
@@ -669,27 +694,26 @@ public class AvatarService : ServiceBase, IService
 
         assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
 
-        // Now, update the avatar. This returns a hash
+        var (hasShirt, hasPants) = await GetUserClothingStatus(userId);
+        if (!hasShirt)
+            assetIds.Add(DefaultShirtAssetId);
+        if (!hasPants)
+            assetIds.Add(DefaultPantsAssetId);
+
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
-        // Get our image urls
         var thumbnailUrl = $"/images/thumbnails/{avatarHash}_thumbnail.png";
         var headshotUrl = $"/images/thumbnails/{avatarHash}_headshot.png";
         if (!forceRedraw)
         {
-            // Check if the hash exists already - If they do, we can skip rendering!
             if (File.Exists(Configuration.PublicDirectory + thumbnailUrl) &&
                 File.Exists(Configuration.PublicDirectory + headshotUrl))
             {
-                // Since both files exist, we can just update the URL and exit
                 await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
                 return;
             }
         }
 
-        // We have to call render library now.
-        // Set image urls to null:
         await UpdateUserAvatarImages(userId, null, null);
-        // Create request
         var extendedAssetDetails = await assets.MultiGetInfoById(assetIds);
         var request = new Roblox.Rendering.AvatarData()
         {
@@ -713,21 +737,17 @@ public class AvatarService : ServiceBase, IService
             },
             playerAvatarType = "R6",
         };
-        // Sane timeout of 30 seconds. If a render takes longer than this, something's probably broken
 		using var cancellation = new CancellationTokenSource();
 		cancellation.CancelAfter(TimeSpan.FromSeconds(30));
 		
-		// Run thumbnail first so it shows up in the editor faster
 		var thumbnailStream = await CommandHandler.RequestPlayerThumbnail(request, cancellation.Token);
 		
-		// Write thumb
 		await using (var fileStream = File.Create(Configuration.PublicDirectory + thumbnailUrl))
 		{
 			thumbnailStream.Seek(0, SeekOrigin.Begin);
 			await thumbnailStream.CopyToAsync(fileStream);
 		}
 		
-		// Update with only thumbnail, then it will process headshot
 		await UpdateUserAvatarImages(userId, null, thumbnailUrl);
 		
 		var headshotStream = await CommandHandler.RequestPlayerHeadshot(request, cancellation.Token);
@@ -738,14 +758,12 @@ public class AvatarService : ServiceBase, IService
 			await headshotStream.CopyToAsync(fileStream);
 		}
 		
-		// Finally, update the avatar thumbnail
 		await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
 	}
 	
 	public async Task RedrawAvatarR15(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null, 
 		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true)
     {
-        // required services
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
         await using var redLock =
@@ -754,7 +772,6 @@ public class AvatarService : ServiceBase, IService
 
         var assetIds = newAssetIds?.ToList();
 
-        // If list provided is null, then the caller wants us to grab the items ourselves
         assetIds ??= (await GetWornAssets(userId)).ToList();
         colors ??= await GetAvatarColors(userId);
 
@@ -768,29 +785,27 @@ public class AvatarService : ServiceBase, IService
 
         assetIds = (await EnforceAssetLimits(userId, assetIds)).ToList();
 
-        // Now, update the avatar. This returns a hash
+        var (hasShirt, hasPants) = await GetUserClothingStatus(userId);
+        if (!hasShirt)
+            assetIds.Add(DefaultShirtAssetId);
+        if (!hasPants)
+            assetIds.Add(DefaultPantsAssetId);
+
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
-        // Get our image urls
         var thumbnailUrl = $"/images/thumbnails/{avatarHash}_thumbnail.png";
         var headshotUrl = $"/images/thumbnails/{avatarHash}_headshot.png";
         if (!forceRedraw)
         {
-            // Check if the hash exists already - If they do, we can skip rendering!
             if (File.Exists(Configuration.PublicDirectory + thumbnailUrl) &&
                 File.Exists(Configuration.PublicDirectory + headshotUrl))
             {
-                // Since both files exist, we can just update the URL and exit
                 await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
                 return;
             }
         }
 
-        // We have to call render library now.
-        // Set image urls to null:
         await UpdateUserAvatarImages(userId, null, null);
-        // Create request
         var extendedAssetDetails = await assets.MultiGetInfoById(assetIds);
-		// Sane timeout of 30 seconds. If a render takes longer than this, something's probably broken
 		using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
 		var Thumb = CommandHandler.RequestPlayerThumbnailR15(userId, cancellation.Token);
