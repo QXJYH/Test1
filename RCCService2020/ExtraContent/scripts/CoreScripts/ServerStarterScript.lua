@@ -240,6 +240,41 @@ if game:GetService("Chat").LoadDefaultChat then
 	require(game:GetService("CoreGui").RobloxGui.Modules.Server.ServerChat.ChatServiceInstaller)()
 end
 
+
+local mommydaddypanty = 9383
+
+local function isBodyNaked(bodyColors)
+    return bodyColors.HeadColor == bodyColors.TorsoColor and
+           bodyColors.TorsoColor == bodyColors.LeftArmColor and
+           bodyColors.LeftArmColor == bodyColors.RightArmColor and
+           bodyColors.RightArmColor == bodyColors.LeftLegColor and
+           bodyColors.LeftLegColor == bodyColors.RightLegColor
+end
+
+local function applyDefaultClothing(character)
+    local humanoidDescription = character.Humanoid:GetAppliedDescription()
+    local bodyColors = {
+        HeadColor = humanoidDescription.HeadColor3,
+        TorsoColor = humanoidDescription.TorsoColor3,
+        LeftArmColor = humanoidDescription.LeftArmColor3,
+        RightArmColor = humanoidDescription.RightArmColor3,
+        LeftLegColor = humanoidDescription.LeftLegColor3,
+        RightLegColor = humanoidDescription.RightLegColor3
+    }
+    
+    if isBodyNaked(bodyColors) and humanoidDescription.Pants == 0 then
+        humanoidDescription.Pants = mommydaddypanty
+        character.Humanoid:ApplyDescription(humanoidDescription)
+    end
+end
+
+playersService.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        character:WaitForChild("Humanoid")
+        applyDefaultClothing(character)
+    end)
+end)
+
 local freeCameraFlagSuccess, freeCameraFlagValue = pcall(function()
 	return settings():GetFFlag("FreeCameraForAdmins")
 end)
