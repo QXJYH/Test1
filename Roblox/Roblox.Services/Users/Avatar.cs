@@ -15,8 +15,8 @@ namespace Roblox.Services;
 
 public class AvatarService : ServiceBase, IService
 {
-    private const long DefaultShirtAssetId = 9350;
-    private const long DefaultPantsAssetId = 9322;
+    private const long DefaultShirtAssetId = 0;
+    private const long DefaultPantsAssetId = 9383;
 
     private static readonly Type[] ClothingTypes = new[]
     {
@@ -650,7 +650,7 @@ public class AvatarService : ServiceBase, IService
     }
 
     public async Task RedrawAvatar(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null,
-        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = false)
+        AvatarType? avatarType = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = true)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
@@ -744,7 +744,7 @@ public class AvatarService : ServiceBase, IService
 	}
 	
 	public async Task RedrawAvatarR15(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null, 
-		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = false)
+		string? currentThumbnail = null, string? currentHeadshot = null, bool forceRedraw = false, bool ignoreLock = true, bool enforceDefaultShirt = false, bool enforceDefaultPants = true)
     {
         using var assets = ServiceProvider.GetOrCreate<AssetsService>();
 
