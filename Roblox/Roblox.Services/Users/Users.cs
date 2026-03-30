@@ -2064,6 +2064,8 @@ public class UsersService : ServiceBase, IService
 
     public async Task EarnDailyRobux(long userId)
     {
+        // todo: config: daily robux and timespan should be configurable via appsettings
+        var dailyRobux = 1;
         var stipendTimespan = TimeSpan.FromDays(1);
 
         // redis is faster than opening a transaction on every page visit, so we need to check that first
@@ -2079,11 +2081,6 @@ public class UsersService : ServiceBase, IService
         await using var robuxLock = await Cache.redLock.CreateLockAsync(l, TimeSpan.FromSeconds(5));
         if (!robuxLock.IsAcquired) return;
         
-        using var ce = ServiceProvider.GetOrCreate<CurrencyExchangeService>(this);
-        var rawRate = await ce.GetAverageRate(CurrencyType.Tickets);
-        var rate1k = rawRate > 0 ? rawRate : 10000;
-        var dailyRobux = (long)Math.Ceiling(10m / (rate1k / 1000m));
-
         await InTransaction(async trx =>
         {
             var time = DateTime.UtcNow;
@@ -2091,7 +2088,7 @@ public class UsersService : ServiceBase, IService
                 "SELECT COUNT(*) AS total FROM user_transaction WHERE user_id_one = :id AND type = :type AND created_at >= :time", new
                 {
                     id = userId,
-                    type = PurchaseType.RobuxStipend,
+                    type = PurchaseType.BuildersClubStipend,
                     time = time.Subtract(stipendTimespan),
                 }, transaction: trx);
 
@@ -2102,7 +2099,7 @@ public class UsersService : ServiceBase, IService
                 await ec.IncrementCurrency(userId, CurrencyType.Robux, dailyRobux);
                 await InsertAsync("user_transaction", new
                 {
-                    type = PurchaseType.RobuxStipend,
+                    type = PurchaseType.BuildersClubStipend,
                     user_id_one = userId,
                     user_id_two = 1,
                     currency_type = 1,
