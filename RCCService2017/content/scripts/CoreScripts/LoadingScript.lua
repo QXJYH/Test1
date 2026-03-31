@@ -360,7 +360,7 @@ function MainGui:GenerateMain()
 					TextScaled = true,
 					TextColor3 = COLORS.WHITE,
 					TextStrokeTransparency = 0,
-					Text = "By sum guy named ",
+					Text = "By",
 					TextXAlignment = Enum.TextXAlignment.Left,
 					TextYAlignment = Enum.TextYAlignment.Top,
 					ZIndex = 2,
