@@ -121,29 +121,26 @@ function methods:CreateGuiObjects(targetParent)
 
 	self:AnimGuiObjects()
 	self:SetUpTextBoxEvents(TextBox, TextLabel, MessageModeTextButton)
-	if self.UserHasChatOff then
-		self:DoLockChatBar()
-	end
 	self.eGuiObjectsChanged:Fire()
 end
 
 -- Used to lock the chat bar when the user has chat turned off.
-function methods:DoLockChatBar()
-	if self.TextLabel then
-		if LocalPlayer.UserId > 0 then
-			self.TextLabel.Text = "To chat in game, turn on chat in your Privacy Settings."
-		else
-			self.TextLabel.Text = "Sign up to chat in game."
-		end
-		self:CalculateSize()
-	end
-	if self.TextBox then
-		self.TextBox.Active = false
-		self.TextBox.Focused:connect(function()
-			self.TextBox:ReleaseFocus()
-		end)
-	end
-end
+-- function methods:DoLockChatBar()
+-- 	if self.TextLabel then
+-- 		if LocalPlayer.UserId > 0 then
+-- 			self.TextLabel.Text = "To chat in game, turn on chat in your Privacy Settings."
+-- 		else
+-- 			self.TextLabel.Text = "Sign up to chat in game."
+-- 		end
+-- 		self:CalculateSize()
+-- 	end
+-- 	if self.TextBox then
+-- 		self.TextBox.Active = false
+-- 		self.TextBox.Focused:connect(function()
+-- 			self.TextBox:ReleaseFocus()
+-- 		end)
+-- 	end
+-- end
 
 function methods:SetUpTextBoxEvents(TextBox, TextLabel, MessageModeTextButton)
 	--// Code for getting back into general channel from other target channel when pressing backspace.
@@ -198,10 +195,8 @@ function methods:SetUpTextBoxEvents(TextBox, TextLabel, MessageModeTextButton)
 	end)
 
 	TextBox.Focused:connect(function()
-		if not self.UserHasChatOff then
-			self:CalculateSize()
-			UpdateOnFocusStatusChanged(true)
-		end
+		self:CalculateSize()
+		UpdateOnFocusStatusChanged(true)
 	end)
 
 	TextBox.FocusLost:connect(function(enterPressed, inputObject)
@@ -228,10 +223,6 @@ function methods:GetMessageModeTextLabel()
 end
 
 function methods:IsFocused()
-	if self.UserHasChatOff then
-		return false
-	end
-
 	-- Temporary hack while reparenting is necessary.
 	if not self.GuiObject:IsDescendantOf(game) then
 		if self.LastFocusedState then
@@ -246,9 +237,7 @@ function methods:GetVisible()
 end
 
 function methods:CaptureFocus()
-	if not self.UserHasChatOff then
-		self:GetTextBox():CaptureFocus()
-	end
+	self:GetTextBox():CaptureFocus()
 end
 
 function methods:ReleaseFocus(didRelease)
@@ -268,19 +257,11 @@ function methods:GetEnabled()
 end
 
 function methods:SetEnabled(enabled)
-	if self.UserHasChatOff then
-		-- The chat bar can not be removed if a user has chat turned off so that
-		-- the chat bar can display a message explaining that chat is turned off.
-		self.GuiObject.Visible = true
-	else
-		self.GuiObject.Visible = enabled
-	end
+	self.GuiObject.Visible = enabled
 end
 
 function methods:SetTextLabelText(text)
-	if not self.UserHasChatOff then
-		self.TextLabel.Text = text
-	end
+	self.TextLabel.Text = text
 end
 
 function methods:SetTextBoxText(text)
@@ -554,17 +535,6 @@ function module.new(CommandProcessor, ChatWindow)
 			obj:SetTextSize(value)
 		end
 	end)
-
-	coroutine.wrap(function()
-		local success, canLocalUserChat = pcall(function()
-			return Chat:CanUserChatAsync(LocalPlayer.UserId)
-		end)
-		local canChat = success and (RunService:IsStudio() or canLocalUserChat)
-		if canChat == false then
-			obj.UserHasChatOff = true
-			obj:DoLockChatBar()
-		end
-	end)()
 
 
 	return obj
