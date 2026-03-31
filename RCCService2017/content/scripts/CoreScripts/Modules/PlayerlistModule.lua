@@ -140,7 +140,6 @@ local CUSTOM_ICONS = {	-- Admins with special icons
   ['13268404'] = 'rbxassetid://113059239', -- Sorcus
   ['261'] = 'rbxassetid://105897927', -- shedlestky
   ['20396599'] = 'rbxassetid://161078086', -- Robloxsai
-  ['1328'] = "rbxassetid://8652", -- forza (donator)
 }
 
 local ABUSES = {
