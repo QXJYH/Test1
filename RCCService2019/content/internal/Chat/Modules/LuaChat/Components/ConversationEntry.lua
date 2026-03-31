@@ -1,0 +1,301 @@
+local CoreGui = game:GetService("CoreGui")
+
+local Modules = CoreGui.RobloxGui.Modules
+local Common = Modules.Common
+local LuaChat = Modules.LuaChat
+local LuaApp = Modules.LuaApp
+
+local Constants = require(LuaChat.Constants)
+local Create = require(LuaChat.Create)
+local FlagSettings = require(LuaChat.FlagSettings)
+local FormFactor = require(LuaApp.Enum.FormFactor)
+local getConversationDisplayTitle = require(LuaChat.Utils.getConversationDisplayTitle)
+local OrderedMap = require(LuaChat.OrderedMap)
+local Signal = require(Common.Signal)
+local Text = require(LuaChat.Text)
+local Message = require(LuaChat.Models.Message)
+
+local Components = LuaChat.Components
+local ConversationThumbnail = require(Components.ConversationThumbnail)
+local PlayTogetherGameIcon = require(Components.PlayTogetherGameIcon)
+
+local FFlagLuaChatGameLinkRender = settings():GetFFlag("LuaChatGameLinkRender")
+local FFlagLuaChatBoldUnreadMessageText = settings():GetFFlag("LuaChatBoldUnreadMessageText")
+
+local UNREAD_COUNTER_ENABLED = false
+
+local ConversationEntry = {}
+
+ConversationEntry.__index = ConversationEntry
+
+function ConversationEntry.new(appState, conversation)
+	local self = {
+		appState = appState,
+	}
+	self.conversation = nil
+	self.Tapped = Signal.new()
+	self.luaChatPlayTogetherEnabled = FlagSettings.IsLuaChatPlayTogetherEnabled(self.appState)
+
+	local activeGameIconRbx = nil
+	if self.luaChatPlayTogetherEnabled then
+		self.activeGameIcon = PlayTogetherGameIcon.new(appState, conversation,
+			PlayTogetherGameIcon.Size.LARGE, PlayTogetherGameIcon.Type.ACTIVE)
+		self.activeGameIcon.rbx.AnchorPoint = Vector2.new(1, 0)
+		self.activeGameIcon.rbx.Position = UDim2.new(1, -12, 0, 12)
+		activeGameIconRbx = self.activeGameIcon.rbx
+
+		self.activeGameIcon.Pressed:connect(function()
+			self.Tapped:fire()
+		end)
+	end
+
+	self.thumb = ConversationThumbnail.new(appState, conversation)
+	self.thumb.rbx.Size = UDim2.new(0, 48, 0, 48)
+	self.thumb.rbx.Position = UDim2.new(0, 12, 0, 12)
+
+	self.content = Create.new "TextLabel" {
+		Name = "Content",
+		AnchorPoint = Vector2.new(0, 1),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Bottom,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -58, 0, Constants.Font.FONT_SIZE_16),
+		Position = UDim2.new(0, 0, 1, -14),
+		TextSize = Constants.Font.FONT_SIZE_16,
+		Font = Constants.Font.STANDARD,
+		TextColor3 = Constants.Color.GRAY2,
+		ClipsDescendants = true,
+	}
+
+	self.lastMessageTime = Create.new "TextLabel" {
+		Name = "LastMessageTime",
+		AnchorPoint = Vector2.new(1,0),
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(0, 50, 0, Constants.Font.FONT_SIZE_14),
+		Position = UDim2.new(1, -12, 0, Constants.Font.FONT_SIZE_18_POS_OFFSET + 20),
+		TextSize = Constants.Font.FONT_SIZE_14,
+		Font = Constants.Font.STANDARD,
+		TextColor3 = Constants.Color.GRAY2,
+	}
+
+	self.title = Create.new "TextLabel" {
+		Name = "Title",
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -90, 0, Constants.Font.FONT_SIZE_18),
+		Position = UDim2.new(0, 0, 0, Constants.Font.FONT_SIZE_18_POS_OFFSET + 20),
+		Font = Constants.Font.STANDARD,
+		TextSize = Constants.Font.FONT_SIZE_18,
+		TextColor3 = Constants.Color.GRAY1,
+		ClipsDescendants = true,
+	}
+
+	self.unreadMessageIndicator = Create.new "ImageLabel" {
+		Name = "UnreadMessageCount",
+		AnchorPoint = Vector2.new(1,1),
+		BackgroundTransparency = 1,
+		BackgroundColor3 = Color3.fromRGB(226, 35, 26),
+		Size = UDim2.new(0, 24, 0, 16),
+		Position = UDim2.new(1, -12, 1, -14),
+		Image = "rbxasset://textures/ui/LuaChat/9-slice/new-message-indicator.png",
+		ScaleType = Enum.ScaleType.Slice,
+		SliceCenter = Rect.new(8, 8, 10, 10),
+		Visible = false,
+
+		Create.new "TextLabel" {
+			Name = "Label",
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			TextColor3 = Constants.Color.WHITE,
+			TextSize = Constants.Font.FONT_SIZE_12,
+			Font = Constants.Font.STANDARD,
+			Text = "1",
+			Position = UDim2.new(0, 0, 0, -1),
+		}
+	}
+
+	self.rbx = Create.new "TextButton" {
+		Name = "ConversationEntry",
+		Size = UDim2.new(1, 0, 0, 72),
+		BackgroundColor3 = Constants.Color.WHITE,
+		AutoButtonColor = false,
+		BorderSizePixel = 0,
+		Text = "",
+		Font = Constants.Font.STANDARD,
+
+		self.thumb.rbx,
+
+		Create.new "Frame" {
+			Name = "Body",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -72, 1, 0),
+			Position = UDim2.new(0, 72, 0, 0),
+
+			Create.new "Frame" {
+				Name = "Inner",
+				BackgroundTransparency = 1,
+				Position = UDim2.new(0, 0, 0, 0),
+				Size = UDim2.new(1, 0, 1, 0),
+
+				self.content,
+				self.lastMessageTime,
+				self.title,
+				self.unreadMessageIndicator,
+				activeGameIconRbx,
+			},
+
+			Create.new "Frame" {
+				Name = "BottomBorder",
+				BackgroundColor3 = Constants.Color.GRAY4,
+				BorderSizePixel = 0,
+				Size = UDim2.new(1, 0, 0, 1),
+				Position = UDim2.new(0, 0, 1, -1),
+			},
+		},
+
+		Create.new "Frame" {
+			Name = "ImageContainer",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(0, 72, 0, 72),
+			Position = UDim2.new(0, 0, 0, 0),
+		},
+	}
+
+	self.rbx.Activated:Connect(function()
+		self.Tapped:fire()
+	end)
+
+	if self.thumb.clicked then
+		self.thumb.clicked:connect(function()
+			self.Tapped:fire()
+		end)
+	end
+
+	setmetatable(self, ConversationEntry)
+
+	self:Update(conversation)
+
+	self.title:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		self.title.Text = self.conversation.title
+	end)
+
+	if self.activeGameIcon then
+		self:AdjustForGameIcon(self.activeGameIcon.rbx.Visible)
+		self.activeGameIcon.rbx:GetPropertyChangedSignal("Visible"):Connect(function()
+			self:AdjustForGameIcon(self.activeGameIcon.rbx.Visible)
+		end)
+	end
+
+	return self
+end
+
+function ConversationEntry:AdjustForGameIcon(isIconVisible)
+	if isIconVisible then
+		self.lastMessageTime.Visible = false
+		self.content.Size = UDim2.new(1, -72, 0, 18)
+	else
+		self.lastMessageTime.Visible = true
+		self.content.Size = UDim2.new(1, -58, 0, 18)
+	end
+end
+
+function ConversationEntry:SetBackgroundColor(color3)
+	self.rbx.BackgroundColor3 = color3
+	if self.thumb.rbx:FindFirstChild("Mask") then
+		self.thumb.rbx.Mask.ImageColor3 = color3
+	elseif self.thumb.rbx:FindFirstChild("Overlay") then
+		self.thumb.rbx.Overlay.ImageColor3 = color3
+	end
+end
+
+function ConversationEntry:Update(conversation)
+
+	local state = self.appState.store:getState()
+	if state.FormFactor == FormFactor.WIDE then
+		local currentLocationParameters = state.ChatAppReducer.Location.current.parameters
+		local currentConversationId = currentLocationParameters and currentLocationParameters.conversationId or nil
+		if currentConversationId == conversation.id then
+			self:SetBackgroundColor(Constants.Color.GRAY5)
+		else
+			self:SetBackgroundColor(Constants.Color.WHITE)
+		end
+	end
+
+	if conversation == self.conversation then
+		return
+	end
+
+	local oldConversationState = self.conversation
+	self.conversation = conversation
+	local lastMessageId = conversation.messages.keys[#conversation.messages.keys]
+	local lastMessage = conversation.messages.values[lastMessageId]
+	local lastMessageText = ""
+	local lastMessageTime = ""
+
+	if lastMessage then
+		if FlagSettings.isMessageTypeEnabled() then
+			if lastMessage.messageType == Message.MessageTypes.PlainText then
+				lastMessageText = Text.RightTrim(lastMessage.content)
+			elseif FFlagLuaChatGameLinkRender and lastMessage.messageType == Message.MessageTypes.Link then
+				if lastMessage.gameLink then
+					lastMessageText = self.appState.localization:Format("Feature.Chat.ConversationEntry.GameLinkPreview")
+				end
+			else
+				lastMessageText = ""
+			end
+		else
+			lastMessageText = Text.RightTrim(lastMessage.content)
+		end
+		lastMessageText = lastMessageText:gsub("%s", " ")
+		lastMessageTime = conversation.lastUpdated:GetShortRelativeTime()
+	elseif conversation.lastUpdated then
+		lastMessageTime = conversation.lastUpdated:GetShortRelativeTime()
+	end
+
+	local textColor = conversation.hasUnreadMessages and Constants.Color.GRAY1 or Constants.Color.GRAY2
+	local font = conversation.hasUnreadMessages and Constants.Font.TITLE or Constants.Font.STANDARD
+
+	self.content.Font = font
+	self.content.Text = lastMessageText
+
+	self.content.TextColor3 = textColor
+	self.lastMessageTime.TextColor3 = textColor
+	self.lastMessageTime.Text = lastMessageTime
+
+	if FFlagLuaChatBoldUnreadMessageText then
+		self.lastMessageTime.Font = font
+	end
+
+
+	self.title.Text = getConversationDisplayTitle(conversation)
+	if FFlagLuaChatBoldUnreadMessageText then
+		self.title.Font = font
+	end
+
+	self.thumb:Update(conversation)
+	if self.activeGameIcon then
+		self.activeGameIcon:Update(conversation)
+		self:AdjustForGameIcon(self.activeGameIcon.rbx.Visible)
+	end
+
+	if UNREAD_COUNTER_ENABLED then
+		self.unreadMessageIndicator.Visible = conversation.hasUnreadMessages
+		if conversation.hasUnreadMessages and
+				(not oldConversationState or oldConversationState.messages ~= conversation.messages) then
+			local numUnread = 0
+			for _, message in OrderedMap.CreateIterator(conversation.messages) do
+				if not message.read then
+					numUnread = numUnread + 1
+				end
+			end
+			self.unreadMessageIndicator.Label.Text = tostring(numUnread)
+		end
+	end
+end
+
+return ConversationEntry

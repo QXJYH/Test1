@@ -1,0 +1,24 @@
+{
+  "name": "LuaDiscussions UI Development (Horsecat)",
+  "tree": {
+      "$className": "DataModel",
+
+      "ReplicatedStorage": {
+          "$className": "ReplicatedStorage",
+
+          "LuaDiscussions": {
+            "$path": "."
+          }
+      },
+
+      "HttpService": {
+          "$className": "HttpService",
+          "$properties": {
+              "HttpEnabled": {
+                  "Type": "Bool",
+                  "Value": true
+              }
+          }
+      }
+  }
+}

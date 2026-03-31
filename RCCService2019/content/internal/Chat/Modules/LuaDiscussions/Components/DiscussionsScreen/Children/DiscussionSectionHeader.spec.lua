@@ -1,0 +1,17 @@
+return function()
+	local LuaDiscussions = script:FindFirstAncestor("LuaDiscussions")
+	local dependencies = require(LuaDiscussions.dependencies)
+    local Roact = dependencies.Roact
+	local mountStyledFrame = require(LuaDiscussions.UnitTestHelpers.mountStyledFrame)
+
+    local DiscussionSectionHeader = require(script.Parent.DiscussionSectionHeader)
+
+    describe("lifecycle", function()
+        it("should mount and unmount without issue", function()
+            local _, cleanup = mountStyledFrame(Roact.createElement(DiscussionSectionHeader))
+
+            cleanup()
+        end)
+    end)
+
+end

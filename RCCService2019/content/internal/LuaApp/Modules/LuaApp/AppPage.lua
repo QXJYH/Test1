@@ -1,0 +1,40 @@
+return {
+	-- "None" page is an empty page that opens when the native codes
+	-- sends out a navigation event with no pages specified. This page
+	-- option should be removed once we remove this navigation event.
+	None = "None",
+	Startup = "Startup",
+	Login = "Login",
+	WeChatLoginWrapper = "WeChatLoginWrapper",
+	Home = "Home",
+	Games = "Games",
+	ChinaCatalog = "ChinaCatalog", -- TODO: CLIAVATAR-2349 - clean up or remove China Catalog code
+	Challenge = "Challenge",
+	GamesList = "GamesList",
+	GameDetail = "GameDetail",
+	ChinaBundleModal = "ChinaBundleModal", -- TODO: CLIAVATAR-2349 - clean up or remove China Catalog code
+	SearchPage = "SearchPage",
+	AvatarEditor = "AvatarEditor",
+	Chat = "Chat",
+	Discussions = "Discussions",
+	ShareGameToChat = "ShareGameToChat",
+	More = "More",
+	SimplifiedMore = "SimplifiedMore",
+	About = "About",
+	Settings = "Settings",
+	Events = "Events",
+	GenericWebPage = "GenericWebPage",
+	YouTubePlayer = "YouTubePlayer",
+	PurchaseRobux = "PurchaseRobux",
+	Notifications = "Notifications",
+	AgreementPage = "AgreementPage",
+	MyFeed = "MyFeed",
+	LogoutConfirmation = "LogoutConfirmation",
+	AddFriends = "AddFriends",
+	ViewUserProfile = "ViewUserProfile",
+	ViewProfile = "ViewProfile",
+    LoginNative = "LoginNative",
+	UsernameSelectionPage = "UsernameSelectionPage",
+	Landing = "Landing",
+	Birthday = "Birthday",
+}
