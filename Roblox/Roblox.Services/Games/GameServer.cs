@@ -926,7 +926,6 @@ public class GameServerService : ServiceBase
 		{
 			return "BAD";
 		}
-		await ModifyServerLua2018(Path.Combine(Configuration.RccService2017Path, "content", "scripts", "CoreScripts", "ServerStarterScript.lua"));
 		
 		await db.ExecuteAsync(
 			"INSERT INTO asset_server (id, asset_id, ip, port, RCCConnection) VALUES (:id::uuid, :asset_id, :ip, :port, :RCCConnection)",
@@ -945,207 +944,72 @@ public class GameServerService : ServiceBase
 		rccServer.StartInfo.CreateNoWindow = false;
 		rccServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
 		rccServer.StartInfo.FileName = $"{Configuration.RccService2017Path}RCCService.exe";
-		// should i get rid of devsetting later
-		rccServer.StartInfo.Arguments = $"-console -verbose -settingsfile \"DevSettingsFile.json\" -port {RCCPort}";
+		rccServer.StartInfo.Arguments = string.Format($@"-console -verbose -port {RCCPort}");
 		rccServer.StartInfo.RedirectStandardError = false;
 		rccServer.StartInfo.RedirectStandardOutput = false;
 		rccServer.StartInfo.UseShellExecute = true;
 		rccServer.Start();
 
-		await Task.Delay(2000);
-
-		string creatorTypeStr = AssetCatalogInfo.creatorType == CreatorType.User ? "User" : "Group";
-		string gameOpenJson = $@"{{
-			""Mode"": ""GameServer"",
-			""GameId"": ""{jobId}"",
-			""Settings"": {{
-				""Type"": ""GameOpen"",
-				""PlaceId"": {placeId},
-				""SessionId"": ""{Guid.NewGuid()}"",
-				""CreatorId"": {AssetCatalogInfo.creatorTargetId},
-				""GameId"": ""{jobId}"",
-				""MachineAddress"": ""av2bq.kornet.lat"",
-				""GsmInterval"": 5,
-				""MaxPlayers"": {MaxPlayers},
-				""MaxGameInstances"": 1,
-				""ApiKey"": ""rccservislwkgoated"",
-				""PreferredPlayerCapacity"": 10,
-				""DataCenterId"": ""1"",
-				""PlaceVisitAccessKey"": """",
-				""UniverseId"": {uni.universeId},
-				""PlaceFetchUrl"": ""{Configuration.BaseUrl}/asset/?id={placeId}&apiKey={Configuration.RccAuthorization}"",
-				""MatchmakingContextId"": 1,
-				""CreatorId"": {AssetCatalogInfo.creatorTargetId},
-				""CreatorType"": ""{creatorTypeStr}"",
-				""PlaceVersion"": 1,
-				""BaseUrl"": ""{Configuration.BaseUrl}"",
-				""JobId"": ""{jobId}"",
-				""script"": ""print('RCC Init')"",
-				""PreferredPort"": {NSPort}
-			}},
-			""Arguments"": {{}}
-		}}";
+		string originalScript = File.ReadAllText($"{Configuration.LuaScriptPath}GameServer.lua");
+		string finalScript = originalScript.Replace
+			("%baseURL%", $"{Configuration.BaseUrl}").Replace
+			("%port%", $"{NSPort}").Replace
+			("%placeId%", $"{placeId}").Replace
+			("%creatorId%", $"{uni.builderId}").Replace
+			("%apiKey%", $"{Configuration.RccAuthorization}").Replace
+			("_AUTHORIZATION_STRING_", Configuration.GameServerAuthorization);
 
 		string XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 			<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
 			   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
 			   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
 				<soap:Body>
-					<OpenJob xmlns=""http://roblox.com/"">
+					<OpenJobEx xmlns=""http://roblox.com/"">
 						<job>
 							<id>{jobId}</id>
-							<expirationInSeconds>{JobExpiration}</expirationInSeconds>
-							<category>0</category>
+							<category>1</category>
 							<cores>1</cores>
+							<expirationInSeconds>43600</expirationInSeconds>
 						</job>
 						<script>
-							<name>GameServer</name>
-							<script>{EscapeXml(gameOpenJson)}</script>
+							<name>{Guid.NewGuid().ToString()}</name>
+							<script>
+								<![CDATA[
+								{finalScript}
+								]]>
+							</script>
 						</script>
-						<arguments>
-							<LuaValue>
-								<type>LUA_TNIL</type>
-							</LuaValue>
-						</arguments>
-					</OpenJob>
+					</OpenJobEx>
 				</soap:Body>
 			</soap:Envelope>";
 
-		bool success = await SendSoapRequestToRcc2021($"http://127.0.0.1:{RCCPort}", XML, "OpenJob");
+		await SendSoapRequestToRcc($"http://127.0.0.1:{RCCPort}", XML, "OpenJobEx");
+		var jobList = currentPlaceIdsInUse.GetOrAdd(placeId, _ => new ConcurrentBag<string>());
+		jobList.Add(jobId);
+		jobRccs[jobId] = rccServer;
+		currentGameServerPorts.TryAdd(jobId, NSPort);
 		
-		if (!success)
-		{
-			rccServer.Kill();
-		}
-
 		try
 		{
-			var jobList = currentPlaceIdsInUse.GetOrAdd(placeId, _ => new ConcurrentBag<string>());
-			jobList.Add(jobId);
-			jobRccs[jobId] = rccServer;
-			currentGameServerPorts.TryAdd(jobId, NSPort);
-			try
+			if (!string.IsNullOrEmpty(Configuration.Webhook))
 			{
-				if (!string.IsNullOrEmpty(Configuration.Webhook))
+				var webhookcont = new
 				{
-					var webhookcont = new
-					{
-						content = $"place {placeId} started with port {NSPort} on server {jobId}"
-					};
-					
-					using var httpClient = new HttpClient();
-					var content = new StringContent(JsonSerializer.Serialize(webhookcont), Encoding.UTF8, "application/json");
-					await httpClient.PostAsync(Configuration.Webhook, content);
-				}
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"failed to send to webhook (did you configure it?): {ex.Message}");
+					content = $"place {placeId} started with port {NSPort} on server {jobId}"
+				};
+				
+				using var httpClient = new HttpClient();
+				var content = new StringContent(JsonSerializer.Serialize(webhookcont), Encoding.UTF8, "application/json");
+				await httpClient.PostAsync(Configuration.Webhook, content);
 			}
 		}
-		catch (ArgumentException)
+		catch (Exception ex)
 		{
-			rccServer.Kill();
+			Console.WriteLine($"failed to send to webhook (did you configure it?): {ex.Message}");
 		}
 
 		return "OK";
 	}
-
-	// public async Task<string> StartGameServer2017(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
-	// {
-	// 	// Before we waste our time, check if the place exists
-	// 	AssetsService assetsService = new AssetsService();
-	// 	GamesService gamesService = new GamesService();
-	// 	var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
-	// 	var uni = (await gamesService.MultiGetPlaceDetails(new[] { placeId })).First();
-	// 	if (AssetCatalogInfo.assetType != Models.Assets.Type.Place)
-	// 	{
-	// 		return "BAD";
-	// 	}
-		
-	// 	await db.ExecuteAsync(
-	// 		"INSERT INTO asset_server (id, asset_id, ip, port, RCCConnection) VALUES (:id::uuid, :asset_id, :ip, :port, :RCCConnection)",
-	// 		new
-	// 		{
-	// 			id = jobId,
-	// 			asset_id = placeId,
-	// 			ip = "av2bq.kornet.lat",
-	// 			port = NSPort,
-	// 			RCCConnection = $"127.0.0.1:{RCCPort}",
-	// 		});
-
-	// 	Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
-
-	// 	Process rccServer = new Process();
-	// 	rccServer.StartInfo.CreateNoWindow = false;
-	// 	rccServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-	// 	rccServer.StartInfo.FileName = $"{Configuration.RccService2017Path}RCCService.exe";
-	// 	rccServer.StartInfo.Arguments = string.Format($@"-console -verbose -port {RCCPort}");
-	// 	rccServer.StartInfo.RedirectStandardError = false;
-	// 	rccServer.StartInfo.RedirectStandardOutput = false;
-	// 	rccServer.StartInfo.UseShellExecute = true;
-	// 	rccServer.Start();
-
-	// 	string originalScript = File.ReadAllText($"{Configuration.LuaScriptPath}GameServer.lua");
-	// 	string finalScript = originalScript.Replace
-	// 		("%baseURL%", $"{Configuration.BaseUrl}").Replace
-	// 		("%port%", $"{NSPort}").Replace
-	// 		("%placeId%", $"{placeId}").Replace
-	// 		("%creatorId%", $"{uni.builderId}").Replace
-	// 		("%apiKey%", $"{Configuration.RccAuthorization}").Replace
-	// 		("_AUTHORIZATION_STRING_", Configuration.GameServerAuthorization);
-
-	// 	string XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-	// 		<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
-	// 		   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
-	// 		   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-	// 			<soap:Body>
-	// 				<OpenJobEx xmlns=""http://roblox.com/"">
-	// 					<job>
-	// 						<id>{jobId}</id>
-	// 						<category>1</category>
-	// 						<cores>1</cores>
-	// 						<expirationInSeconds>43600</expirationInSeconds>
-	// 					</job>
-	// 					<script>
-	// 						<name>{Guid.NewGuid().ToString()}</name>
-	// 						<script>
-	// 							<![CDATA[
-	// 							{finalScript}
-	// 							]]>
-	// 						</script>
-	// 					</script>
-	// 				</OpenJobEx>
-	// 			</soap:Body>
-	// 		</soap:Envelope>";
-
-	// 	await SendSoapRequestToRcc($"http://127.0.0.1:{RCCPort}", XML, "OpenJobEx");
-	// 	var jobList = currentPlaceIdsInUse.GetOrAdd(placeId, _ => new ConcurrentBag<string>());
-	// 	jobList.Add(jobId);
-	// 	jobRccs[jobId] = rccServer;
-	// 	currentGameServerPorts.TryAdd(jobId, NSPort);
-		
-	// 	try
-	// 	{
-	// 		if (!string.IsNullOrEmpty(Configuration.Webhook))
-	// 		{
-	// 			var webhookcont = new
-	// 			{
-	// 				content = $"place {placeId} started with port {NSPort} on server {jobId}"
-	// 			};
-				
-	// 			using var httpClient = new HttpClient();
-	// 			var content = new StringContent(JsonSerializer.Serialize(webhookcont), Encoding.UTF8, "application/json");
-	// 			await httpClient.PostAsync(Configuration.Webhook, content);
-	// 		}
-	// 	}
-	// 	catch (Exception ex)
-	// 	{
-	// 		Console.WriteLine($"failed to send to webhook (did you configure it?): {ex.Message}");
-	// 	}
-
-	// 	return "OK";
-	// }
 
 	public async Task<string> StartGameServer2018(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
