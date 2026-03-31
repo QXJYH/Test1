@@ -53,6 +53,7 @@ public static class Configuration
 	public static string RccService2015Path { get; set; }
 	public static string RccService2017Path { get; set; }
 	public static string RccService2018Path { get; set; }
+	public static string RccService2019Path { get; set; }
 	public static string RccService2020Path { get; set; }
     public static string RccService2021Path { get; set; }
 	public static string LuaScriptPath { get; set; }
