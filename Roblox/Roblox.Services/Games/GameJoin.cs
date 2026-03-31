@@ -63,7 +63,8 @@ namespace Roblox.Services
                 case "2021":
 				case "2020":
 					return await Generate2020JoinScript(UserInfo, PlaceDetails, UniID, jobId, serverPort, MembershipType, AccountAge, Creator, Ticket);
-				case "2018":
+				case "2019":
+                case "2018":
 				case "2017":
 					return await Generate2017JoinScript(UserInfo, PlaceDetails, UniID, jobId, serverPort, MembershipType, AccountAge, Creator, Ticket);
 				case "2015":

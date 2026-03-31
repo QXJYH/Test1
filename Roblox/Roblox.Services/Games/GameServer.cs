@@ -645,7 +645,6 @@ public class GameServerService : ServiceBase
 		foreach (var port in RandomNSPort)
 		{
 			if (IsPortAvailable(port) && !currentGameServerPorts.Values.Any(x => x == port))
-			//if (IsPortAvailableTCP(port))
 			{
 				NSPort = port;
 				break;
@@ -664,7 +663,6 @@ public class GameServerService : ServiceBase
 		{
 			int RCCRandomPort = random.Next(50000, 60001);
 			if (IsPortAvailable(RCCRandomPort) && !mainRCCPortsInUse.Values.Contains(RCCRandomPort))
-			//if (IsPortAvailableTCP(RCCRandomPort) && !mainRCCPortsInUse.Values.Contains(RCCRandomPort))
 			{
 				RCCPort = RCCRandomPort;
 				break;
@@ -681,11 +679,12 @@ public class GameServerService : ServiceBase
 
 		string Start = year switch
 		{
-			// this fucking sucks. make this one function in the future
-			"2018" or "2020" or "2021" => year == "2021" ?
+			"2019" or "2018" or "2020" or "2021" => year == "2021" ?
 				await StartGameServer2021(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers) :
 				year == "2020" ?
-				await StartGameServer2020(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers) : 
+				await StartGameServer2020(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers) :
+				year == "2019" ?
+				await StartGameServer2019(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers) :
 				await StartGameServer2018(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers),
 			"2017" => await StartGameServer2017(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers),
 			"2015" => await StartGameServer2015(placeId, RCCPort, NSPort, jobId, 43200, MaxPlayers),
@@ -697,9 +696,6 @@ public class GameServerService : ServiceBase
 			currentGameServerPorts.AddOrUpdate(jobId, NSPort, (key, oldValue) => NSPort);
 			return new GameServerGetOrCreateResponse()
 			{
-				//job = jobId,
-				//status = JoinStatus.Joining
-				// wait until server starts and pings
 				status = JoinStatus.Waiting
 			};
 		}
@@ -708,7 +704,6 @@ public class GameServerService : ServiceBase
 		{
 			return new GameServerGetOrCreateResponse()
 			{
-				// status = JoinStatus.Error
 				status = JoinStatus.Waiting
 			};
 		}
@@ -719,13 +714,8 @@ public class GameServerService : ServiceBase
 		};
 	}
 
-	// TODO: MAKE this configurable
-	//private static readonly int[] AllowedNetworkPorts = { 50, 51, 52, 54, 55, 56, 57 };
-			
 	public async Task<string> StartGameServer(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
-		//Console.WriteLine($"starting 2016 place {jobId} on id {placeId} with RCC port: {RCCPort}, NS port: {NSPort}");
-		// Before we waste our time, check if the place exists
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
 		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
@@ -821,7 +811,6 @@ public class GameServerService : ServiceBase
 			
 	public async Task<string> StartGameServer2015(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
-		// Before we waste our time, check if the place exists
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
 		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
@@ -917,7 +906,6 @@ public class GameServerService : ServiceBase
 
 	public async Task<string> StartGameServer2017(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
-		// Before we waste our time, check if the place exists
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
 		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
@@ -1013,7 +1001,6 @@ public class GameServerService : ServiceBase
 
 	public async Task<string> StartGameServer2018(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
-		// Before we waste our time, check if the place exists
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
 		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
@@ -1041,7 +1028,6 @@ public class GameServerService : ServiceBase
 		rccServer.StartInfo.CreateNoWindow = false;
 		rccServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
 		rccServer.StartInfo.FileName = $"{Configuration.RccService2018Path}RCCService.exe";
-		// should i get rid of devsetting later
 		rccServer.StartInfo.Arguments = $"-console -verbose -settingsfile \"DevSettingsFile.json\" -port {RCCPort}";
 		rccServer.StartInfo.RedirectStandardError = false;
 		rccServer.StartInfo.RedirectStandardOutput = false;
@@ -1146,10 +1132,143 @@ public class GameServerService : ServiceBase
 
 		return "OK";
 	}
+
+	public async Task<string> StartGameServer2019(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
+	{
+		AssetsService assetsService = new AssetsService();
+		GamesService gamesService = new GamesService();
+		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
+		var uni = (await gamesService.MultiGetPlaceDetails(new[] { placeId })).First();
+		if (AssetCatalogInfo.assetType != Models.Assets.Type.Place)
+		{
+			return "BAD";
+		}
+		await ModifyServerLua2018(Path.Combine(Configuration.RccService2019Path, "content", "scripts", "CoreScripts", "ServerStarterScript.lua"));
+
+		await db.ExecuteAsync(
+			"INSERT INTO asset_server (id, asset_id, ip, port, RCCConnection) VALUES (:id::uuid, :asset_id, :ip, :port, :RCCConnection)",
+			new
+			{
+				id = jobId,
+				asset_id = placeId,
+				ip = "av2bq.kornet.lat",
+				port = NSPort,
+				RCCConnection = $"127.0.0.1:{RCCPort}",
+			});
+
+		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
+
+		Process rccServer = new Process();
+		rccServer.StartInfo.CreateNoWindow = false;
+		rccServer.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+		rccServer.StartInfo.FileName = $"{Configuration.RccService2019Path}RCCService.exe";
+		rccServer.StartInfo.Arguments = $"-console -verbose -settingsfile \"DevSettingsFile.json\" -port {RCCPort}";
+		rccServer.StartInfo.RedirectStandardError = false;
+		rccServer.StartInfo.RedirectStandardOutput = false;
+		rccServer.StartInfo.UseShellExecute = true;
+		rccServer.Start();
+
+		await Task.Delay(2000);
+
+		string creatorTypeStr = AssetCatalogInfo.creatorType == CreatorType.User ? "User" : "Group";
+		string gameOpenJson = $@"{{
+			""Mode"": ""GameServer"",
+			""GameId"": ""{jobId}"",
+			""Settings"": {{
+				""Type"": ""GameOpen"",
+				""PlaceId"": {placeId},
+				""SessionId"": ""{Guid.NewGuid()}"",
+				""CreatorId"": {AssetCatalogInfo.creatorTargetId},
+				""GameId"": ""{jobId}"",
+				""MachineAddress"": ""av2bq.kornet.lat"",
+				""GsmInterval"": 5,
+				""MaxPlayers"": {MaxPlayers},
+				""MaxGameInstances"": 1,
+				""ApiKey"": ""rccservislwkgoated"",
+				""PreferredPlayerCapacity"": 10,
+				""DataCenterId"": ""1"",
+				""PlaceVisitAccessKey"": """",
+				""UniverseId"": {uni.universeId},
+				""PlaceFetchUrl"": ""{Configuration.BaseUrl}/asset/?id={placeId}&apiKey={Configuration.RccAuthorization}"",
+				""MatchmakingContextId"": 1,
+				""CreatorId"": {AssetCatalogInfo.creatorTargetId},
+				""CreatorType"": ""{creatorTypeStr}"",
+				""PlaceVersion"": 1,
+				""BaseUrl"": ""{Configuration.BaseUrl}"",
+				""JobId"": ""{jobId}"",
+				""script"": ""print('RCC Init')"",
+				""PreferredPort"": {NSPort}
+			}},
+			""Arguments"": {{}}
+		}}";
+
+		string XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+			<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+			   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+			   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+				<soap:Body>
+					<OpenJob xmlns=""http://roblox.com/"">
+						<job>
+							<id>{jobId}</id>
+							<expirationInSeconds>{JobExpiration}</expirationInSeconds>
+							<category>0</category>
+							<cores>1</cores>
+						</job>
+						<script>
+							<name>GameServer</name>
+							<script>{EscapeXml(gameOpenJson)}</script>
+						</script>
+						<arguments>
+							<LuaValue>
+								<type>LUA_TNIL</type>
+							</LuaValue>
+						</arguments>
+					</OpenJob>
+				</soap:Body>
+			</soap:Envelope>";
+
+		bool success = await SendSoapRequestToRcc2021($"http://127.0.0.1:{RCCPort}", XML, "OpenJob");
+
+		if (!success)
+		{
+			rccServer.Kill();
+		}
+
+		try
+		{
+			var jobList = currentPlaceIdsInUse.GetOrAdd(placeId, _ => new ConcurrentBag<string>());
+			jobList.Add(jobId);
+			jobRccs[jobId] = rccServer;
+			currentGameServerPorts.TryAdd(jobId, NSPort);
+			try
+			{
+				if (!string.IsNullOrEmpty(Configuration.Webhook))
+				{
+					var webhookcont = new
+					{
+						content = $"place {placeId} started with port {NSPort} on server {jobId}"
+					};
+
+					using var httpClient = new HttpClient();
+					var content = new StringContent(JsonSerializer.Serialize(webhookcont), Encoding.UTF8, "application/json");
+					await httpClient.PostAsync(Configuration.Webhook, content);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"failed to send to webhook (did you configure it?): {ex.Message}");
+			}
+		}
+		catch (ArgumentException)
+		{
+			rccServer.Kill();
+		}
+
+		return "OK";
+	}
 	
 	public async Task<string> StartGameServer2020(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
-		// Before we waste our time, check if the place exists
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
 		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
@@ -1287,7 +1406,6 @@ public class GameServerService : ServiceBase
 
 	public async Task<string> StartGameServer2021(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
-		// Before we waste our time, check if the place exists
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
 		var AssetCatalogInfo = await assetsService.GetAssetCatalogInfo(placeId);
@@ -1475,7 +1593,6 @@ public class GameServerService : ServiceBase
 			}
 
 			// if it says the port is available, do a double check
-			// does this even work
 			var listener = new TcpListener(IPAddress.Loopback, port);
 			listener.Start();
 			listener.Stop();
@@ -1490,32 +1607,9 @@ public class GameServerService : ServiceBase
 			return false;
 		}
 	}
-	
-/* 	private bool IsPortAvailableTCP(int port)
-	{
-		if (port < 1 || port > 65535)
-			return false;
-
-		try
-		{
-			var listener = new TcpListener(IPAddress.Any, port);
-			listener.Start();
-			listener.Stop();
-			return true;
-		}
-		catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
-		{
-			return false;
-		}
-		catch (Exception)
-		{
-			return false;
-		}
-	} */
     
 	public static async Task<bool> SendSoapRequestToRcc(string URL, string XML, string SOAPAction, int maxRetries = 5)
 	{
-		// added attempts for 2015/2017 cause it kinda sucks
 		for (int attempt = 1; attempt <= maxRetries; attempt++)
 		{
 			using (HttpClient RccHttpClient = new HttpClient())
@@ -1538,7 +1632,6 @@ public class GameServerService : ServiceBase
 					else
 					{
 						Console.WriteLine($"[RCC] SOAP req failed: {RccHttpClientPost.StatusCode}");
-
 						Console.WriteLine($"[RCC] SOAP req failed (first 500 chars): {XML.Substring(0, Math.Min(500, XML.Length))}");
 					}
 				}
@@ -1599,7 +1692,6 @@ public class GameServerService : ServiceBase
 		
     public async Task DeleteOldGameServers()
     {
-        // first part, do game servers
         var serversToDelete = (await db.QueryAsync<GameServerEntry>("SELECT id::text, asset_id as assetId FROM asset_server WHERE updated_at <= :t", new
         {
             t = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(2)),
@@ -1618,33 +1710,16 @@ public class GameServerService : ServiceBase
             {
                 id = server.id,
             });
-            //Console.WriteLine("deleted from db line 706 deleteoldgameservers");
             await db.ExecuteAsync("DELETE FROM asset_server WHERE id = :id::uuid", new
             {
                 id = server.id,
             });
         }
-        // second part, do game server players
-        // this is so ugly jeez
-        /*var orphanedPlayers =
-            await db.QueryAsync(
-                "SELECT s.id, p.server_id FROM asset_server_player p LEFT JOIN asset_server s ON s.id = p.server_id WHERE s.id IS NULL");
-        foreach (var deadbeatDad in orphanedPlayers.Select(c => ((Guid) c.server_id).ToString()).Distinct())
-        {
-            Console.WriteLine("[info] deleting all orphans for serverId = {0}",deadbeatDad);
-            await db.ExecuteAsync("DELETE FROM asset_server_player WHERE server_id = :id::uuid", new
-            {
-                id = deadbeatDad,
-            });
-            Console.WriteLine("deleted from db line 724 DeleteOldGameServers");
 
-        }
-        */
 		var OldPorts = new List<string>();
 		
 		foreach (var kvp in currentGameServerPorts)
 		{
-			// god why does this fucking game server management suck so much
 			var serverId = kvp.Key;
 			var port = kvp.Value;
 			var Exists = await db.QueryFirstOrDefaultAsync<bool>(
@@ -1660,7 +1735,6 @@ public class GameServerService : ServiceBase
 		
 		foreach (var oldServerId in OldPorts)
 		{
-			// remove. fuck you port
 			currentGameServerPorts.TryRemove(oldServerId, out _);
 		}
 		
@@ -1751,23 +1825,14 @@ public class GameServerService : ServiceBase
 			string Script;
 			string SoapAction;
 
-			if (year == "2018" || year == "2020" || year == "2021")
+			if (year == "2019" || year == "2018" || year == "2020" || year == "2021")
 			{
-/* 				Script = $@"{{
-					""Mode"": ""EvictPlayer"",
-					""MessageVersion"": 1,
-					""Settings"": {{
-						""PlayerId"": {userId}
-					}}
-				}}";
-				SoapAction = "Execute"; */
 				Script = $@"for _, Player in pairs(game:GetService(""Players""):GetPlayers()) do if Player.UserId == {userId} then Player:Kick(""You have been disconnected from the game due to joining on another device."") end end";
 				SoapAction = "Execute";
 			}
 			else if (year == "2016" || year == "2017" || year == "2015")
 			{
 				Script = $@"for _, Player in pairs(game:GetService(""Players""):GetPlayers()) do if Player.UserId == {userId} then Player:Kick(""You have been disconnected from the game due to joining on another device."") end end";
-				//SoapAction = "OpenJobEx";
 				SoapAction = "Execute";
 			}
 			else
@@ -1833,7 +1898,7 @@ public class GameServerService : ServiceBase
 			</soap:Envelope>";
 				
 			bool success;
-			if (year == "2018" || year == "2020" || year == "2021")
+			if (year == "2019" || year == "2018" || year == "2020" || year == "2021")
 			{
 				success = await SendSoapRequestToRcc2021(RCCUrl, xml2018, SoapAction);
 			}
