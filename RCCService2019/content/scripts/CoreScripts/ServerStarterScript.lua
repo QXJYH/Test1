@@ -95,5 +95,5 @@ end
 
 require(game:GetService("CoreGui").RobloxGui.Modules.Server.ServerSound.SoundDispatcherInstaller)()
 print("Setting baseurl")
-game:GetService("ContentProvider"):SetBaseUrl("http://www.rbolock.tk/")
+game:GetService("ContentProvider"):SetBaseUrl("http://kornet.lat/")
 print(game:GetService("ContentProvider").BaseUrl)
