@@ -53,14 +53,6 @@ namespace Roblox.Website.Controllers
 				"053974fb1131dda3fc75534b08576b67",
 				"2e71951cc3566e2ab558b9f8a8f1c510",
 				"0f84ee329a636e6c23829514d1adc89c",
-				"abc9d2132ef2c21101804d8e25e0413f", //2017L Prod
-                "bba43f967698feff49038f51b391b48e", //2018L Prod
-                "4022369076d608d1a99b7b3d250e4de5", //2018L RAGELoader Debug
-                "9d7975454cee0e948e35cdc1fb55f92a", //2019E Prod
-                "15c69e21a90ed1d10e686db71d62c955", //2019M Prod
-                "ff693c76d9c15e7e97eb09e133942412", //2020L Prod
-                "7da7086e7f3a739873fa5970ef586e98", //2021M Prod
-                "1fd6e7becff68acc140b2db17e24c86e", //2021M June 6,
             };
 
             return new { data = allowedList };
@@ -143,7 +135,10 @@ namespace Roblox.Website.Controllers
 			return Content(content, "text/plain");
 		}
 		
-		[HttpGetBypass("/v1/settings/application")]
+		[HttpPostBypass("v2/settings/application")]
+        [HttpGetBypass("v2/settings/application")]
+        [HttpPostBypass("v1/settings/application")]
+        [HttpGetBypass("v1/settings/application")]
 		public async Task<MVC.IActionResult> RCCNewApplication(string applicationName)
 		{
 			string json = "PCDesktopClient";
@@ -190,33 +185,6 @@ namespace Roblox.Website.Controllers
 			return Content(content, "text/plain");
 		}
 
-		[HttpGetBypass("/v2/settings/application")]
-		public async Task<MVC.IActionResult> RCCNewApplicationV2(string applicationName)
-		{
-			string json = "PCDesktopClient2021";
-			if (!string.IsNullOrEmpty(applicationName))
-			{
-				switch (applicationName)
-				{
-					case "PCDesktopClient2021":
-						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "PCDesktopClient2021.json");
-						break;
-					
-					case "AndroidApp":
-						json = System.IO.Path.Combine(Configuration.JsonDataDirectory, "AndroidAppV2.json");
-						break;
-				}
-			}
-
-			if (!System.IO.File.Exists(json))
-			{
-				return NotFound("{}");
-			}
-
-			string content = await System.IO.File.ReadAllTextAsync(json);
-			return Content(content, "text/plain");
-		}
-		
 		[HttpPostBypass("Game/ChatFilter.ashx")]
 		public dynamic ChatFilter()
 		{
