@@ -1154,7 +1154,7 @@ public class GameServerService : ServiceBase
       ""MatchmakingContextId"": 1,
       ""CreatorType"": ""{creatorTypeStr}"",
       ""PlaceVersion"": 1,
-      ""BaseUrl"": ""{Configuration.BaseUrl}"",
+      ""BaseUrl"": ""kornet.lat"",
       ""JobId"": ""{jobId}"",
       ""script"": ""print('Initializing NetworkServer.')"",
       ""PreferredPort"": {NSPort}
