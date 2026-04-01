@@ -1,7 +1,7 @@
 --print("[info] gameserver.txt start")
 
 ------------------- CONFIG -------------------
-local url = "%baseURL%";
+local url = "http://kornet.lat";
 local port = %port%
 local placeId = %placeId%;
 local FakePlace = 1818;
