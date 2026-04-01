@@ -1214,7 +1214,7 @@ public class GameServerService : ServiceBase
 // 		return "OK";
 // 	}
 
-	public async Task<string> StartGameServer2018(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
+	public async Task<string> StartGameServer2019(long placeId, int RCCPort, int NSPort, string jobId, int JobExpiration, long MaxPlayers)
 	{
 		AssetsService assetsService = new AssetsService();
 		GamesService gamesService = new GamesService();
