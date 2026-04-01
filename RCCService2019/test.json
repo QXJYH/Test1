@@ -1,12 +1,12 @@
 {
    "Mode": "GameServer",
-   "GameId": "19d640bb-060c-4dac-b98e-28262ea728cf",
+   "GameId": "0ccd7ab0-7521-42a0-b5a8-d040abc90882",
    "Settings": {
       "Type": "Avatar",
       "PlaceId": 9484,
-      "SessionId": "6a24f44f-6dc5-4cd4-9025-43161b9e611b",
+      "SessionId": "cffe95f5-5a62-4787-aeb9-c2447f34c6c7",
       "CreatorId": 46,
-      "GameId": "19d640bb-060c-4dac-b98e-28262ea728cf",
+      "GameId": "0ccd7ab0-7521-42a0-b5a8-d040abc90882",
       "MachineAddress": "av2bq.kornet.lat",
       "GsmInterval": 5,
       "MaxPlayers": 10,
@@ -21,9 +21,9 @@
       "CreatorType": "User",
       "PlaceVersion": 1,
       "BaseUrl": "kornet.lat",
-      "JobId": "19d640bb-060c-4dac-b98e-28262ea728cf",
+      "JobId": "0ccd7ab0-7521-42a0-b5a8-d040abc90882",
       "script": "print('Initializing NetworkServer.')",
-      "PreferredPort": 3
+      "PreferredPort": 1
    },
    "Arguments": {}
 }
