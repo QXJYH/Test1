@@ -30,7 +30,7 @@ namespace Roblox.Services.Networking
             try
             {
                 _clientSide = new UdpClient(PublicPort);
-                _serverSide = new UdpClient();
+                _serverSide = new UdpClient(0);
             }
             catch (Exception ex)
             {
