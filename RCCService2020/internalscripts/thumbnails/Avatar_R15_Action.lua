@@ -1,5 +1,5 @@
 -- Avatar_R15_Action v1.1.1
--- For R6, this generates the normal with/without gear pose. For R15 it positions their body in an action pose.
+-- For R6, this generates the normal with/without gear pose.  For R15 it positions their body in an action pose.
 local baseUrl, characterAppearanceUrl, fileExtension, x, y = ...
 
 local ThumbnailGenerator = game:GetService("ThumbnailGenerator")
@@ -8,14 +8,6 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
 game:GetService("UserInputService").MouseIconEnabled = false
-game:GetService("HttpService").HttpEnabled = true
-
-pcall(function() game:GetService("InsertService"):SetAssetUrl(baseUrl .. "/Asset/?id=%d") end)
-pcall(function() game:GetService("InsertService"):SetAssetVersionUrl(baseUrl .. "/Asset/?assetversionid=%d") end)
-pcall(function() game:GetService("ScriptInformationProvider"):SetAssetUrl(baseUrl .. "/Asset/") end)
-
-local Insert = game:GetService("InsertService")
-local HttpService = game:GetService("HttpService")
 
 local player = game:GetService("Players"):CreateLocalPlayer(0)
 player.CharacterAppearance = characterAppearanceUrl
@@ -35,25 +27,36 @@ end
 
 local function applyKeyframe(character, poseKeyframe)
     local function recurApplyPoses(parentPose, poseObject)
-        if parentPose then
-            local joint = getJointBetween(character[parentPose.Name], character[poseObject.Name])
-            if joint and poseObject.Weight ~= 0 then
-                joint.C1 = poseObject.CFrame:inverse() + joint.C1.p
+        if poseObject:IsA("Pose") then
+            if parentPose then
+                local parentPart = character:FindFirstChild(parentPose.Name)
+                local childPart = character:FindFirstChild(poseObject.Name)
+
+                if parentPart and childPart and parentPart:IsA("BasePart") and childPart:IsA("BasePart") then
+                    local joint = getJointBetween(parentPart, childPart)
+                    if joint and poseObject.Weight ~= 0 then
+                        joint.C1 = poseObject.CFrame:inverse() + joint.C1.p
+                    end
+                end
             end
-        end
-        for _, subPose in pairs(poseObject:GetSubPoses()) do
-            recurApplyPoses(poseObject, subPose)
+
+            for _, subPose in pairs(poseObject:GetSubPoses()) do
+                recurApplyPoses(poseObject, subPose)
+            end
         end
     end
 
     for _, poseObj in pairs(poseKeyframe:GetPoses()) do
-        recurApplyPoses(nil, poseObj)
+        if poseObj:IsA("Pose") then
+            recurApplyPoses(nil, poseObj)
+        end
     end
 end
 
 local function applyR15Pose(character)
     local poseKeyframSequence = game:GetService("KeyframeSequenceProvider"):GetKeyframeSequence(poseAnimationId)
     local poseKeyframe = poseKeyframSequence:GetKeyframes()[1]
+
     applyKeyframe(character, poseKeyframe)
 end
 
@@ -65,7 +68,7 @@ local function findAttachmentsRecur(parent, resultTable, returnDictionary)
             else
                 resultTable[#resultTable + 1] = obj
             end
-        elseif not obj:IsA("Tool") and not obj:IsA("Accoutrement") then
+        elseif not obj:IsA("Tool") and not obj:IsA("Accoutrement") then -- Leave out tools and accoutrements in the character
             findAttachmentsRecur(obj, resultTable, returnDictionary)
         end
     end
@@ -110,7 +113,8 @@ local function doR15ToolPose(character, humanoid, tool)
     local characterAttachments = findAttachmentsInCharacter(character)
     local toolAttachments = findAttachmentsInTool(tool)
     local foundAttachments = false
-
+    -- If matching attachments exist in the gear then weld them and do the "action" R15 pose.
+    -- Otherwise keep the R15 in the T-Pose position and just raise the arm.
     for _, attachment in pairs(toolAttachments) do
         local matchingAttachment = characterAttachments[attachment.Name]
         if matchingAttachment then
@@ -123,15 +127,15 @@ local function doR15ToolPose(character, humanoid, tool)
         tool.Parent = character
         applyR15Pose(character)
 
-        local toolPose = tool:FindFirstChild("ThumbnailPose")
-        if toolPose and toolPose:IsA("Keyframe") then
-            applyKeyframe(character, toolPose)
-        end
+		local toolPose = tool:FindFirstChild("ThumbnailPose")
+		if toolPose and toolPose:IsA("Keyframe") then
+			applyKeyframe(character, toolPose)
+		end
     else
         tool.Parent = nil
         local rightShoulderJoint = getJointBetween(character.UpperTorso, character.RightUpperArm)
         if rightShoulderJoint then
-            rightShoulderJoint.C1 = rightShoulderJoint.C1 * CFrame.new(0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 1, 0):inverse()
+            rightShoulderJoint.C1 = rightShoulderJoint.C1 *  CFrame.new(0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 1, 0):inverse()
         end
         if tool:FindFirstChild("Handle") then
             local attachment = findFirstMatchingAttachment(character, "RightGripAttachment")
@@ -143,103 +147,10 @@ local function doR15ToolPose(character, humanoid, tool)
     end
 end
 
-local function applyMesh(character, children, limb)
-    local ok, msg = pcall(function()
-        local specialMesh = children[1]
-        local part = character[limb]
-        local m = part:FindFirstChild("Mesh")
-        if not m then
-            m = Instance.new("SpecialMesh")
-            m.Parent = part
-        end
-        m.Scale = specialMesh.Scale
-        m.TextureId = specialMesh.TextureId
-        m.MeshId = specialMesh.MeshId
-        m.MeshType = specialMesh.MeshType
-        m.VertexColor = specialMesh.VertexColor
-    end)
-    if not ok then
-        print("error loading mesh", msg)
-    end
-end
-
-local function applyPackage(character, children)
-    local ok, msg = pcall(function()
-        for _, asset in pairs(children) do
-            asset.Parent = character
-        end
-    end)
-    if not ok then
-        print("error loading package", msg)
-    end
-end
-
-local avatarData = HttpService:JSONDecode(HttpService:GetAsync(characterAppearanceUrl))
-
 local character = player.Character
 if character then
-    local done = 0
-    local total = #avatarData.assets
-
-    for _, asset in pairs(avatarData.assets) do
-        coroutine.wrap(function()
-            local ok, Asset = pcall(function()
-                return Insert:LoadAsset(asset.id)
-            end)
-
-            if not ok then
-                print("failed to load asset", asset.id, Asset)
-                done = done + 1
-                return
-            end
-
-            local children = Asset:GetChildren()
-
-            if asset.assetType.id == 17 then
-                applyMesh(character, children, "Head")
-            elseif asset.assetType.id == 27 or asset.assetType.id == 28 or asset.assetType.id == 29 or asset.assetType.id == 30 or asset.assetType.id == 31 then
-                applyPackage(character, children)
-            else
-                for _, item in pairs(children) do
-                    if asset.assetType.id == 18 then
-                        local head = character.Head
-                        if head:FindFirstChild("face") then
-                            head.face:Destroy()
-                        end
-                        item.Name = "face"
-                        item.Parent = head
-                    else
-                        item.Parent = character
-                    end
-                end
-            end
-
-            done = done + 1
-        end)()
-    end
-
-    repeat wait() until done == total
-
-    local bc = avatarData.bodyColors
-    if bc then
-        local colors = {
-            ['Head']      = bc.headColorId,
-            ['Torso']     = bc.torsoColorId,
-            ['Left Arm']  = bc.leftArmColorId,
-            ['Right Arm'] = bc.rightArmColorId,
-            ['Left Leg']  = bc.leftLegColorId,
-            ['Right Leg'] = bc.rightLegColorId,
-        }
-        for part, color in pairs(colors) do
-            if character:FindFirstChild(part) then
-                character[part].BrickColor = BrickColor.new(color)
-            end
-        end
-    end
-
     local tool = character:FindFirstChildOfClass("Tool")
     local humanoid = character:FindFirstChildOfClass("Humanoid")
-
     local animateScript = character:FindFirstChild("Animate")
     if animateScript then
         local equippedPoseValue = animateScript:FindFirstChild("Pose") or animateScript:FindFirstChild("pose")
