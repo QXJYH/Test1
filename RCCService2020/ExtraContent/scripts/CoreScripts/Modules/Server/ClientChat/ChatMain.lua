@@ -1120,5 +1120,13 @@ for i, channelData in pairs(initData.Channels) do
 		HandleChannelJoined(channelData[1], channelData[2], channelData[3], channelData[4], true, false)
 	end
 end
-
+spawn(function()
+	while not DidFirstChannelsLoads do
+		wait()
+	end
+	wait(1)
+	moduleApiTable.ChatMakeSystemMessageEvent:fire({
+		Text = "hello welcome to kornet!"
+	})
+end)
 return moduleApiTable
