@@ -58,6 +58,7 @@ public static class Configuration
 	public static string RccService2019Path { get; set; }
 	public static string RccService2020Path { get; set; }
     public static string RccService2021Path { get; set; }
+	public static string SUDPPipePath { get; set; }
 	public static string LuaScriptPath { get; set; }
 	public static IEnumerable<string> AllowedQuietGetJson { get; set; } = Array.Empty<string>();
     public const string UserAgentBypassSecret = "7C8D2E1A-9B34-4F67-9A2C-3D5E8F1A2B3CE4F5A678-9B0C-4D1E-8F2A-3B4C5D6E7F8AB2C3D4E5-F6A7-4B8C-9D0E-1F2A3B4C5D6E";
