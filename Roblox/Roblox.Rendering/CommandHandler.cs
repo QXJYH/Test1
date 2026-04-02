@@ -317,7 +317,7 @@ namespace Roblox.Rendering
 				}
 			}
 
-			throw new Exception($"port take too long ");
+			throw new Exception($"RCC2020 did not become ready on port {port} within 30 seconds");
 		}
 		
 		private static async Task<string> SendSoapRequest(int port, string soapAction, string xmlBody)
@@ -339,8 +339,36 @@ namespace Roblox.Rendering
 			await WaitForRccReady(port);
 			var jobId = Guid.NewGuid().ToString();
 			var baseUrl = Roblox.Configuration.BaseUrl;
-
 			var charApp = $"{baseUrl}/v1.1/avatar-fetch?placeId=0&userId={userId}";
+
+			object[] arguments;
+			if (renderType == "Closeup")
+			{
+				arguments = new object[]
+				{
+					Roblox.Configuration.BaseUrl,
+					charApp,
+					"Png",
+					840,
+					840,
+					false,  // quadratic
+					70.0,   // baseHatZoom
+					120.0,  // maxHatZoom
+					0.0,    // cameraOffsetX
+					0.0,    // cameraOffsetY
+				};
+			}
+			else
+			{
+				arguments = new object[]
+				{
+					Roblox.Configuration.BaseUrl,
+					charApp,
+					"Png",
+					840,
+					840,
+				};
+			}
 
 			var Json = new
 			{
@@ -348,14 +376,7 @@ namespace Roblox.Rendering
 				Settings = new
 				{
 					Type = renderType,
-					Arguments = new object[]
-					{
-						Roblox.Configuration.BaseUrl,
-						charApp,
-						"Png",
-						840,
-						840,
-					}
+					Arguments = arguments,
 				}
 			};
 
