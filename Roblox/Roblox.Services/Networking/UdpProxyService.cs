@@ -5,12 +5,11 @@ namespace Roblox.Services.Networking
 {
     public class UdpProxy : IDisposable
     {
-        private readonly UdpClient _clientSide;
-        private readonly UdpClient _serverSide;
+        private UdpClient? _clientSide;
+        private UdpClient? _serverSide;
         private readonly IPEndPoint _serverEndPoint;
         private bool _isRunning;
-        private Task _clientToServerTask;
-        private Task _serverToClientTask;
+        private CancellationTokenSource? _cts;
 
         public int PublicPort { get; }
         public int InternalPort { get; }
@@ -20,102 +19,87 @@ namespace Roblox.Services.Networking
             PublicPort = publicPort;
             InternalPort = internalPort;
             _serverEndPoint = new IPEndPoint(IPAddress.Loopback, internalPort);
-
-            _clientSide = new UdpClient(publicPort);
-            _serverSide = new UdpClient();
         }
 
         public void Start()
         {
             if (_isRunning) return;
             _isRunning = true;
+            _cts = new CancellationTokenSource();
 
-            _clientToServerTask = Task.Run(async () =>
+            try
             {
-                IPEndPoint? remoteClientEndPoint = null;
-                while (_isRunning)
-                {
-                    try
-                    {
-                        var result = await _clientSide.ReceiveAsync();
-                        remoteClientEndPoint = result.RemoteEndPoint;
-                        await _serverSide.SendAsync(result.Buffer, result.Buffer.Length, _serverEndPoint);
-                    }
-                    catch (Exception) when (!_isRunning) { }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[UdpProxy] Error in Client -> Server: {ex.Message}");
-                    }
-                }
-            });
+                _clientSide = new UdpClient(PublicPort);
+                _serverSide = new UdpClient();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[UdpProxy] Failed to initialize ports {PublicPort}/{InternalPort}: {ex.Message}");
+                _isRunning = false;
+                return;
+            }
 
-            _serverToClientTask = Task.Run(async () =>
-            {
-                IPEndPoint? remoteClientEndPoint = null;
-                while (_isRunning)
-                {
-                    try
-                    {
-                        var result = await _serverSide.ReceiveAsync();
-                    }
-                    catch (Exception) when (!_isRunning) { }
-                }
-            });
-            
-            _isRunning = false;
-            _clientSide.Dispose();
-            _serverSide.Dispose();
-            StartRobust();
+            Task.Run(() => RunProxyLoop(_cts.Token));
         }
 
-        private void StartRobust()
+        private async Task RunProxyLoop(CancellationToken token)
         {
-            _isRunning = true;
-            _ = Task.Run(async () =>
+            IPEndPoint? lastClient = null;
+
+            var clientToServer = Task.Run(async () =>
             {
-                IPEndPoint? lastClient = null;
-                
-                var clientTask = Task.Run(async () =>
+                while (!token.IsCancellationRequested && _isRunning)
                 {
-                    while (_isRunning)
+                    try
                     {
-                        try
-                        {
-                            var result = await _clientSide.ReceiveAsync();
-                            lastClient = result.RemoteEndPoint;
-                            await _serverSide.SendAsync(result.Buffer, result.Buffer.Length, _serverEndPoint);
-                        }
-                        catch (Exception) when (!_isRunning) { break; }
-                        catch (Exception ex) { Console.WriteLine($"[UdpProxy] Client->Server Error: {ex.Message}"); }
+                        var result = await _clientSide!.ReceiveAsync(token);
+                        lastClient = result.RemoteEndPoint;
+                        await _serverSide!.SendAsync(result.Buffer, result.Buffer.Length, _serverEndPoint);
                     }
-                });
+                    catch (OperationCanceledException) { break; }
+                    catch (ObjectDisposedException) { break; }
+                    catch (Exception ex)
+                    {
+                        if (_isRunning) Console.WriteLine($"[UdpProxy] Client->Server Error: {ex.Message}");
+                    }
+                }
+            }, token);
 
-                var serverTask = Task.Run(async () =>
+            var serverToClient = Task.Run(async () =>
+            {
+                while (!token.IsCancellationRequested && _isRunning)
                 {
-                    while (_isRunning)
+                    try
                     {
-                        try
+                        var result = await _serverSide!.ReceiveAsync(token);
+                        if (lastClient != null)
                         {
-                            var result = await _serverSide.ReceiveAsync();
-                            if (lastClient != null)
-                            {
-                                await _clientSide.SendAsync(result.Buffer, result.Buffer.Length, lastClient);
-                            }
+                            await _clientSide!.SendAsync(result.Buffer, result.Buffer.Length, lastClient);
                         }
-                        catch (Exception) when (!_isRunning) { break; }
-                        catch (Exception ex) { Console.WriteLine($"[UdpProxy] Server->Client Error: {ex.Message}"); }
                     }
-                });
+                    catch (OperationCanceledException) { break; }
+                    catch (ObjectDisposedException) { break; }
+                    catch (Exception ex)
+                    {
+                        if (_isRunning) Console.WriteLine($"[UdpProxy] Server->Client Error: {ex.Message}");
+                    }
+                }
+            }, token);
 
-                await Task.WhenAll(clientTask, serverTask);
-            });
+            try
+            {
+                await Task.WhenAll(clientToServer, serverToClient);
+            }
+            catch (Exception) { /* Handled in loops */ }
         }
 
         public void Dispose()
         {
             _isRunning = false;
+            _cts?.Cancel();
             _clientSide?.Dispose();
             _serverSide?.Dispose();
+            _cts?.Dispose();
         }
     }
 
