@@ -19,7 +19,6 @@ using Roblox.Models.GameServer;
 using Roblox.Rendering;
 using Roblox.Services.App.FeatureFlags;
 using Roblox.Services.Exceptions;
-using Roblox.Services.Networking;
 
 namespace Roblox.Services;
 
@@ -296,10 +295,6 @@ public class GameServerService : ServiceBase
 					currentPlaceIdsInUse[placeId] = DagLover34;
 			}
 			currentGameServerPorts.TryRemove(placeJobId, out var removedNSport);
-			if (Configuration.UseProxy)
-			{
-				UdpProxyService.StopProxy(removedNSport);
-			}
 			jobRccs.TryRemove(placeJobId, out var removedRCCport);
 			mainRCCPortsInUse.Remove(rccProcess);
 			RemoveAllPlayersFromPlaceId(placeId);
@@ -721,28 +716,12 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
 
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
-
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
 
 		Process rccServer = new Process();
 		rccServer.StartInfo.CreateNoWindow = false;
@@ -757,7 +736,7 @@ public class GameServerService : ServiceBase
 		string originalScript = File.ReadAllText($"{Configuration.LuaScriptPath}GameServer.lua");
 		string finalScript = originalScript.Replace
 			("%baseURL%", $"{Configuration.BaseUrl}").Replace
-			("%port%", $"{internalPort}").Replace
+			("%port%", $"{NSPort}").Replace
 			("%placeId%", $"{placeId}").Replace
 			("%creatorId%", $"{uni.builderId}").Replace
 			("%apiKey%", $"{Configuration.RccAuthorization}").Replace
@@ -832,27 +811,11 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
 			
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
-
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
 
 		Process rccServer = new Process();
@@ -867,7 +830,7 @@ public class GameServerService : ServiceBase
 
 		string originalScript = File.ReadAllText($"{Configuration.LuaScriptPath}GameServer.lua");
 		string finalScript = originalScript.Replace
-			("%port%", $"{internalPort}").Replace
+			("%port%", $"{NSPort}").Replace
 			("%placeId%", $"{placeId}").Replace
 			("%creatorId%", $"{uni.builderId}").Replace
 			("%apiKey%", $"{Configuration.RccAuthorization}").Replace
@@ -943,26 +906,10 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
-
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
 
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
 
@@ -1055,26 +1002,10 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
-
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
 
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
 
@@ -1240,7 +1171,7 @@ public class GameServerService : ServiceBase
 // 			{
 // 				id = jobId,
 // 				asset_id = placeId,
-// 				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+// 				ip = "av2bq.kornet.lat",
 // 				port = NSPort,
 // 				RCCConnection = $"127.0.0.1:{RCCPort}",
 // 			});
@@ -1301,26 +1232,10 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
-
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
 
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
 
@@ -1452,26 +1367,10 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
-
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
 
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
 
@@ -1605,26 +1504,10 @@ public class GameServerService : ServiceBase
 			{
 				id = jobId,
 				asset_id = placeId,
-				ip = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+				ip = "av2bq.kornet.lat",
 				port = NSPort,
 				RCCConnection = $"127.0.0.1:{RCCPort}",
 			});
-
-		int internalPort = NSPort;
-		if (Configuration.UseProxy)
-		{
-			var random = new Random();
-			for (int i = 0; i < 100; i++)
-			{
-				int candidate = random.Next(40000, 50000);
-				if (IsPortAvailable(candidate))
-				{
-					internalPort = candidate;
-					break;
-				}
-			}
-			UdpProxyService.StartProxy(NSPort, internalPort);
-		}
 
 		Console.WriteLine($"[DEBUG] current GS ports: {string.Join(",", currentGameServerPorts.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
 

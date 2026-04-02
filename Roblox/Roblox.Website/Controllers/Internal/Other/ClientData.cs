@@ -191,6 +191,10 @@ namespace Roblox.Website.Controllers
 			try
 			{
 				var text = HttpContext.Request.Form["text"].ToString();
+				var userId = HttpContext.Request.Form["userId"].ToString();
+				var placeId = HttpContext.Request.Headers["placeId"].ToString();
+				var gameInstanceId = HttpContext.Request.Headers["gameInstanceID"].ToString();
+
 				var filteredText = services.filter.FilterText(text);
 				
 				return new

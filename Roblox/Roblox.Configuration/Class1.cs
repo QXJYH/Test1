@@ -1,4 +1,4 @@
-// ReSharper disable InconsistentNaming
+﻿// ReSharper disable InconsistentNaming
 #pragma warning disable CS8618
 namespace Roblox;
 
@@ -24,8 +24,6 @@ public static class Configuration
     public static string BaseUrl { get; set; }
     public static string AssetUrl { get; set; }   
 	public static string GSIPAddress { get; set; }
-	public static string ProxyIP { get; set; }
-	public static bool UseProxy { get; set; }
 	public static string Webhook { get; set; }
 	public static string SignupWebhook { get; set; }
 	public static string AssetLoggerWebhook { get; set; }

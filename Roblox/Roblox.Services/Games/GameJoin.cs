@@ -80,7 +80,7 @@ namespace Roblox.Services
             return Task.FromResult<dynamic>(new
             {
                 ClientPort = 0,
-                MachineAddress = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+                MachineAddress = $"{Configuration.GSIPAddress}",
                 ServerPort = serverPort,
                 DirectServerReturn = true,
                 PingUrl = "",
@@ -129,7 +129,7 @@ namespace Roblox.Services
             return Task.FromResult<dynamic>(new
             {
                 ClientPort = 0,
-                MachineAddress = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+                MachineAddress = $"{Configuration.GSIPAddress}",
                 ServerPort = serverPort,
                 PingUrl = "",
                 PingInterval = 0,
@@ -169,7 +169,7 @@ namespace Roblox.Services
             return Task.FromResult<dynamic>(new
             {
                 ClientPort = 0,
-                MachineAddress = Configuration.UseProxy ? Configuration.ProxyIP : Configuration.GSIPAddress,
+                MachineAddress = $"{Configuration.GSIPAddress}",
                 ServerPort = serverPort,
                 PingUrl = "",
                 PingInterval = 0,
