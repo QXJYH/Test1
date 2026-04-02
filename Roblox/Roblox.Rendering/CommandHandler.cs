@@ -12,7 +12,7 @@ using Roblox.Logging;
 using System.Net;
 using System.Xml;
 using Roblox;
-// comments are useless ass fuck features why do comments even exist bruda
+
 namespace Roblox.Rendering
 {
     public static class CommandHandler
@@ -24,8 +24,7 @@ namespace Roblox.Rendering
 		private static Dictionary<int, Process> rccProcesses { get; } = new();
         private static Random random { get; } = new();
         private static object rccLock { get; } = new();
-		private static SemaphoreSlim R15RenderLock { get; } = new(1, 1);
-		private static SemaphoreSlim R6HeadshotLock { get; } = new(1, 1);
+		private static SemaphoreSlim Rcc2020Lock { get; } = new(1, 1);
 		private static Process? rccProcess;
 		private static int? rccPort;
 
@@ -292,6 +291,34 @@ namespace Roblox.Rendering
 				return rccPort.Value;
 			}
 		}
+
+		private static async Task WaitForRccReady(int port)
+		{
+			var deadline = DateTime.UtcNow.AddSeconds(30);
+			while (DateTime.UtcNow < deadline)
+			{
+				try
+				{
+					var pingXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+			<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+			   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+			   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+				<soap:Body>
+					<HelloWorld xmlns=""http://roblox.com/"" />
+				</soap:Body>
+			</soap:Envelope>";
+
+					await SendSoapRequest(port, "http://roblox.com/HelloWorld", pingXml);
+					return;
+				}
+				catch
+				{
+					await Task.Delay(500);
+				}
+			}
+
+			throw new Exception($"port take too long ");
+		}
 		
 		private static async Task<string> SendSoapRequest(int port, string soapAction, string xmlBody)
 		{
@@ -306,9 +333,10 @@ namespace Roblox.Rendering
 			return await response.Content.ReadAsStringAsync();
 		}
 
-		private static async Task<Stream> RenderR15(long userId, string renderType, CancellationToken? cancellationToken = null)
+		private static async Task<Stream> RenderRcc2020(long userId, string renderType, CancellationToken? cancellationToken = null)
 		{
 			var port = await StartRccService();
+			await WaitForRccReady(port);
 			var jobId = Guid.NewGuid().ToString();
 			var baseUrl = Roblox.Configuration.BaseUrl;
 
@@ -370,13 +398,12 @@ namespace Roblox.Rendering
 				NSManager.AddNamespace("ns1", "http://roblox.com/");
 				
 				var resNodes = xmlDoc.SelectNodes("//soap:Envelope/soap:Body/ns1:OpenJobResponse/ns1:OpenJobResult", NSManager);
-				using var httpClient = new HttpClient();
 				foreach (XmlNode resultNode in resNodes)
 				{
 					var typeNode = resultNode.SelectSingleNode("ns1:type", NSManager);
 					var valueNode = resultNode.SelectSingleNode("ns1:value", NSManager);
 					
-					if (typeNode != null && valueNode != null && 
+					if (typeNode != null && valueNode != null &&
 						// tstring contains the actual b64 render
 						typeNode.InnerText == "LUA_TSTRING" && 
 						!string.IsNullOrEmpty(valueNode.InnerText))
@@ -398,118 +425,22 @@ namespace Roblox.Rendering
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"R15 {renderType} rendering failed: {ex.Message}");
-				throw;
-			}
-		}
-
-		private static async Task<Stream> RenderR6Headshot(long userId, CancellationToken? cancellationToken = null)
-		{
-			var port = await StartRccService();
-			var jobId = Guid.NewGuid().ToString();
-			var baseUrl = Roblox.Configuration.BaseUrl;
-
-			var charApp = $"{baseUrl}/v1.1/avatar-fetch?placeId=0&userId={userId}";
-
-			var Json = new
-			{
-				Mode = "Thumbnail",
-				Settings = new
-				{
-					Type = "Closeup",
-					Arguments = new object[]
-					{
-						Roblox.Configuration.BaseUrl,
-						charApp,
-						"Png",
-						840,
-						840,
-					}
-				}
-			};
-
-			var finalJson = JsonSerializer.Serialize(Json);
-
-			var XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-		<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
-		   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
-		   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-			<soap:Body>
-				<OpenJob xmlns=""http://roblox.com/"">
-					<job>
-						<id>{jobId}</id>
-						<expirationInSeconds>60</expirationInSeconds>
-						<category>0</category>
-						<cores>1</cores>
-					</job>
-					<script>
-						<name>GameServer</name>
-						<script>{finalJson}</script>
-					</script>
-					<arguments>
-						<LuaValue>
-							<type>LUA_TNIL</type>
-						</LuaValue>
-					</arguments>
-				</OpenJob>
-			</soap:Body>
-		</soap:Envelope>";
-
-			try
-			{
-				var res = await SendSoapRequest(port, "http://roblox.com/OpenJob", XML);
-				
-				var xmlDoc = new XmlDocument();
-				xmlDoc.LoadXml(res);
-				
-				var NSManager = new XmlNamespaceManager(xmlDoc.NameTable);
-				NSManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/");
-				NSManager.AddNamespace("ns1", "http://roblox.com/");
-				
-				var resNodes = xmlDoc.SelectNodes("//soap:Envelope/soap:Body/ns1:OpenJobResponse/ns1:OpenJobResult", NSManager);
-				foreach (XmlNode resultNode in resNodes)
-				{
-					var typeNode = resultNode.SelectSingleNode("ns1:type", NSManager);
-					var valueNode = resultNode.SelectSingleNode("ns1:value", NSManager);
-					
-					if (typeNode != null && valueNode != null && 
-						// tstring contains the actual b64 render
-						typeNode.InnerText == "LUA_TSTRING" && 
-						!string.IsNullOrEmpty(valueNode.InnerText))
-					{
-						try
-						{
-							var imgBytes = Convert.FromBase64String(valueNode.InnerText);
-							await SendCloseJobRequest(port, jobId);								
-							return new MemoryStream(imgBytes);						
-						}
-						catch (FormatException)
-						{
-							continue;
-						}
-					}
-				}
-				
-				throw new Exception("no b64 found in RCC Response");
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"r6 closeup shitty rendering failed: {ex.Message}");
+				Console.WriteLine($"RCC2020 {renderType} rendering failed: {ex.Message}");
 				throw;
 			}
 		}
 
 		public static async Task<Stream> RequestPlayerThumbnailR15(long userId, CancellationToken? cancellationToken = null)
 		{
-			await R15RenderLock.WaitAsync(cancellationToken ?? CancellationToken.None);
+			await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
 			
 			try
 			{
-				return await RenderR15(userId, "Avatar_R15_Action", cancellationToken);
+				return await RenderRcc2020(userId, "Avatar_R15_Action", cancellationToken);
 			}
 			finally
 			{
-				R15RenderLock.Release();
+				Rcc2020Lock.Release();
 			}
 		}
 
@@ -541,15 +472,15 @@ namespace Roblox.Rendering
             if (data.playerAvatarType != "R6")
                 throw new Exception("Invalid PlayerAvatarType");
 
-            await R6HeadshotLock.WaitAsync(cancellationToken ?? CancellationToken.None);
+            await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
 
             try
             {
-                return await RenderR6Headshot(data.userId, cancellationToken);
+                return await RenderRcc2020(data.userId, "Closeup", cancellationToken);
             }
             finally
             {
-                R6HeadshotLock.Release();
+                Rcc2020Lock.Release();
             }
         }
 
@@ -569,7 +500,6 @@ namespace Roblox.Rendering
                 assetId, 
             }, cancellationToken);
         }
-        
 
         public static async Task<Stream> RequestHeadThumbnail(long assetId, CancellationToken? cancellationToken = null)
         {
