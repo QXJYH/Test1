@@ -351,9 +351,9 @@ namespace Roblox.Rendering
 					"Png",
 					840,
 					840,
-					false,  // quadratic
-					70.0,   // baseHatZoom
-					120.0,  // maxHatZoom
+					true,   // quadratic
+					30.0,   // baseHatZoom
+					130.0,  // maxHatZoom
 					0.0,    // cameraOffsetX
 					0.0,    // cameraOffsetY
 				};
