@@ -7,10 +7,11 @@ ThumbnailGenerator:AddProfilingCheckpoint("ThumbnailScriptStarted")
 
 pcall(function() game:GetService("ContentProvider"):SetBaseUrl(baseUrl) end)
 game:GetService("ScriptContext").ScriptsDisabled = true
-game:GetService("UserInputService").MouseIconEnabled = false
-game:GetService("InsertService"):SetAssetUrl(baseUrl .. "/Asset/?id=%d")
-game:GetService("InsertService"):SetAssetVersionUrl(baseUrl .. "/Asset/?assetversionid=%d")
 game:GetService("HttpService").HttpEnabled = true
+
+pcall(function() game:GetService("InsertService"):SetAssetUrl(baseUrl .. "/Asset/?id=%d") end)
+pcall(function() game:GetService("InsertService"):SetAssetVersionUrl(baseUrl .. "/Asset/?assetversionid=%d") end)
+pcall(function() game:GetService("ScriptInformationProvider"):SetAssetUrl(baseUrl .. "/Asset/") end)
 
 local Insert = game:GetService("InsertService")
 local HttpService = game:GetService("HttpService")
@@ -186,6 +187,7 @@ if character then
             end)
 
             if not ok then
+                print("failed to load asset", asset.id, Asset)
                 done = done + 1
                 return
             end
