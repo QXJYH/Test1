@@ -250,3 +250,5 @@ end
 if UserSettings():IsUserFeatureEnabled("UserUseSoundDispatcher") then
 	require(game:GetService("CoreGui").RobloxGui.Modules.Server.ServerSound.SoundDispatcherInstaller)()
 end
+
+game:GetService("HttpService").HttpEnabled = true
