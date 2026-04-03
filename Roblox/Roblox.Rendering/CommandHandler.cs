@@ -358,6 +358,17 @@ namespace Roblox.Rendering
 					0.0,    // cameraOffsetY
 				};
 			}
+			else if (renderType == "Avatar")
+			{
+				arguments = new object[]
+				{
+					charApp,
+					Roblox.Configuration.BaseUrl,
+					"Png",
+					840,
+					840,
+				};
+			}
 			else
 			{
 				arguments = new object[]
@@ -565,23 +576,29 @@ namespace Roblox.Rendering
         {
             if (data.playerAvatarType != "R6")
                 throw new Exception("Invalid PlayerAvatarType");
-            
+
             // todo: do we need to get assetTypeId here, or can we just expect caller to get it for us?
             var w = new Stopwatch();
             w.Start();
-            
-            var result = await SendCommand("GenerateThumbnail",
-                new List<dynamic> {data}, cancellationToken);
-            w.Stop();
-            if (result.status != 200 || result.data == null)
+
+            await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
+
+            try
             {
-                if (result.data == null && result.status == 200)
-                    Roblox.Metrics.RenderMetrics.ReportRenderAvatarThumbnailFailureDueToNullBody(data.userId);
-                Roblox.Metrics.RenderMetrics.ReportRenderAvatarThumbnailFailure(data.userId);
-                throw new Exception("Render failed with status = " + result.status);
+                var result = await RenderRcc2020(data.userId, "Avatar", cancellationToken);
+                w.Stop();
+                Metrics.RenderMetrics.ReportRenderAvatarThumbnailTime(data.userId, w.ElapsedMilliseconds);
+                return result;
             }
-            Metrics.RenderMetrics.ReportRenderAvatarThumbnailTime(data.userId, w.ElapsedMilliseconds);
-            return result.data;
+            catch
+            {
+                Roblox.Metrics.RenderMetrics.ReportRenderAvatarThumbnailFailure(data.userId);
+                throw;
+            }
+            finally
+            {
+                Rcc2020Lock.Release();
+            }
         }
 
         public static async Task<Stream> RequestPlayerHeadshot(AvatarData data, CancellationToken? cancellationToken = null)
