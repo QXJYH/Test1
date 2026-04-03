@@ -17,17 +17,22 @@ public class RobloxPlayerCorsMiddleware
         connectSrc += " ws://localhost:*";
 #endif
 
-        var imgSrc = "'self' data: https://images.rbxcdn.com";
+        // Images
+        var imgSrc = "'self' data:";
         if (isAuthenticated)
         {
-            imgSrc += " https://*.cdn.kornet.lat";
+            imgSrc += "  https://*.cdn.kornet.lat";
         }
         
-        var scriptSrc = "'unsafe-eval' 'self' https://hcaptcha.com https://*.hcaptcha.com https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js http://localhost:5000";
+        // Scripts
         
-        return "default-src 'self'; img-src https://kornet.lat http://kornet.lat https://*.kornet.lat "+imgSrc+"; child-src 'self'; script-src https://esm.sh "+scriptSrc+"; frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://*.kornet.lat https://kornet.lat; style-src 'unsafe-inline' 'self' https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css https://css.rbxcdn.com; font-src 'self' fonts.gstatic.com https://css.rbxcdn.com; connect-src "+connectSrc+"; worker-src 'self';";
+        // unsafe-eval required by nextjs
+        var scriptSrc =
+            "'unsafe-eval' 'self' https://hcaptcha.com https://*.hcaptcha.com https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js http://localhost:5000";
+        
+        return "default-src 'self'; img-src https://kornet.lat http://kornet.lat https://*.kornet.lat data:; child-src 'self'; script-src https://esm.sh "+scriptSrc+"; frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://*.kornet.lat https://kornet.lat; style-src 'unsafe-inline' 'self' https://fonts.googleapis.com https://hcaptcha.com https://*.hcaptcha.com https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css; font-src 'self' fonts.gstatic.com; connect-src "+connectSrc+"; worker-src 'self';";
     }
-    // we dont need shitty ass comments that are useless :skull:
+    
     public async Task InvokeAsync(HttpContext ctx)
     {
         var isAuthenticated = ctx.Items.ContainsKey(".ROBLOSECURITY");
