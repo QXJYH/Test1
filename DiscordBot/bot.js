@@ -28,7 +28,7 @@ const ALLOWED_USER_IDS = [
     '1361029212194210036'
 ];
 
-const BOOSTS_FILE = path.join(__dirname, 'boosts.json');
+
 const REWARD_ITEM_IDS = [2069, 6608, 4505, 2617];
 const BOOST_MESSAGE_TYPES = [
     MessageType.GuildBoost,
@@ -37,24 +37,7 @@ const BOOST_MESSAGE_TYPES = [
     MessageType.GuildBoostTier3
 ];
 
-function loadBoosts() {
-    try {
-        if (fs.existsSync(BOOSTS_FILE)) {
-            return JSON.parse(fs.readFileSync(BOOSTS_FILE, 'utf8'));
-        }
-    } catch (error) {
-        console.error('Error loading boosts:', error);
-    }
-    return {};
-}
 
-function saveBoosts(boosts) {
-    try {
-        fs.writeFileSync(BOOSTS_FILE, JSON.stringify(boosts, null, 2), 'utf8');
-    } catch (error) {
-        console.error('Error saving boosts:', error);
-    }
-}
 
 console.log('kornet bot goin up');
 
@@ -411,9 +394,8 @@ client.on('messageCreate', async message => {
         console.log(`Added message to transcript for ticket ${channelId}`);
     }
 
-    // Boost detection
     if (BOOST_MESSAGE_TYPES.includes(message.type)) {
-        console.log(`Boost detected from ${message.author.tag}`);
+        console.log(`sm1 boosted: ${message.author.tag}`);
         await handleBoost(message);
     }
 });
@@ -1363,15 +1345,14 @@ async function handleGiveItem(interaction, options) {
 
 async function handleBoost(message) {
     const userId = message.author.id;
-    const boosts = loadBoosts();
 
-    boosts[userId] = (boosts[userId] || 0) + 1;
-    saveBoosts(boosts);
+    const boostCountMatch = message.content.match(/just boosted the server (\d+) times/i);
+    const boostCount = boostCountMatch ? parseInt(boostCountMatch[1]) : 1;
 
-    console.log(`User ${message.author.tag} now has ${boosts[userId]} boost(s).`);
+    console.log(`sm1 boosted: ${message.author.tag}. current boosts from msg: ${boostCount}`);
 
-    if (boosts[userId] >= 2) {
-        console.log(`Rewarding ${message.author.tag} for 2 boosts!`);
+    if (boostCount % 2 === 0) {
+        console.log(`Rewarding ${message.author.tag} for reaching ${boostCount} boosts!`);
 
         try {
             const robuxRes = await apiClient.get('/botapi/discord/add-robux', {
@@ -1395,25 +1376,22 @@ async function handleBoost(message) {
                         if (giveRes.data.success) {
                             itemsGiven.push(itemId);
                         } else {
-                            errors.push(`Failed to give ${itemId}: ${giveRes.data.error}`);
+                            errors.push(`failed to give ${itemId}: ${giveRes.data.error}`);
                         }
                     } else if (checkRes.data.isOwned) {
                         itemsOwned.push(itemId);
                     }
                 } catch (e) {
-                    errors.push(`Error processing ${itemId}: ${e.message}`);
+                    errors.push(`error processing ${itemId}: ${e.message}`);
                 }
             }
-
-            boosts[userId] = 0;
-            saveBoosts(boosts);
 
             const embed = new EmbedBuilder()
                 .setColor(0xFFD700)
                 .setTitle('reward for boostin the server :)')
-                .setDescription(`Thank you for boosting the server twice, ${message.author}!`)
+                .setDescription(`thank you for boosting the server ${boostCount} times, ${message.author}!`)
                 .addFields(
-                    { name: 'robucks', value: '1k robux', inline: true },
+                    { name: 'robux', value: '1k robux', inline: true },
                     { name: 'items', value: itemsGiven.length > 0 ? itemsGiven.join(', ') : 'none (already owned)', inline: true }
                 )
                 .setTimestamp();
@@ -1433,7 +1411,8 @@ async function handleBoost(message) {
             await message.channel.send(`error rewarding ${message.author} for boost: ${error.message}`);
         }
     } else {
-        await message.channel.send(`thank you for the boost, ${message.author}! youve boosted **${boosts[userId]}** time boost 1 more time and u get stuff in boost-perks :)`);
+        const remaining = 2 - (boostCount % 2);
+        await message.channel.send(`thank you for the boost, ${message.author}! youve boosted **${boostCount}** ${boostCount === 1 ? 'time' : 'times'} boost ${remaining} more time and u get stuff in boost-perks :)`);
     }
 }
 
