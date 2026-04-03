@@ -8,12 +8,12 @@ local SpecialChatColors = {
 			--- ROBLOX Interns group
 			GroupId = 2868472,
 			Rank = 100,
-			ChatColor = Color3.new(175/255, 221/255, 1),
+			ChatColor = Color3.new(1, 0, 0),
 		},
 		{
 			--- ROBLOX Admins group
 			GroupId = 1200769,
-			ChatColor = Color3.new(1, 215/255, 0),
+			ChatColor = Color3.new(1, 0, 0),
 		},
 	},
 	Players = {
