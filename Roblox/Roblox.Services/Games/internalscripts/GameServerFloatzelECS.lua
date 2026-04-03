@@ -1,7 +1,7 @@
 print("[info] gameserver.txt start")
 local serverOk = false;
 local http = game:GetService("HttpService");
-http.HttpEnabled = false;
+http.HttpEnabled = true;
 
 -- begin dynamiclly edited
 local url = "http://kornet.lat";

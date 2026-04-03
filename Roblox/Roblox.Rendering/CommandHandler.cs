@@ -259,7 +259,7 @@ namespace Roblox.Rendering
 		
 		private static readonly HttpClient httpClient = new()
 		{
-			Timeout = TimeSpan.FromMinutes(1)
+			Timeout = TimeSpan.FromMinutes(2)
 		};
 		
 		private static async Task<int> StartRccService()
@@ -442,11 +442,107 @@ namespace Roblox.Rendering
 					}
 				}
 				
-				throw new Exception("no b64 found in RCC Response");
+				throw new Exception("no bullshit found in rcc response");
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"RCC2020 {renderType} rendering failed: {ex.Message}");
+				Console.WriteLine($"rcc {renderType} render shit fail here msg {ex.Message}");
+				throw;
+			}
+		}
+
+		private static async Task<Stream> RenderRcc2020Game(long assetId, int x, int y, CancellationToken? cancellationToken = null)
+		{
+			var port = await StartRccService();
+			await WaitForRccReady(port);
+			var jobId = Guid.NewGuid().ToString();
+			var baseUrl = Roblox.Configuration.BaseUrl;
+			var assetUrl = $"{baseUrl}/Asset/?id={assetId}&apikey=rccservislwkgoated";
+
+			var Json = new
+			{
+				Mode = "Thumbnail",
+				Settings = new
+				{
+					Type = "Place",
+					Arguments = new object[]
+					{
+						assetUrl,
+						"Png",
+						x,
+						y,
+						baseUrl,
+					}
+				}
+			};
+
+			var finalJson = JsonSerializer.Serialize(Json);
+
+			var XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+		<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+		   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+		   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+			<soap:Body>
+				<OpenJob xmlns=""http://roblox.com/"">
+					<job>
+						<id>{jobId}</id>
+						<expirationInSeconds>120</expirationInSeconds>
+						<category>0</category>
+						<cores>1</cores>
+					</job>
+					<script>
+						<name>GameServer</name>
+						<script>{finalJson}</script>
+					</script>
+					<arguments>
+						<LuaValue>
+							<type>LUA_TNIL</type>
+						</LuaValue>
+					</arguments>
+				</OpenJob>
+			</soap:Body>
+		</soap:Envelope>";
+
+			try
+			{
+				var res = await SendSoapRequest(port, "http://roblox.com/OpenJob", XML);
+
+				var xmlDoc = new XmlDocument();
+				xmlDoc.LoadXml(res);
+
+				var NSManager = new XmlNamespaceManager(xmlDoc.NameTable);
+				NSManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/");
+				NSManager.AddNamespace("ns1", "http://roblox.com/");
+
+				var resNodes = xmlDoc.SelectNodes("//soap:Envelope/soap:Body/ns1:OpenJobResponse/ns1:OpenJobResult", NSManager);
+				foreach (XmlNode resultNode in resNodes)
+				{
+					var typeNode = resultNode.SelectSingleNode("ns1:type", NSManager);
+					var valueNode = resultNode.SelectSingleNode("ns1:value", NSManager);
+
+					if (typeNode != null && valueNode != null &&
+						// tstring contains the actual b64 render
+						typeNode.InnerText == "LUA_TSTRING" &&
+						!string.IsNullOrEmpty(valueNode.InnerText))
+					{
+						try
+						{
+							var imgBytes = Convert.FromBase64String(valueNode.InnerText);
+							await SendCloseJobRequest(port, jobId);
+							return new MemoryStream(imgBytes);
+						}
+						catch (FormatException)
+						{
+							continue;
+						}
+					}
+				}
+
+				throw new Exception("bullshit 64 :heart:");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($" bullshit error {ex.Message}");
 				throw;
 			}
 		}
@@ -557,12 +653,16 @@ namespace Roblox.Rendering
         
         public static async Task<Stream> RequestAssetGame(long assetId, int x, int y, CancellationToken? cancellationToken = null)
         {
-            return await SendCmdWithErrHandlingAsync("GenerateThumbnailGame", new List<dynamic>
+            await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
+
+            try
             {
-                assetId,
-                x,
-                y,
-            }, cancellationToken);
+                return await RenderRcc2020Game(assetId, x, y, cancellationToken);
+            }
+            finally
+            {
+                Rcc2020Lock.Release();
+            }
         }
 
         public static async Task<Stream> RequestAssetTeeShirt(long assetId, long contentId, CancellationToken? cancellationToken = null)
