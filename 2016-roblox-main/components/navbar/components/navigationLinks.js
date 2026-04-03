@@ -7,6 +7,7 @@ const useStyles = createUseStyles({
     marginBottom: 0,
     paddingBottom: 0,
     paddingLeft: '0',
+    marginLeft: '-40px', 
   },
   linkEntry: {
     color: 'white',
