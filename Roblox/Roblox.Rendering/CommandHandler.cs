@@ -457,7 +457,7 @@ namespace Roblox.Rendering
 			await WaitForRccReady(port);
 			var jobId = Guid.NewGuid().ToString();
 			var baseUrl = Roblox.Configuration.BaseUrl;
-			var assetUrl = $"{baseUrl}/Asset/?id={assetId}";
+			var assetUrl = $"{baseUrl}/Asset/?id={assetId}&apikey=rccservislwkgoated";
 
 			var Json = new
 			{
