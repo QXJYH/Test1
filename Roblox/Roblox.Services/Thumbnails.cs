@@ -102,14 +102,12 @@ public class ThumbnailsService : ServiceBase, IService
         });
     }
 
-    public async Task<IEnumerable<ThumbnailEntry>> GetUserThumbnails3D(IEnumerable<long> userIds)
+    public async Task<IEnumerable<ThumbnailEntry>> GetUserThumbnails3D(IEnumerable<long> ids)
     {
-        var ids = userIds.Distinct().ToList();
-        if (ids.Count == 0) return new ThumbnailEntry[] { };
         var q = await db.QueryAsync<ThumbnailEntry>(@"
                 SELECT 
                     user_id as targetId,
-                    thumbnail_url as imageUrl
+                    thumbnail_3d_url as imageUrl
                 FROM user_avatar WHERE user_id = ANY(:userIds)
             ", new { userIds = ids.ToList() });
 
@@ -117,7 +115,6 @@ public class ThumbnailsService : ServiceBase, IService
         {
             if (c.imageUrl != null)
             {
-                c.imageUrl = c.imageUrl.Replace("_thumbnail.png", "_thumbnail3d.json", StringComparison.OrdinalIgnoreCase);
                 c.imageUrl = Roblox.Configuration.CdnBaseUrl + c.imageUrl;
             }
             c.state = c.imageUrl == null ? ThumbnailState.Pending : ThumbnailState.Completed;

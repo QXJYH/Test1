@@ -333,7 +333,7 @@ namespace Roblox.Rendering
 			return await response.Content.ReadAsStringAsync();
 		}
 
-		private static async Task<Stream> RenderRcc2020(long userId, string renderType, CancellationToken? cancellationToken = null)
+		private static async Task<Stream> RenderRcc2020(long userId, string renderType, string format = "Png", CancellationToken? cancellationToken = null)
 		{
 			var port = await StartRccService();
 			await WaitForRccReady(port);
@@ -348,7 +348,7 @@ namespace Roblox.Rendering
 				{
 					Roblox.Configuration.BaseUrl,
 					charApp,
-					"Png",
+					format,
 					840,
 					840,
 					true,   // quadratic
@@ -364,7 +364,7 @@ namespace Roblox.Rendering
 				{
 					charApp,
 					Roblox.Configuration.BaseUrl,
-					"Png",
+					format,
 					840,
 					840,
 				};
@@ -375,7 +375,7 @@ namespace Roblox.Rendering
 				{
 					Roblox.Configuration.BaseUrl,
 					charApp,
-					"Png",
+					format,
 					840,
 					840,
 				};
@@ -440,11 +440,17 @@ namespace Roblox.Rendering
 						typeNode.InnerText == "LUA_TSTRING" && 
 						!string.IsNullOrEmpty(valueNode.InnerText))
 					{
+						await SendCloseJobRequest(port, jobId);
+						
+						if (format == "Obj")
+						{
+							return new MemoryStream(Encoding.UTF8.GetBytes(valueNode.InnerText));
+						}
+						
 						try
 						{
 							var imgBytes = Convert.FromBase64String(valueNode.InnerText);
-							await SendCloseJobRequest(port, jobId);								
-							return new MemoryStream(imgBytes);						
+							return new MemoryStream(imgBytes);				
 						}
 						catch (FormatException)
 						{
@@ -564,7 +570,7 @@ namespace Roblox.Rendering
 			
 			try
 			{
-				return await RenderRcc2020(userId, "Avatar_R15_Action", cancellationToken);
+				return await RenderRcc2020(userId, "Avatar_R15_Action", cancellationToken: cancellationToken);
 			}
 			finally
 			{
@@ -585,7 +591,7 @@ namespace Roblox.Rendering
 
             try
             {
-                var result = await RenderRcc2020(data.userId, "Avatar", cancellationToken);
+                var result = await RenderRcc2020(data.userId, "Avatar", data.format ?? "Png", cancellationToken);
                 w.Stop();
                 Metrics.RenderMetrics.ReportRenderAvatarThumbnailTime(data.userId, w.ElapsedMilliseconds);
                 return result;
@@ -610,7 +616,21 @@ namespace Roblox.Rendering
 
             try
             {
-                return await RenderRcc2020(data.userId, "Closeup", cancellationToken);
+                return await RenderRcc2020(data.userId, "Closeup", data.format ?? "Png", cancellationToken);
+            }
+            finally
+            {
+                Rcc2020Lock.Release();
+            }
+        }
+
+        public static async Task<Stream> RequestPlayerThumbnail3D(long userId, CancellationToken? cancellationToken = null)
+        {
+            await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
+
+            try
+            {
+                return await RenderRcc2020(userId, "Avatar", "Obj", cancellationToken);
             }
             finally
             {

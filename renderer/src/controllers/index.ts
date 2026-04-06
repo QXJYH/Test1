@@ -659,6 +659,7 @@ export default class CommandHandler extends StdExceptions {
                 scripts.playerHeadshot
                     .replace(/65789275746246/g, user.userId.toString())
                     .replace(/JSON_AVATAR/g, JSON.stringify(user).replace(`'`, `\\'`))
+                    .replace(/_FORMAT_/g, user.format || 'png')
                     .replace(/_X_RES_/g, (420 * resolutionMultiplier.userHeadshot).toString())
                     .replace(/_Y_RES_/g, (420 * resolutionMultiplier.userHeadshot).toString()),
                 uuid.v4());
@@ -682,6 +683,7 @@ export default class CommandHandler extends StdExceptions {
                 scripts.playerThumbnail
                     .replace(/65789275746246/g, user.userId.toString())
                     .replace(/JSON_AVATAR/g, JSON.stringify(user).replace(`'`, `\\'`))
+                    .replace(/_FORMAT_/g, user.format || 'png')
                     .replace(/_X_RES_/g, (420 * resolutionMultiplier.userThumbnail).toString())
                     .replace(/_Y_RES_/g, (420 * resolutionMultiplier.userThumbnail).toString()),
                 uuid.v4());
