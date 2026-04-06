@@ -43,20 +43,57 @@ const Navbar = () => {
   return (
     <div id="navigation-container" className="light-theme gotham-font">
       <style>{`
+        #navigation-container {
+            padding-top: 40px !important;
+        }
+        #header {
+            position: fixed !important;
+            top: 0 !important;
+            width: 100%;
+            z-index: 1041;
+        }
         @media (min-width: 1301px) {
           .rbx-nav-collapse { display: none !important; }
           .icon-logo { display: inline-block !important; }
           .icon-logo-r { display: none !important; }
         }
         @media (max-width: 1300px) {
-          .rbx-nav-collapse { display: flex !important; }
+          .authenticated .rbx-nav-collapse { display: flex !important; }
           .icon-logo { display: none !important; }
           .icon-logo-r { display: inline-block !important; }
         }
+        @media (max-width: 991px) {
+          .rbx-navbar.hidden-md.hidden-lg {
+            display: flex !important;
+            position: relative !important;
+            top: 0 !important;
+            justify-content: space-around;
+            background: #fff;
+            border-top: 1px solid #e3e3e3;
+          }
+        }
+        .light-theme .navbar-search .input-group {
+          background-color: hsla(0, 0%, 100%, 0.9) !important;
+          border: 1px solid rgba(57, 59, 61, 0.2) !important;
+          border-radius: 8px !important; 
+          height: 32px !important;
+          width: 100% !important;
+          display: flex !important;
+          overflow: hidden !important;
+        }
+        .light-theme .navbar-search .input-field {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          padding: 0 12px !important;
+          height: 100% !important;
+          width: 100% !important;
+          background: transparent !important;
+        }
       `}</style>
 
-      <div id="header" className="navbar-fixed-top rbx-header" role="navigation" ref={mainNavBarRef}>
-        <div className="container-fluid" style={{ display: 'flex', alignItems: 'center', height: '40px', padding: '0 15px' }}>
+      <div id="header" className={`navbar-fixed-top rbx-header ${authStore.isAuthenticated ? 'authenticated' : ''}`} role="navigation" ref={mainNavBarRef}>
+        <div className="container-fluid" style={{ display: 'flex', alignItems: 'center', height: '40px', padding: '0 15px', flexWrap: 'wrap' }}>
           
           <div className="rbx-navbar-header" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div className="navbar-header" style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
@@ -108,7 +145,7 @@ const Navbar = () => {
             }}
           >
             <form onSubmit={handleSearch}>
-              <div className="input-group" style={{ width: '100%' }}>
+              <div className="input-group">
                 <input 
                   type="text" 
                   className="form-control input-field" 
@@ -118,11 +155,6 @@ const Navbar = () => {
                   onFocus={() => setIsSearchFocused(true)}
                   autoComplete="off"
                 />
-                <div className="input-group-btn">
-                  <button className="input-addon-btn" type="submit">
-                    <span className="icon-nav-search"></span>
-                  </button>
-                </div>
               </div>
             </form>
 
@@ -141,19 +173,19 @@ const Navbar = () => {
               <LoggedInArea />
             ) : (
               <ul className="nav navbar-right rbx-navbar-right-nav" style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
-                <li className="signup-button-container">
-                  <a className="rbx-navbar-signup btn-growth-sm nav-menu-title signup-button" href="/">Sign Up</a>
-                </li>
                 <li className="login-action">
                   <span>
                     <a className="font-header-2 rbx-navbar-login nav-menu-title rbx-menu-item" href="/auth">Log In</a>
                   </span>
                 </li>
+                <li className="signup-button-container" style={{ paddingLeft: '10px' }}>
+                  <a className="rbx-navbar-signup btn-growth-sm nav-menu-title signup-button" href="/">Sign Up</a>
+                </li>
               </ul>
             )}
           </div>
 
-          <ul className="nav rbx-navbar hidden-md hidden-lg col-xs-12" style={{ position: 'absolute', top: '40px', left: 0, width: '100%', backgroundColor: 'inherit', display: 'none' }}>
+          <ul className="nav rbx-navbar hidden-md hidden-lg col-xs-12" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             <li><a className="font-header-2 nav-menu-title text-header" href="/games">Games</a></li>
             <li><a className="font-header-2 nav-menu-title text-header" href="/catalog">Avatar Shop</a></li>
             <li><a className="font-header-2 nav-menu-title text-header" href="/develop">Create</a></li>
