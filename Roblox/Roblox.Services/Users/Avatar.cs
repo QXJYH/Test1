@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Roblox.Dto.Assets;
 using Dapper;
 using Roblox.Dto;
 using Roblox.Dto.Avatar;
@@ -763,7 +762,7 @@ public class AvatarService : ServiceBase, IService
         {
             using var reader = new StreamReader(thumbnail3dStream);
             var thumbnail3DResult = await reader.ReadToEndAsync();
-            var thumbJson = JsonSerializer.Deserialize<Thumbnail3DRender>(thumbnail3DResult);
+            var thumbJson = JsonSerializer.Deserialize<Roblox.Dto.Assets.Thumbnail3DRender>(thumbnail3DResult);
             if (thumbJson is null)
                 throw new Exception("Renderer returned incorrect 3D thumbnail.");
 
