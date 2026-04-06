@@ -43,7 +43,6 @@ const Navbar = () => {
   return (
     <div id="navigation-container" className="light-theme gotham-font">
       <style>{`
-
         @media (min-width: 1301px) {
           .rbx-nav-collapse { display: none !important; }
           .icon-logo { display: inline-block !important; }
@@ -87,7 +86,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          <ul className="nav rbx-navbar hidden-xs hidden-sm" style={{ display: 'flex', alignItems: 'center', flexShrink: 0, margin: 0, padding: 0, listStyle: 'none' }}>
+          <ul className="nav rbx-navbar hidden-xs hidden-sm" style={{ display: 'flex', alignItems: 'center', flexShrink: 0, margin: 0, padding: 0, listStyle: 'none', marginLeft: '8px' }}>
             <li style={{ padding: '0 10px' }}><a className="font-header-2 nav-menu-title text-header" href="/games">Games</a></li>
             <li style={{ padding: '0 10px' }}><a className="font-header-2 nav-menu-title text-header" href="/catalog">Avatar Shop</a></li>
             <li style={{ padding: '0 10px' }}><a className="font-header-2 nav-menu-title text-header" href="/develop">Create</a></li>
@@ -153,7 +152,6 @@ const Navbar = () => {
               </ul>
             )}
           </div>
-
 
           <ul className="nav rbx-navbar hidden-md hidden-lg col-xs-12" style={{ position: 'absolute', top: '40px', left: 0, width: '100%', backgroundColor: 'inherit', display: 'none' }}>
             <li><a className="font-header-2 nav-menu-title text-header" href="/games">Games</a></li>
