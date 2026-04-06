@@ -381,7 +381,7 @@ public class AvatarService : ServiceBase, IService
         });
     }
 
-    public async Task UpdateUserAvatarImages(long userId, string? headshotImage, string? thumbnailImage, string? thumbnail3dImage)
+    public async Task UpdateUserAvatarImages(long userId, string? headshotImage, string? thumbnailImage, string? thumbnail3dImage = null)
     {
         await db.ExecuteAsync(
             "UPDATE user_avatar SET thumbnail_url = :thumbnail_url, headshot_thumbnail_url = :headshot_url, thumbnail_3d_url = :thumbnail_3d_url WHERE user_id = :user_id",
