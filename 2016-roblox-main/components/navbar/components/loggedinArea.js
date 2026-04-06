@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { createUseStyles } from "react-jss";
-import getFlag from "../../../lib/getFlag";
 import { logout } from "../../../services/auth";
 import AuthenticationStore from "../../../stores/authentication";
 import Link from "../../link";
@@ -15,11 +14,13 @@ const useDropdownStyles = createUseStyles({
     boxShadow: "0 -5px 20px rgba(25,25,25,0.15)",
     userSelect: "none",
     background: "white",
+    zIndex: 10,
   },
   text: {
     padding: "10px",
     marginBottom: 0,
     fontSize: "16px",
+    cursor: "pointer",
     "&:hover": {
       background: "#eaeaea",
       borderLeft: "4px solid #0074BD",
@@ -27,63 +28,49 @@ const useDropdownStyles = createUseStyles({
     "&:hover > a": {
       marginLeft: "-4px",
     },
+    "& > a": {
+      textDecoration: "none",
+      color: "inherit",
+      display: "block",
+      width: "100%",
+    }
   },
 });
 
-const SettingsDropdown = (props) => {
-  const authStore = AuthenticationStore.useContainer();
+const SettingsDropdown = () => {
   const s = useDropdownStyles();
   return (
     <div className={s.wrapper}>
-      <p className={`${s.text}`}>
+      <div className={s.text}>
         <Link href="/My/Account">
-          <a className="">Settings</a>
+          <a>Settings</a>
         </Link>
-      </p>
-      <p className={`${s.text}`}>
+      </div>
+      <div className={s.text}>
         <Link href="/help">
-          <a className="">Help</a>
+          <a>Help</a>
         </Link>
-      </p>
-      <p className={`${s.text}`}>
+      </div>
+      <div className={s.text}>
         <a
+          href="/logout"
           onClick={(e) => {
             e.preventDefault();
             logout().then(() => {
               window.location.reload();
             });
           }}
-          className=""
         >
           Logout
         </a>
-      </p>
+      </div>
     </div>
   );
 };
 
 const useLoginAreaStyles = createUseStyles({
-  linkContainer: {
-    display: "flex",
-    margin: 0,
-    marginRight: "20px",
-    paddingLeft: '12px',
-    paddingRight: '12px',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    "&:before": {
-      content: '""',
-      display: "table",
-    },
-    "&:after": {
-      content: '""',
-      display: "table",
-      clear: "both",
-    },
-  },
   linkContainerCol: {
     width: "25%",
-    //maxWidth: "600px",
     float: "right",
     marginLeft: "auto",
     marginRight: "3px",
@@ -99,135 +86,90 @@ const useLoginAreaStyles = createUseStyles({
   row: {
     display: "block",
     height: "100%",
-    "&:before": {
-      content: '""',
-      display: "table",
-    },
-    "&:after": {
-      content: '""',
-      display: "table",
-      clear: "both",
-    },
+  },
+  linkContainer: {
+    display: "flex",
+    margin: 0,
+    marginRight: "20px",
+    paddingLeft: '12px',
+    paddingRight: '12px',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    listStyle: 'none',
   },
   ageNameContainer: {
-    float: "left",
-    color: "#fff",
-    marginRight: "0",
+    color: "#000 !important",
+    marginRight: "10px",
     fontSize: "12px",
     fontWeight: "500",
     display: 'flex',
     gap: '2px',
+    alignItems: 'center',
   },
   nameLink: {
-    color: "inherit",
-    display: "inline",
+    color: "#000 !important",
     textDecoration: "none",
-  },
-  nameSpan: {
-    marginRight: 0,
-    color: "inherit",
-    display: "inline",
-    fontWeight: 500,
-    textDecoration: 'none',
-    '&:hover': {
+    '&:hover $nameSpan': {
       textDecoration: 'underline',
     },
+  },
+  nameSpan: {
+    fontWeight: 500,
     "&:after": {
       content: '": "',
     },
   },
   ageSpan: {
-    color: "inherit",
-    display: "inline",
     fontWeight: 500,
   },
   messagesContainer: {
-    float: "left",
     height: "40px",
-    marginLeft: "0",
-    width: "auto",
-    textAlign: "center",
-    listStyle: "none",
     display: "flex",
-    position: "relative",
+    alignItems: 'center',
   },
   messagesLink: {
     padding: "6px 9px",
-    display: "inline",
-    position: "relative",
-    marginRight: "0",
+    filter: "brightness(0)",
   },
   currencyContainer: {
-    padding: "0",
-    display: "block",
+    display: "flex",
     cursor: "pointer",
-    float: "left",
-    position: "relative",
-  },
-  tixContainer: {
-   paddingRight: '9px'
+    alignItems: 'center',
   },
   robuxContainer: {
     paddingLeft: '6px'
   },
-  currencyIcon: {
-    verticalAlign: "middle",
-  },
-  currencyPrice: {
-    display: "inline-block",
-    minWidth: "42px",
-    fontWeight: "300",
-    textAlign: "center",
-    margin: 0,
-    marginLeft: "5px",
-    textDecoration: "none",
-    color: "#fff",
-    float: "right",
-    marginBottom: "auto",
-    position: "relative",
-    userSelect: 'none',
-    '&:link': { textDecoration: 'none!important', color: '#fff' },
-    '&:visited': { textDecoration: 'none!important', color: '#fff' },
-    '&:hover': { textDecoration: 'none!important', color: '#fff' },
-    '&:active': { textDecoration: 'none!important', color: '#fff' },
-  },
   currencyLink: {
     display: "flex",
-    width: "100%",
-    height: "100%",
-    justifyContent: 'center',
     alignItems: 'center',
+    textDecoration: 'none',
+    color: "#000 !important",
   },
-  settingsIcon: {
-    float: "right",
+  currencyIcon: {
+    filter: "brightness(0)",
   },
-  text: {
-    color: "white",
-    fontWeight: 500,
-    fontSize: "16px",
-    borderBottom: 0,
-    textAlign: "right",
-    whiteSpace: "nowrap",
-    display: "inline",
-    marginRight: '0',
-    position: 'relative',
-  },
-
   currencySpan: {
-    color: '#fff',
-    display: 'inline',
     marginLeft: '5px',
     marginRight: '14px',
     fontSize: '16px',
-    height: '100%',
-    marginBottom: '2px',
+    fontWeight: 300,
     '@media(max-width: 400px)': {
       marginRight: '4px'
     }
   },
+  settingsIcon: {
+    filter: "brightness(0)",
+    cursor: 'pointer',
+    fontSize: '20px',
+  },
+  text: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
   hideOnMobile: {
     '@media(max-width: 991px)': {
-      display: 'none!important'
+      display: 'none !important'
     }
   },
   dropdownClass: {
@@ -236,52 +178,42 @@ const useLoginAreaStyles = createUseStyles({
   },
 });
 
-const LoggedInArea = (props) => {
+const LoggedInArea = () => {
   const s = useLoginAreaStyles();
   const authStore = AuthenticationStore.useContainer();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (authStore.robux === null || authStore.tix === null) return null;
+
   return (
-    <div className={`${s.linkContainerCol} `}>
+    <div className={s.linkContainerCol}>
       <div className={`${s.row} row`}>
-        <ul className={`${s.linkContainer}`}>
-          <div className={`${s.ageNameContainer} ${s.hideOnMobile}`}>
-            <a
-              href={`/users/${authStore.userId}/profile`}
-              className={`${s.nameLink}`}
-            >
-              <span className={`${s.nameSpan}`}>{authStore.username}</span>
+        <ul className={s.linkContainer}>
+          <li className={`${s.ageNameContainer} ${s.hideOnMobile}`}>
+            <a href={`/users/${authStore.userId}/profile`} className={s.nameLink}>
+              <span className={s.nameSpan}>{authStore.username}</span>
             </a>
-            <span className={`${s.ageSpan}`}>13+</span>
-          </div>
+            <span className={s.ageSpan}>13+</span>
+          </li>
+
           <li className={`${s.messagesContainer} ${s.hideOnMobile}`}>
-            <a href="/My/Messages" className={`${s.messagesLink}`}>
+            <a href="/My/Messages" className={s.messagesLink}>
               <span className="icon-nav-message2" />
             </a>
           </li>
+
           <li className={`${s.currencyContainer} ${s.robuxContainer}`}>
-            <a className={`${s.currencyLink}`} href='/My/Money.aspx'>
+            <a className={s.currencyLink} href='/My/Money.aspx'>
               <span className={`${s.currencyIcon} icon-nav-robux`} />
               <span className={s.currencySpan}>
                 {authStore.robux.toLocaleString()}
               </span>
             </a>
           </li>
-          {getFlag("showTicketBalance", true) ? (
-            <>
-              <li className={`${s.currencyContainer} ${s.tixContainer}`}>
-                <a className={`${s.currencyLink}`} href='/My/Money.aspx'>
-                  <span className="icon-nav-tix" />
-                  <span className={s.currencySpan}>
-                    {authStore.tix.toLocaleString()}
-                  </span>
-                </a>
-              </li>
-            </>
-          ) : null}
-          <li className={`${s.text}`}>
+
+          <li className={s.text}>
             <a
+              href="#settings"
               onClick={(e) => {
                 e.preventDefault();
                 setSettingsOpen(!settingsOpen);
@@ -290,28 +222,34 @@ const LoggedInArea = (props) => {
               <span
                 className={`icon-nav-settings ${s.settingsIcon}`}
                 id="nav-settings"
-              ></span>
+              />
             </a>
-            {settingsOpen && <Dropdown2016 dropdownClass={s.dropdownClass} onlyDropdown={true} options={[
-              {
-                name: 'Settings',
-                url: '/My/Account',
-              },
-              {
-                name: 'Help',
-                url: 'https://discord.gg/yKheUexWm2',
-              },
-              {
-                name: 'Logout',
-                onClick: (e) => {
-                  if (e)
-                    e?.preventDefault();
-                  logout().then(() => {
-                    window.location.reload();
-                  })
-                },
-              },
-            ]} />}
+            
+            {settingsOpen && (
+              <Dropdown2016 
+                dropdownClass={s.dropdownClass} 
+                onlyDropdown={true} 
+                options={[
+                  {
+                    name: 'Settings',
+                    url: '/My/Account',
+                  },
+                  {
+                    name: 'Help',
+                    url: 'https://discord.gg/yKheUexWm2',
+                  },
+                  {
+                    name: 'Logout',
+                    onClick: (e) => {
+                      e?.preventDefault();
+                      logout().then(() => {
+                        window.location.reload();
+                      });
+                    },
+                  },
+                ]} 
+              />
+            )}
           </li>
         </ul>
       </div>

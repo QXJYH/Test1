@@ -3,7 +3,7 @@ import { createUseStyles } from "react-jss";
 import AuthenticationStore from "../../stores/authentication";
 import NavigationStore from "../../stores/navigation";
 import LinkEntry from "./components/linkEntry";
-import request, { getBaseUrl, getFullUrl } from "../../lib/request";
+import request, { getFullUrl } from "../../lib/request";
 
 const useNavSideBarStyles = createUseStyles({
   container: {
@@ -18,6 +18,7 @@ const useNavSideBarStyles = createUseStyles({
     height: '100vh',
     paddingLeft: '10px',
     paddingRight: '10px',
+    color: '#ffffff', 
   },
   userWrapper: {
     display: 'flex',
@@ -65,6 +66,8 @@ const useNavSideBarStyles = createUseStyles({
     textAlign: 'center',
     color: 'white',
     borderRadius: '4px',
+    textDecoration: 'none',
+    display: 'block',
     '&:hover': {
       background: '#3ab8ff',
     },
@@ -75,21 +78,15 @@ const NavSideBar = props => {
   const authStore = AuthenticationStore.useContainer();
   const navStore = NavigationStore.useContainer();
   const mainNavBarRef = props.mainNavBarRef;
-  const [avatarMenu, setAvatarMenu] = useState('R15');
   const [dimensions, setDimensions] = useState({
-    height: window.innerHeight,
-    width: window.innerWidth
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+    width: typeof window !== 'undefined' ? window.innerWidth : 0
   });
   const [userData, setUserData] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
   const s = useNavSideBarStyles();
 
   useEffect(() => {
-    const menuType = localStorage.getItem('rbx_avatarmenu_type');
-    if (menuType === 'Legacy' || menuType === 'R15') {
-      setAvatarMenu(menuType);
-    }
-
     const handleResize = () => {
       setDimensions({
         height: window.innerHeight,
@@ -98,7 +95,7 @@ const NavSideBar = props => {
     };
 
     window.addEventListener('resize', handleResize);
-
+    
     const getStaffData = async () => {
       try {
         const response = await request('GET', getFullUrl('users', '/v1/users/authenticated'));
@@ -118,25 +115,20 @@ const NavSideBar = props => {
 
           setPendingCount(count);
         }
-      } catch (error) {
-        console.error('Failed to fetch staff data:', error);
-      }
+      } catch (error) {}
     };
 
     getStaffData();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const paddingTop = (mainNavBarRef.current && mainNavBarRef.current.clientHeight + 'px') || 0;
+  const paddingTop = (mainNavBarRef?.current && mainNavBarRef.current.clientHeight + 'px') || '40px';
 
-  if (navStore.isSidebarOpen === false && dimensions.width <= 1300) {
+  const isDesktop = dimensions.width > 1300;
+  
+  if (!isDesktop && navStore.isSidebarOpen === false) {
     return null;
   }
-
-  const characterUrl = '/My/Avatar' //avatarMenu === 'R15' ? '/My/Avatar' : '/My/Character.aspx';
 
   return (
     <div className={s.container}>
@@ -146,10 +138,6 @@ const NavSideBar = props => {
             className={s.headshot}
             src={`/thumbs/avatar-headshot.ashx?userId=${authStore.userId}&width=48&height=48&v=${Date.now()}`}
             alt="User"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = "https://kornet.lat/img/placeholder.png";
-            }}
           />
           <p className={s.username}>{authStore.username}</p>
         </a>
@@ -158,13 +146,13 @@ const NavSideBar = props => {
         <LinkEntry name='Profile' url={'/users/' + authStore.userId + '/profile'} icon='icon-nav-profile' />
         <LinkEntry name='Messages' url='/My/Messages' icon='icon-nav-message' count={authStore.notificationCount.messages} />
         <LinkEntry name='Friends' url={'/users/' + authStore.userId + '/friends'} icon='icon-nav-friends' count={authStore.notificationCount.friendRequests} />
-        <LinkEntry name='Avatar' url={characterUrl} icon='icon-nav-charactercustomizer' />
+        <LinkEntry name='Avatar' url='/My/Avatar' icon='icon-nav-charactercustomizer' />
         <LinkEntry name='Inventory' url={'/users/' + authStore.userId + '/inventory'} icon='icon-nav-inventory' />
         <LinkEntry name='Trade' url='/My/Trades.aspx' icon='icon-nav-trade' count={authStore.notificationCount.trades} />
         <LinkEntry name='Groups' url='/My/Groups.aspx' icon='icon-nav-group' />
-        {userData?.isStaff && <LinkEntry name='Control Panel' url='/admin' icon='icon-nav-friends' count={pendingCount} />}
+        {userData?.isStaff && <LinkEntry name='Control Panel' url='/admin' icon='icon-nav-settings' count={pendingCount} />}
         <LinkEntry name='Promocodes' url='/promocodes' icon='icon-nav-forum' />
-        <a href='/BuildersClub/Upgrade.ashx'><p className={s.upgradeNowButton}>Upgrade Now</p></a>
+        <a href='/BuildersClub/Upgrade.ashx' className={s.upgradeNowButton}>Upgrade Now</a>
       </div>
     </div>
   );

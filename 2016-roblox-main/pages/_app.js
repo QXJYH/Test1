@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 // Roblox CSS
 import '../styles/roblox/gameStyles2020.css';
 import '../styles/roblox/icons.css';
+import '../styles/roblox/2020navbar1.css';
+import '../styles/roblox/2020navbar2.css';
 import Navbar from '../components/navbar';
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
