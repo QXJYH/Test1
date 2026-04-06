@@ -440,11 +440,17 @@ namespace Roblox.Rendering
 						typeNode.InnerText == "LUA_TSTRING" && 
 						!string.IsNullOrEmpty(valueNode.InnerText))
 					{
+						await SendCloseJobRequest(port, jobId);
+						
+						if (format == "Obj")
+						{
+							return new MemoryStream(Encoding.UTF8.GetBytes(valueNode.InnerText));
+						}
+						
 						try
 						{
 							var imgBytes = Convert.FromBase64String(valueNode.InnerText);
-							await SendCloseJobRequest(port, jobId);								
-							return new MemoryStream(imgBytes);						
+							return new MemoryStream(imgBytes);				
 						}
 						catch (FormatException)
 						{
