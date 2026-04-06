@@ -40,6 +40,7 @@ namespace Roblox.Rendering
         public long userId { get; set; }
         public AvatarBodyColors bodyColors { get; set; }
         public string playerAvatarType { get; set; }
+        public string? format { get; set; }
         public IEnumerable<AvatarAssetEntry> assets { get; set; }
     }
 }

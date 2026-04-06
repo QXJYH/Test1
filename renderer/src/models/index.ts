@@ -7,6 +7,7 @@ export class Command {
 export class AvatarRenderRequest {
     userId: number;
     playerAvatarType: 'R6' | 'R15';
+    format: string;
     scales: any;
     bodyColors: {
         headColorId: number;

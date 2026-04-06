@@ -150,7 +150,7 @@ local function render(id)
         print("[WARNING] no ThumbnailCamera found, using default");
     end
 
-    local avatarEncoded = ThumbnailGenerator:Click('png', _X_RES_, _Y_RES_, true, false)
+    local avatarEncoded = ThumbnailGenerator:Click('_FORMAT_', _X_RES_, _Y_RES_, true, false)
     print("[DEBUG] thumb rendered");
 
     print("[DEBUG] destroying");

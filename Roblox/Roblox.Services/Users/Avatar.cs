@@ -87,7 +87,7 @@ public class AvatarService : ServiceBase, IService
 	public async Task<AvatarWithColors> GetAvatar(long userId)
 	{
 		var existingAvatar = await db.QuerySingleOrDefaultAsync<DatabaseAvatarWithImages>(
-			"SELECT head_color_id, torso_color_id, left_arm_color_id, right_arm_color_id, left_leg_color_id, right_leg_color_id, thumbnail_url, headshot_thumbnail_url FROM user_avatar WHERE user_id = :user_id",
+			"SELECT head_color_id, torso_color_id, left_arm_color_id, right_arm_color_id, left_leg_color_id, right_leg_color_id, thumbnail_url, headshot_thumbnail_url, thumbnail_3d_url FROM user_avatar WHERE user_id = :user_id",
 			new
 			{
 				user_id = userId,
@@ -102,6 +102,7 @@ public class AvatarService : ServiceBase, IService
 			leftLegColorId = existingAvatar.left_leg_color_id,
 			thumbnailUrl = existingAvatar.thumbnail_url,
 			headshotUrl = existingAvatar.headshot_thumbnail_url,
+			thumbnail3dUrl = existingAvatar.thumbnail_3d_url,
 		};
 	}
 
@@ -127,7 +128,7 @@ public class AvatarService : ServiceBase, IService
 	public async Task<AvatarImages> GetAvatarImages(long userId)
 	{
 		var result = await db.QuerySingleOrDefaultAsync<AvatarImages>(
-			"SELECT thumbnail_url as thumbnailUrl, headshot_thumbnail_url as headshotUrl FROM user_avatar WHERE user_id = :user_id",
+			"SELECT thumbnail_url as thumbnailUrl, headshot_thumbnail_url as headshotUrl, thumbnail_3d_url as thumbnail3dUrl FROM user_avatar WHERE user_id = :user_id",
 			new { user_id = userId });
 		
 		return result ?? new AvatarImages();
@@ -137,6 +138,7 @@ public class AvatarService : ServiceBase, IService
 	{
 		public string? thumbnailUrl { get; set; }
 		public string? headshotUrl { get; set; }
+		public string? thumbnail3dUrl { get; set; }
 	}
 
 	private readonly Models.Assets.Type[] _wearableAssetTypes = new[]
@@ -379,15 +381,16 @@ public class AvatarService : ServiceBase, IService
         });
     }
 
-    public async Task UpdateUserAvatarImages(long userId, string? headshotImage, string? thumbnailImage)
+    public async Task UpdateUserAvatarImages(long userId, string? headshotImage, string? thumbnailImage, string? thumbnail3dImage)
     {
         await db.ExecuteAsync(
-            "UPDATE user_avatar SET thumbnail_url = :thumbnail_url, headshot_thumbnail_url = :headshot_url WHERE user_id = :user_id",
+            "UPDATE user_avatar SET thumbnail_url = :thumbnail_url, headshot_thumbnail_url = :headshot_url, thumbnail_3d_url = :thumbnail_3d_url WHERE user_id = :user_id",
             new
             {
                 user_id = userId,
                 thumbnail_url = thumbnailImage,
                 headshot_url = headshotImage,
+                thumbnail_3d_url = thumbnail3dImage,
             });
     }
 	
@@ -687,17 +690,20 @@ public class AvatarService : ServiceBase, IService
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
         var thumbnailUrl = $"/images/thumbnails/{avatarHash}_thumbnail.png";
         var headshotUrl = $"/images/thumbnails/{avatarHash}_headshot.png";
+        var thumbnail3dUrl = $"/images/thumbnails/{avatarHash}_thumbnail3d.json";
+        
         if (!forceRedraw)
         {
             if (File.Exists(Configuration.PublicDirectory + thumbnailUrl) &&
-                File.Exists(Configuration.PublicDirectory + headshotUrl))
+                File.Exists(Configuration.PublicDirectory + headshotUrl) &&
+                File.Exists(Configuration.PublicDirectory + thumbnail3dUrl))
             {
-                await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
+                await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl, thumbnail3dUrl);
                 return;
             }
         }
 
-        await UpdateUserAvatarImages(userId, null, null);
+        await UpdateUserAvatarImages(userId, null, null, null);
         var extendedAssetDetails = await assets.MultiGetInfoById(assetIds);
         var request = new Roblox.Rendering.AvatarData()
         {
@@ -732,7 +738,7 @@ public class AvatarService : ServiceBase, IService
 			await thumbnailStream.CopyToAsync(fileStream);
 		}
 		
-		await UpdateUserAvatarImages(userId, null, thumbnailUrl);
+		await UpdateUserAvatarImages(userId, null, thumbnailUrl, null);
 		
 		var headshotStream = await CommandHandler.RequestPlayerHeadshot(request, cancellation.Token);
 
@@ -742,7 +748,17 @@ public class AvatarService : ServiceBase, IService
 			await headshotStream.CopyToAsync(fileStream);
 		}
 		
-		await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
+		await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl, null);
+
+        var thumbnail3dStream = await CommandHandler.RequestPlayerThumbnail3D(userId, cancellation.Token);
+
+        await using (var fileStream = File.Create(Configuration.PublicDirectory + thumbnail3dUrl))
+        {
+            thumbnail3dStream.Seek(0, SeekOrigin.Begin);
+            await thumbnail3dStream.CopyToAsync(fileStream);
+        }
+
+        await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl, thumbnail3dUrl);
 	}
 	
 	public async Task RedrawAvatarR15(long userId, IEnumerable<long>? newAssetIds = null, ColorEntry? colors = null, 
@@ -781,17 +797,20 @@ public class AvatarService : ServiceBase, IService
         var avatarHash = await UpdateUserAvatar(userId, colors, assetIds);
         var thumbnailUrl = $"/images/thumbnails/{avatarHash}_thumbnail.png";
         var headshotUrl = $"/images/thumbnails/{avatarHash}_headshot.png";
+        var thumbnail3dUrl = $"/images/thumbnails/{avatarHash}_thumbnail3d.json";
+
         if (!forceRedraw)
         {
             if (File.Exists(Configuration.PublicDirectory + thumbnailUrl) &&
-                File.Exists(Configuration.PublicDirectory + headshotUrl))
+                File.Exists(Configuration.PublicDirectory + headshotUrl) &&
+                File.Exists(Configuration.PublicDirectory + thumbnail3dUrl))
             {
-                await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
+                await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl, thumbnail3dUrl);
                 return;
             }
         }
 
-        await UpdateUserAvatarImages(userId, null, null);
+        await UpdateUserAvatarImages(userId, null, null, null);
         var extendedAssetDetails = await assets.MultiGetInfoById(assetIds);
 		using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
@@ -823,8 +842,9 @@ public class AvatarService : ServiceBase, IService
 			var thumbStream = await Thumb;
 			thumbStream.Seek(0, SeekOrigin.Begin);
 			await thumbStream.CopyToAsync(fileStream, cancellation.Token);
-			await UpdateUserAvatarImages(userId, null, thumbnailUrl);
 		}
+        
+		await UpdateUserAvatarImages(userId, null, thumbnailUrl, null);
 
 		await using (var fileStream = File.Create(Configuration.PublicDirectory + headshotUrl))
 		{
@@ -833,7 +853,17 @@ public class AvatarService : ServiceBase, IService
 			await headStream.CopyToAsync(fileStream, cancellation.Token);
 		}
 
-		await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl);
+		await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl, null);
+
+        var thumbnail3dStream = await CommandHandler.RequestPlayerThumbnail3D(userId, cancellation.Token);
+
+        await using (var fileStream = File.Create(Configuration.PublicDirectory + thumbnail3dUrl))
+        {
+            thumbnail3dStream.Seek(0, SeekOrigin.Begin);
+            await thumbnail3dStream.CopyToAsync(fileStream, cancellation.Token);
+        }
+
+        await UpdateUserAvatarImages(userId, headshotUrl, thumbnailUrl, thumbnail3dUrl);
 	}
 
     public async Task Update3DRenderModified(long userId, string avatarHash)

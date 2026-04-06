@@ -14,4 +14,5 @@ public class DatabaseAvatarWithImages : DatabaseAvatar
 {
     public string thumbnail_url { get; set; }
     public string headshot_thumbnail_url { get; set; }
+    public string? thumbnail_3d_url { get; set; }
 }
