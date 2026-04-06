@@ -320,7 +320,10 @@ public class ThumbnailsControllerV1 : ControllerBase
 					Path.GetFileNameWithoutExtension(v.imageUrl!).Replace("_thumbnail3d", "")
 					))
 		);
-		foreach (var v in parsed.Except(result.Select(e => e.targetId)).ToList())
+		var usersNeedingRedraw = parsed.Except(result.Select(e => e.targetId))
+			.Concat(result.Where(v => v.imageUrl == null).Select(v => v.targetId))
+			.Distinct().ToList();
+		foreach (var v in usersNeedingRedraw)
 		{
 			_ = Task.Run(async () => {
 				await services.avatar.RedrawAvatar(v);
