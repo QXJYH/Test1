@@ -564,7 +564,7 @@ namespace Roblox.Rendering
 			
 			try
 			{
-				return await RenderRcc2020(userId, "Avatar_R15_Action", cancellationToken);
+				return await RenderRcc2020(userId, "Avatar_R15_Action", cancellationToken: cancellationToken);
 			}
 			finally
 			{
