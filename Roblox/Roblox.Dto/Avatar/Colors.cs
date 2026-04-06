@@ -14,6 +14,7 @@ public class AvatarWithColors : ColorEntry
 {
     public string? thumbnailUrl { get; set; }
     public string? headshotUrl { get; set; }
+    public string? thumbnail3dUrl { get; set; }
 }
 
 public class OutfitAvatar : ColorEntry
