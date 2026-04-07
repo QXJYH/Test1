@@ -169,7 +169,22 @@ const useStyles = createUseStyles({
     fontSize: '13px',
     color: '#343434',
     fontWeight: 500,
-  }
+  },
+  thumbnail3DButtonContainer: {
+    display: 'flex',
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    zIndex: 3,
+  },
+  thumbnail3DButton: {
+    padding: '4px 8px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    background: '#fff',
+    border: '1px solid #777',
+    borderRadius: '3px'
+  },
 
 })
 
@@ -338,21 +353,20 @@ const CatalogDetails = props => {
                 <div ref={canvasParentRef} style={{ display: is3dMode ? 'block' : 'none', width: '352px', height: '352px', position: 'relative', overflow: 'hidden' }}>
                     {is3dMode && !is3DReady && (
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e3e3e3', zIndex: 1, borderRadius: '4px' }}>
-                            <div className="spinner-border" role="status">
-                                <span className="sr-only">Loading...</span>
-                            </div>
+                            <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
                         </div>
                     )}
                 </div>
                 {store.details.assetType === 3 ? <AudioPlayButton audioId={details.id} /> : null}
                 {(isLimitedUnique && <LimitedUniqueOverlay />) || (isLimited && <LimitedOverlay />) || null}
-                <div style={{ position: 'absolute', bottom: '5px', right: '5px', zIndex: 5 }}>
-                    <ActionButton
-                        label={is3dMode ? "2D" : "3D"}
-                        size="sm"
+                <div className={s.thumbnail3DButtonContainer}>
+                    <button
+                        className={s.thumbnail3DButton}
                         disabled={isRendering3D}
                         onClick={toggle3D}
-                    />
+                    >
+                        {is3dMode ? "2D" : "3D"}
+                    </button>
                 </div>
               </div>
             </div>
