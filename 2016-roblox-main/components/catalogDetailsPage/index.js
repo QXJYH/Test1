@@ -28,7 +28,7 @@ import Favorite from "./components/favorite";
 import AudioPlayButton from "./components/audioPlayButton";
 import { Thumbnail3DHandler } from "../thumbnail3D";
 import ActionButton from "../actionButton";
-import apiFetch from "../../lib/apiFetch";
+import request from "../../lib/request";
 
 const emptyDescriptionMessage = 'No description available.';
 const filterTextForEmpty = str => {
@@ -208,9 +208,9 @@ const CatalogDetails = props => {
       setIs3dMode(true);
       setRendering3D(true);
       try {
-        const result = await apiFetch(`/apisite/thumbnails/v1/assets/3d?assetIds=${details.id}`);
-        if (result.data && result.data[0] && result.data[0].imageUrl) {
-          const jsonBlobUrl = result.data[0].imageUrl;
+        const result = await request('GET', `/apisite/thumbnails/v1/assets/3d?assetIds=${details.id}`);
+        if (result.data && result.data.data && result.data.data[0] && result.data.data[0].imageUrl) {
+          const jsonBlobUrl = result.data.data[0].imageUrl;
           const blobResponse = await fetch(jsonBlobUrl);
           if (blobResponse.status !== 200) throw new Error("JSON Fetch failed");
           const jsonVal = await blobResponse.json();
