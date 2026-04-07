@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import OutfitsTab from "./components/outfitsTab";
 import BodyColorsTab from "./components/bodyColorsTab";
 import { useRouter } from "next/router";
+import { Thumbnail3DHandler } from "../thumbnail3D";
 
 const useStyles = createUseStyles({
     sliderInput: {
@@ -107,6 +108,18 @@ const useStyles = createUseStyles({
     itemContainer: {
         flex: 1,
     },
+    thumbnail3DButtonContainer: {
+        display: "flex",
+        position: "absolute",
+        bottom: 10,
+        right: 10,
+    },
+    thumbnail3DButton: {
+        padding: 9,
+        fontSize: "18px!important",
+        lineHeight: "100%!important",
+        minHeight: 32,
+    },
     moreBut: {
         padding: 9,
         fontSize: 18,
@@ -188,15 +201,17 @@ function AvatarEditor() {
     const debounce = useRef(false);
     const [avThumb, setAvThumb] = useState(null);
     const [isRendering, setIsRendering] = useState(false);
-    
+    const [is3DReady, set3DReady] = useState(false);
+
     /** @type RefObject<HTMLElement> */
     const canvasParentRef = useRef(null);
-    
+    const thumbnail3D = useRef(new Thumbnail3DHandler());
+
     useEffect(() => {
         listItemMetadata.current = page.listItemMetadata;
     }, [page.listItemMetadata]); // keeps listItemMetadata fresh for below functions
     // (because apparently that doesnt happen by default?? i have no clue)
-    
+
     /**
      * @param {SubmenuData} item
      * @param {FormEvent<HTMLDivElement>} e
@@ -218,7 +233,7 @@ function AvatarEditor() {
         await wait(0.5);
         debounce.current = false;
     }
-    
+
     /**
      * @param {SubmenuData} item
      * @param {FormEvent<HTMLDivElement>} e
@@ -241,32 +256,49 @@ function AvatarEditor() {
         await wait(0.5);
         debounce.current = false;
     }
-    
+
     useEffect(async () => {
         if (debounce.current) {
             await wait(3);
             if (debounce.current) debounce.current = false;
         }
     }, [debounce]);
-    
+
     useEffect(() => {
         setAvThumb(store.avThumb)
     }, [store.avThumb]);
-    
+
     useEffect(() => {
         setIsRendering(store.isRendering);
     }, [store.isRendering]);
-    
+
+    useEffect(async () => {
+        if (store.isRendering || page.thumbnailType !== 1 || !store.avThumb3D) {
+            await thumbnail3D.current.Stop();
+        } else if (page.thumbnailType === 1 && !thumbnail3D.current.isLoadingThumbnail) {
+            await thumbnail3D.current.LoadThumbnail(store.avThumb3D, canvasParentRef.current, set3DReady);
+        }
+    }, [store.avThumb3D, page.thumbnailType, canvasParentRef.current, store.isRendering]);
+
+    useEffect(() => {
+        if (typeof THREE !== "undefined" && thumbnail3D.current.scene === null) {
+            thumbnail3D.current.Init();
+        }
+        return () => {
+            thumbnail3D.current.Dispose();
+        };
+    }, []);
+
     return <div>
         <div className={`${s.avatarHeader} flex justify-content-between align-items-center`}>
             <h1 className={s.avatarHeaderText}>Avatar Editor</h1>
             <div className="flex justify-content-center align-items-center" style={{ gap: 12 }}>
                 <span>Explore the catalog to find more clothes!</span>
                 <ActionButton label="Get More" className={s.moreBut} buttonStyle={buttonStyles.newBuyButton}
-                              onClick={() => {
-                                  const router = useRouter();
-                                  router.push("/catalog").then();
-                              }}/>
+                    onClick={() => {
+                        const router = useRouter();
+                        router.push("/catalog").then();
+                    }} />
             </div>
         </div>
         <div className={`flex ${s.content}`}>
@@ -275,18 +307,27 @@ function AvatarEditor() {
                     <div className={s.avatarThumbContainer}>
                         {
                             avThumb && page.thumbnailType !== 1 ?
-                            <img src={avThumb} alt={`${auth.username}'s Avatar`}/>
-                            :
-                            store.avThumb3D && is3DReady ?
-                            null
-                            :
-                            <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }}/>
+                                <img src={avThumb} alt={`${auth.username}'s Avatar`} />
+                                :
+                                store.avThumb3D && is3DReady ?
+                                    null
+                                    :
+                                    <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
                         }
+                        <div className={s.thumbnail3DContainer} ref={canvasParentRef} />
                         <div className={s.avatarRigTypeSelector}>
                             <RadioPill options={[
                                 "R6",
                                 "R15"
-                            ]} selected={store?.bodyRigType} setSelected={store?.setModifiedRigType}/>
+                            ]} selected={store?.bodyRigType} setSelected={store?.setModifiedRigType} />
+                        </div>
+                        <div className={s.thumbnail3DButtonContainer}>
+                            <ActionButton
+                                label={page.thumbnailType === 1 ? "2D" : "3D"}
+                                buttonStyle={buttonStyles.newCancelButton}
+                                className={s.thumbnail3DButton}
+                                onClick={() => page.LoadNewThumbnailType(page.thumbnailType === 1 ? 0 : 1)}
+                            />
                         </div>
                     </div>
                     <div className={`${s.scalingContainer} ${s.scalingContainerDesktop}`}>
@@ -336,13 +377,13 @@ function AvatarEditor() {
                     <span>Avatar isn't updated?</span>
                     <ActionButton onClick={async () => {
                         await store.GetUpdatedAvatar();
-                    }} label="Refetch" buttonStyle={buttonStyles.newCancelButton} className={s.redrawBtn}/>
+                    }} label="Refetch" buttonStyle={buttonStyles.newCancelButton} className={s.redrawBtn} />
                 </div>
                 <div className={`flex justify-content-between ${s.redrawContainer}`}>
                     <span>Avatar isn't loading correctly?</span>
                     <ActionButton onClick={async () => {
                         await store.ForceRender();
-                    }} label="Redraw" buttonStyle={buttonStyles.newCancelButton} className={s.redrawBtn}/>
+                    }} label="Redraw" buttonStyle={buttonStyles.newCancelButton} className={s.redrawBtn} />
                 </div>
             </div>
             <div className={s.itemContainer}>
@@ -351,7 +392,7 @@ function AvatarEditor() {
                         {
                             id: "recent",
                             name: <span>Recent <span
-                                className={`icon-down ${s.iconDown}`}/></span>,
+                                className={`icon-down ${s.iconDown}`} /></span>,
                             element: <AvatarTabSubmenu
                                 data={[
                                     {
@@ -370,7 +411,7 @@ function AvatarEditor() {
                         {
                             id: "clothing",
                             name: <span>Clothing <span
-                                className={`icon-down ${s.iconDown}`}/></span>,
+                                className={`icon-down ${s.iconDown}`} /></span>,
                             element: <AvatarTabSubmenu
                                 data={[
                                     {
@@ -450,7 +491,7 @@ function AvatarEditor() {
                         {
                             id: "body",
                             name: <span>Body <span
-                                className={`icon-down ${s.iconDown}`}/></span>,
+                                className={`icon-down ${s.iconDown}`} /></span>,
                             element: <AvatarTabSubmenu
                                 data={[
                                     {
@@ -505,7 +546,7 @@ function AvatarEditor() {
                         },
                         {
                             id: "animations",
-                            name: <span>Animations <span className={`icon-down ${s.iconDown}`}/></span>,
+                            name: <span>Animations <span className={`icon-down ${s.iconDown}`} /></span>,
                             element: <AvatarTabSubmenu
                                 data={[
                                     {
@@ -568,16 +609,16 @@ function AvatarEditor() {
                         },
                     ]}
                     setTabType={setActiveTab}
-                    default={<span>Recent <span className={`icon-down ${s.iconDown}`}/></span>}
+                    default={<span>Recent <span className={`icon-down ${s.iconDown}`} /></span>}
                     tabType={activeTab}
                 />
                 {
                     (() => {
                         switch (activeTab) {
                             case 1:
-                                return <OutfitsTab/>
+                                return <OutfitsTab />
                             case 2:
-                                return <BodyColorsTab/>
+                                return <BodyColorsTab />
                             default:
                                 return <div>
                                     <div style={{ display: "flex" }}>
@@ -587,7 +628,7 @@ function AvatarEditor() {
                                             {!IsNullOrEmpty(page?.selectedList?.subTab) && ` > ${CapitalizeVariable(page?.selectedList?.subTab)}`}
                                         </span>
                                     </div>
-                                    <AvatarCardList/>
+                                    <AvatarCardList />
                                 </div>;
                         }
                     })()
