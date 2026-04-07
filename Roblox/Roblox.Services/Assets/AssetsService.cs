@@ -687,7 +687,7 @@ public class AssetsService : ServiceBase, IService
         await db.ExecuteAsync("UPDATE asset_thumbnail SET content_3d_url = :url WHERE asset_id = :id", new
         {
             id = assetId,
-            url = fileName != null ? "/images/thumbnails/" + fileName : null
+            url = fileName != null ? "/images/thumbnails/3d/" + fileName : null
         });
     }
 	
@@ -717,14 +717,14 @@ public class AssetsService : ServiceBase, IService
             if (thumbJson.files.TryGetValue("scene.obj", out var sceneObj))
             {
                 byte[] objData = Convert.FromBase64String(sceneObj.content);
-                obj = $"/images/thumbnails/{objFileName}";
+                obj = $"/images/thumbnails/3d/{objFileName}";
                 await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, objFileName), objData);
             }
 
             if (thumbJson.files.TryGetValue("scene.mtl", out var sceneMtl))
             {
                 byte[] mtlData = Convert.FromBase64String(sceneMtl.content);
-                mtl = $"/images/thumbnails/{mtlFileName}";
+                mtl = $"/images/thumbnails/3d/{mtlFileName}";
                 await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, mtlFileName), mtlData);
             }
 
@@ -734,7 +734,7 @@ public class AssetsService : ServiceBase, IService
                 {
                     byte[] pngData = Convert.FromBase64String(kvp.Value.content);
                     string pngFileName = $"asset_{assetId}_{kvp.Key}";
-                    textures.Add($"/images/thumbnails/{pngFileName}");
+                    textures.Add($"/images/thumbnails/3d/{pngFileName}");
                     await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, pngFileName), pngData);
                 }
             }
