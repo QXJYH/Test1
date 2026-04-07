@@ -303,7 +303,7 @@
       if (hash.includes('mats-thumbnails.roblox.com')) {
         return hash;
       }
-      if (hash.includes('www.kornet.lat')) {
+      if (hash.includes('kornet.lat')) {
         return hash;
       }
       if (hash.includes('https://kornet.lat/')) {
@@ -314,7 +314,7 @@
         st ^= hash[ii].charCodeAt(0);
       }
       // return `https://t${(st % 8).toString()}.rbxcdn.com/${hash}`;
-      return `https://www.kornet.lat${hash.at(0) === '/' ? hash : '/' + hash}`;
+      return `https://kornet.lat${hash.at(0) === '/' ? hash : '/' + hash}`;
     }
 
     load(hash, onLoad, onProgress, onError) {
