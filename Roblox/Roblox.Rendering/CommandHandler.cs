@@ -564,6 +564,108 @@ namespace Roblox.Rendering
 			}
 		}
 
+		private static async Task<Stream> RenderRcc2020Asset(long assetId, string renderType, string format = "Png", CancellationToken? cancellationToken = null)
+		{
+			var port = await StartRccService();
+			await WaitForRccReady(port);
+			var jobId = Guid.NewGuid().ToString();
+			var baseUrl = Roblox.Configuration.BaseUrl;
+			var assetUrl = $"{baseUrl}/Asset/?id={assetId}&apikey=rccservislwkgoated";
+
+			var Json = new
+			{
+				Mode = "Thumbnail",
+				Settings = new
+				{
+					Type = renderType,
+					Arguments = new object[]
+					{
+						assetUrl,
+						baseUrl,
+						format,
+						840,
+						840,
+					}
+				}
+			};
+
+			var finalJson = JsonSerializer.Serialize(Json);
+
+			var XML = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+		<soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+		   xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+		   xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+			<soap:Body>
+				<OpenJob xmlns=""http://roblox.com/"">
+					<job>
+						<id>{jobId}</id>
+						<expirationInSeconds>60</expirationInSeconds>
+						<category>0</category>
+						<cores>1</cores>
+					</job>
+					<script>
+						<name>GameServer</name>
+						<script>{finalJson}</script>
+					</script>
+					<arguments>
+						<LuaValue>
+							<type>LUA_TNIL</type>
+						</LuaValue>
+					</arguments>
+				</OpenJob>
+			</soap:Body>
+		</soap:Envelope>";
+
+			try
+			{
+				var res = await SendSoapRequest(port, "http://roblox.com/OpenJob", XML);
+
+				var xmlDoc = new XmlDocument();
+				xmlDoc.LoadXml(res);
+
+				var NSManager = new XmlNamespaceManager(xmlDoc.NameTable);
+				NSManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/");
+				NSManager.AddNamespace("ns1", "http://roblox.com/");
+
+				var resNodes = xmlDoc.SelectNodes("//soap:Envelope/soap:Body/ns1:OpenJobResponse/ns1:OpenJobResult", NSManager);
+				foreach (XmlNode resultNode in resNodes)
+				{
+					var typeNode = resultNode.SelectSingleNode("ns1:type", NSManager);
+					var valueNode = resultNode.SelectSingleNode("ns1:value", NSManager);
+
+					if (typeNode != null && valueNode != null &&
+						// tstring contains the actual b64 render
+						typeNode.InnerText == "LUA_TSTRING" &&
+						!string.IsNullOrEmpty(valueNode.InnerText))
+					{
+						await SendCloseJobRequest(port, jobId);
+
+						if (format == "Obj")
+						{
+							return new MemoryStream(Encoding.UTF8.GetBytes(valueNode.InnerText));
+						}
+
+						try
+						{
+							var imgBytes = Convert.FromBase64String(valueNode.InnerText);
+							return new MemoryStream(imgBytes);
+						}
+						catch (FormatException)
+						{
+							continue;
+						}
+					}
+				}
+
+				throw new Exception("no bullshit found in rcc response");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"rcc {renderType} render shit fail here msg {ex.Message}");
+				throw;
+			}
+		}
+
 		public static async Task<Stream> RequestPlayerThumbnailR15(long userId, CancellationToken? cancellationToken = null)
 		{
 			await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
@@ -657,10 +759,16 @@ namespace Roblox.Rendering
 
         public static async Task<Stream> RequestAssetThumbnail3D(long assetId, CancellationToken? cancellationToken = null)
         {
-            return await SendCmdWithErrHandlingAsync("GenerateThumbnailAsset3D", new List<dynamic>
+            await Rcc2020Lock.WaitAsync(cancellationToken ?? CancellationToken.None);
+
+            try
             {
-                assetId, 
-            }, cancellationToken);
+                return await RenderRcc2020Asset(assetId, "Model", "Obj", cancellationToken);
+            }
+            finally
+            {
+                Rcc2020Lock.Release();
+            }
         }
 
         public static async Task<Stream> RequestHeadThumbnail(long assetId, CancellationToken? cancellationToken = null)
