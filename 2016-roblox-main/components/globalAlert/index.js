@@ -5,7 +5,7 @@ import { getGlobalAlertSetting } from "../../services/globalAlertSetting";
 
 const useStyles = createUseStyles({
   alertBg: {
-    background: '#F68802',
+    background: '#393939',
   },
   alertText: {
     color: '#fff',
