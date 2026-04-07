@@ -255,6 +255,23 @@ System.Net.ServicePointManager.DefaultConnectionLimit = 100;
 // CdnBaseUrl is empty on dev servers
 if (string.IsNullOrWhiteSpace(Roblox.Configuration.CdnBaseUrl))
 {
+    app.Use(async (context, next) =>
+    {
+        var normalizedPath = context.Request.Path.Value ?? "";
+        if (normalizedPath.StartsWith("/images/thumbnails/3d/"))
+        {
+            var fileName = normalizedPath.Substring("/images/thumbnails/3d/".Length);
+            var filePathWithoutExtension = Path.Combine(Roblox.Configuration.ThumbnailsDirectory, "3d", fileName);
+            if (File.Exists(filePathWithoutExtension))
+            {
+                context.Response.ContentType = "application/octet-stream";
+                await context.Response.SendFileAsync(filePathWithoutExtension);
+                return;
+            }
+        }
+        await next();
+    });
+
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(Roblox.Configuration.ThumbnailsDirectory),
