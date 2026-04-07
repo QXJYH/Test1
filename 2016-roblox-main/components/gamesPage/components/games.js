@@ -1,5 +1,5 @@
 import SmallGameCard from "../../smallGameCard";
-import GameRow, {useStyles as useGameRowStyles} from "./gameRow";
+import GameRow, { useStyles as useGameRowStyles } from "./gameRow";
 import React from "react";
 import GamesPageStore from "../../../stores/gamesPage";
 
@@ -41,7 +41,7 @@ const Games = props => {
         }
         existingGames[v.token] = true;
         let games = store.games && store.games[v.token] || null;
-        return <GameRow ads={true} key={'row ' + v.token} title={v.displayName} games={games} icons={store.icons}/>
+        return <GameRow ads={false} key={'row ' + v.token} title={v.displayName} games={games} icons={store.icons} />
       }) : null
     }
   </div>

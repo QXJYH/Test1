@@ -29,7 +29,7 @@ const Creations = props => {
       <Subtitle>Games</Subtitle>
     </div>
     <div className='col-12 ps-4 pe-4'>
-      <div className='row'>
+      <ul className='hlist game-cards' style={{ overflow: 'hidden' }}>
         {
           store.createdGames.map(v => {
             return <SmallGameCard key={v.id}
@@ -45,7 +45,7 @@ const Creations = props => {
             ></SmallGameCard>
           })
         }
-      </div>
+      </ul>
     </div>
   </div>
 }
