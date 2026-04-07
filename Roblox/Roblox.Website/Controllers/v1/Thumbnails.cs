@@ -337,4 +337,28 @@ public class ThumbnailsControllerV1 : ControllerBase
 			data = result
 		};
 	}
+
+	[HttpGet("assets/3d")]
+	public async Task<RobloxCollection<ThumbnailEntry>> GetAssetThumbnails3D(string assetIds)
+	{
+		var parsed = assetIds.Split(",").Select(long.Parse).Distinct().ToList();
+		if (parsed.Count is > 200 or < 0) throw new BadRequestException();
+		var result = (await services.thumbnails.GetAssetThumbnails3D(parsed)).ToList();
+		var assetsNeedingRedraw = parsed.Except(result.Select(e => e.targetId))
+			.Concat(result.Where(v => v.imageUrl == null).Select(v => v.targetId))
+			.Distinct().ToList();
+		foreach (var v in assetsNeedingRedraw)
+		{
+			_ = Task.Run(async () => {
+				await using var redrawLock = await Roblox.Services.Cache.redLock.CreateLockAsync(
+					$"RedrawAsset3D:{v}", TimeSpan.FromMinutes(5));
+				if (!redrawLock.IsAcquired) return;
+				await services.assets.RenderAsset3DAsync(v);
+			});
+		}
+		return new()
+		{
+			data = result
+		};
+	}
 }

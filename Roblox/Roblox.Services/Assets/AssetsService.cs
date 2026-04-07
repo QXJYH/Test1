@@ -682,6 +682,99 @@ public class AssetsService : ServiceBase, IService
         await InsertOrReplaceThumbnail(assetId, latestVersion.assetVersionId, key, ModerationStatus.ReviewApproved);
     }
 
+    public async Task UpdateAsset3DThumbnail(long assetId, string? hash)
+    {
+        await db.ExecuteAsync("UPDATE asset_thumbnail SET content_3d_url = :url WHERE asset_id = :id", new
+        {
+            id = assetId,
+            url = hash != null ? "/images/thumbnails/3d/" + hash + ".json" : null
+        });
+    }
+	
+	public async Task RenderAsset3DAsync(long assetId, CancellationToken? cancellationToken = null)
+	{
+        var thumbnail3dStream = await CommandHandler.RequestAssetThumbnail3D(assetId, cancellationToken);
+        await SaveAsset3DRender(assetId, thumbnail3dStream);
+	}
+	
+    private async Task SaveAsset3DRender(long assetId, Stream thumbnail3dStream)
+    {
+        try
+        {
+            using var reader = new StreamReader(thumbnail3dStream);
+            var thumbnail3DResult = await reader.ReadToEndAsync();
+            var thumbJson = JsonSerializer.Deserialize<Roblox.Dto.Assets.Thumbnail3DRender>(thumbnail3DResult);
+            if (thumbJson is null)
+                throw new Exception("Renderer returned incorrect 3D thumbnail.");
+
+            string? obj = null;
+            string? mtl = null;
+            var textures = new List<string>();
+            var hasher = SHA256.Create();
+
+            string threeDFolder = Path.Combine(Configuration.ThumbnailsDirectory, "3d");
+            if (!Directory.Exists(threeDFolder))
+            {
+                Directory.CreateDirectory(threeDFolder);
+            }
+
+            if (thumbJson.files.TryGetValue("scene.obj", out var sceneObj))
+            {
+                byte[] objData = Convert.FromBase64String(sceneObj.content);
+                string objHash = Convert.ToHexString(hasher.ComputeHash(objData)).ToLower();
+                obj = $"/images/thumbnails/3d/{objHash}";
+
+                if (!File.Exists(Path.Combine(threeDFolder, objHash)))
+                    await File.WriteAllBytesAsync(Path.Combine(threeDFolder, objHash), objData);
+            }
+
+            if (thumbJson.files.TryGetValue("scene.mtl", out var sceneMtl))
+            {
+                byte[] mtlData = Convert.FromBase64String(sceneMtl.content);
+                string mtlHash = Convert.ToHexString(hasher.ComputeHash(mtlData)).ToLower();
+                mtl = $"/images/thumbnails/3d/{mtlHash}";
+
+                if (!File.Exists(Path.Combine(threeDFolder, mtlHash)))
+                    await File.WriteAllBytesAsync(Path.Combine(threeDFolder, mtlHash), mtlData);
+            }
+
+            foreach (var kvp in thumbJson.files)
+            {
+                if (kvp.Key.EndsWith(".png"))
+                {
+                    byte[] pngData = Convert.FromBase64String(kvp.Value.content);
+                    string pngHash = Convert.ToHexString(hasher.ComputeHash(pngData)).ToLower();
+                    textures.Add($"/images/thumbnails/3d/{pngHash}");
+
+                    if (!File.Exists(Path.Combine(threeDFolder, pngHash)))
+                        await File.WriteAllBytesAsync(Path.Combine(threeDFolder, pngHash), pngData);
+                }
+            }
+
+            var finalJson = new
+            {
+                camera = thumbJson.camera,
+                aabb = thumbJson.aabb,
+                mtl = mtl,
+                obj = obj,
+                textures = textures
+            };
+
+            var finalJsonBytes = JsonSerializer.SerializeToUtf8Bytes(finalJson);
+            var jsonHash = Convert.ToHexString(hasher.ComputeHash(finalJsonBytes)).ToLower();
+
+            if (!File.Exists(Path.Combine(threeDFolder, jsonHash + ".json")))
+                await File.WriteAllBytesAsync(Path.Combine(threeDFolder, jsonHash + ".json"), finalJsonBytes);
+
+            await UpdateAsset3DThumbnail(assetId, jsonHash);
+        }
+        catch (Exception ex)
+        {
+            Writer.Info(LogGroup.AssetRender, "Error saving 3D asset render: " + ex.Message);
+            await UpdateAsset3DThumbnail(assetId, null);
+        }
+    }
+
     private async Task CreateMeshThumbnail(long assetId, CancellationToken? cancellationToken = null)
     {
         var latestVersion = await GetLatestAssetVersion(assetId);

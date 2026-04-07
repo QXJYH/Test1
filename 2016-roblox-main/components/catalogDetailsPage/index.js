@@ -26,6 +26,9 @@ import getFlag from "../../lib/getFlag";
 import Owners from "./components/owners";
 import Favorite from "./components/favorite";
 import AudioPlayButton from "./components/audioPlayButton";
+import { Thumbnail3DHandler } from "../thumbnail3D";
+import ActionButton from "../actionButton";
+import apiFetch from "../../lib/apiFetch";
 
 const emptyDescriptionMessage = 'No description available.';
 const filterTextForEmpty = str => {
@@ -184,6 +187,51 @@ const CatalogDetails = props => {
   const store = CatalogDetailsPage.useContainer();
   const [menuOpen, setMenuOpen] = React.useState(false);
 
+  const canvasParentRef = React.useRef(null);
+  const [thumbnail3D] = React.useState(new Thumbnail3DHandler());
+  const [is3DReady, set3DReady] = React.useState(false);
+  const [isRendering3D, setRendering3D] = React.useState(false);
+  const [is3dMode, setIs3dMode] = React.useState(false);
+
+  useEffect(() => {
+    return () => {
+      thumbnail3D.Dispose();
+    }
+  }, []);
+
+  const toggle3D = async (e) => {
+    e.preventDefault();
+    if (is3dMode) {
+      setIs3dMode(false);
+      thumbnail3D.Stop();
+    } else {
+      setIs3dMode(true);
+      setRendering3D(true);
+      try {
+        const result = await apiFetch(`/apisite/thumbnails/v1/assets/3d?assetIds=${details.id}`);
+        if (result.data && result.data[0] && result.data[0].imageUrl) {
+          const jsonBlobUrl = result.data[0].imageUrl;
+          const blobResponse = await fetch(jsonBlobUrl);
+          if (blobResponse.status !== 200) throw new Error("JSON Fetch failed");
+          const jsonVal = await blobResponse.json();
+          if (jsonVal && canvasParentRef.current) {
+            thumbnail3D.LoadThumbnail(jsonVal, canvasParentRef.current, set3DReady);
+          } else {
+            console.error("Null json or missing parent");
+            setIs3dMode(false);
+          }
+        } else {
+            setIs3dMode(false);
+        }
+      } catch (err) {
+        console.error("Error loading 3D:", err);
+        setIs3dMode(false);
+      } finally {
+        setRendering3D(false);
+      }
+    }
+  };
+
   useEffect(() => {
     store.setDetails(props.details);
     if (props.details.saleCount) {
@@ -283,10 +331,29 @@ const CatalogDetails = props => {
         <div className='col-12 col-lg-10'>
           <div className='row'>
             <div className='col-12 col-md-6 mb-4'>
-              <div style={{ position: 'relative', display: 'table', margin: '0 auto' }}>
-                <ItemImage id={details.id} name={details.name} />
+              <div style={{ position: 'relative', display: 'table', margin: '0 auto', width: '352px', height: '352px' }}>
+                <div style={{ display: is3dMode ? 'none' : 'block' }}>
+                    <ItemImage id={details.id} name={details.name} />
+                </div>
+                <div ref={canvasParentRef} style={{ display: is3dMode ? 'block' : 'none', width: '352px', height: '352px', position: 'relative', overflow: 'hidden' }}>
+                    {is3dMode && !is3DReady && (
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e3e3e3', zIndex: 1, borderRadius: '4px' }}>
+                            <div className="spinner-border" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 {store.details.assetType === 3 ? <AudioPlayButton audioId={details.id} /> : null}
                 {(isLimitedUnique && <LimitedUniqueOverlay />) || (isLimited && <LimitedOverlay />) || null}
+                <div style={{ position: 'absolute', bottom: '5px', right: '5px', zIndex: 5 }}>
+                    <ActionButton
+                        label={is3dMode ? "2D" : "3D"}
+                        size="sm"
+                        disabled={isRendering3D}
+                        onClick={toggle3D}
+                    />
+                </div>
               </div>
             </div>
             <div className='col-12 col-md-6'>
