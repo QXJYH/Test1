@@ -18,7 +18,7 @@ const useNavSideBarStyles = createUseStyles({
     height: '100vh',
     paddingLeft: '10px',
     paddingRight: '10px',
-    color: '#ffffff', 
+    color: '#ffffff',
   },
   userWrapper: {
     display: 'flex',
@@ -95,7 +95,7 @@ const NavSideBar = props => {
     };
 
     window.addEventListener('resize', handleResize);
-    
+
     const getStaffData = async () => {
       try {
         const response = await request('GET', getFullUrl('users', '/v1/users/authenticated'));
@@ -115,7 +115,7 @@ const NavSideBar = props => {
 
           setPendingCount(count);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     getStaffData();
@@ -124,8 +124,8 @@ const NavSideBar = props => {
 
   const paddingTop = (mainNavBarRef?.current && mainNavBarRef.current.clientHeight + 'px') || '40px';
 
-  const isDesktop = dimensions.width > 1300;
-  
+  const isDesktop = false; //dimensions.width > 1300;
+
   if (!isDesktop && navStore.isSidebarOpen === false) {
     return null;
   }

@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import AuthenticationStore from "../../stores/authentication"; 
+import AuthenticationStore from "../../stores/authentication";
 import NavigationStore from "../../stores/navigation";
 import LoggedInArea from "./components/loggedInArea";
 import NavSideBar from "../navSidebar";
 
 const SearchSuggestionEntry = ({ mode, url, query }) => (
   <li className="navbar-search-option rbx-clickable-li">
-    <a 
-      className="navbar-search-anchor" 
+    <a
+      className="navbar-search-anchor"
       href={`${url}?keyword=${encodeURIComponent(query)}`}
     >
       Search "{query}" in {mode}
@@ -52,16 +52,9 @@ const Navbar = () => {
             width: 100%;
             z-index: 1041;
         }
-        @media (min-width: 1301px) {
-          .rbx-nav-collapse { display: none !important; }
-          .icon-logo { display: inline-block !important; }
-          .icon-logo-r { display: none !important; }
-        }
-        @media (max-width: 1300px) {
-          .authenticated .rbx-nav-collapse { display: flex !important; }
-          .icon-logo { display: none !important; }
-          .icon-logo-r { display: inline-block !important; }
-        }
+        .rbx-nav-collapse { display: flex !important; }
+        .icon-logo { display: none !important; }
+        .icon-logo-r { display: inline-block !important; }
         @media (max-width: 991px) {
           .rbx-navbar.hidden-md.hidden-lg {
             display: flex !important;
@@ -94,13 +87,13 @@ const Navbar = () => {
 
       <div id="header" className={`navbar-fixed-top rbx-header ${authStore.isAuthenticated ? 'authenticated' : ''}`} role="navigation" ref={mainNavBarRef}>
         <div className="container-fluid" style={{ display: 'flex', alignItems: 'center', height: '40px', padding: '0 15px', flexWrap: 'wrap' }}>
-          
+
           <div className="rbx-navbar-header" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <div className="navbar-header" style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
-              
+
               {authStore.isAuthenticated && (
-                <div 
-                  className="rbx-nav-collapse" 
+                <div
+                  className="rbx-nav-collapse"
                   onClick={() => navStore.setIsSidebarOpen(!navStore.isSidebarOpen)}
                   style={{ cursor: 'pointer', paddingRight: '10px', alignItems: 'center', height: '40px' }}
                 >
@@ -108,14 +101,14 @@ const Navbar = () => {
                 </div>
               )}
 
-              <a className="navbar-brand" href="/home" style={{ 
-                padding: 0, 
-                margin: 0, 
-                display: 'flex', 
-                alignItems: 'center', 
-                height: '40px', 
+              <a className="navbar-brand" href="/home" style={{
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                height: '40px',
                 float: 'none',
-                marginRight: '30px' 
+                marginRight: '30px'
               }}>
                 <span className="icon-logo"></span>
                 <span className="icon-logo-r"></span>
@@ -130,26 +123,26 @@ const Navbar = () => {
             <li style={{ padding: '0 10px' }}><a className="font-header-2 nav-menu-title text-header" href="/My/Money.aspx">Robux</a></li>
           </ul>
 
-          <div 
+          <div
             ref={searchContainerRef}
-            id="navbar-universal-search" 
-            className="navbar-left navbar-search col-xs-5 col-sm-6 col-md-3 col-lg-4" 
+            id="navbar-universal-search"
+            className="navbar-left navbar-search col-xs-5 col-sm-6 col-md-3 col-lg-4"
             role="search"
-            style={{ 
-                flexGrow: 1, 
-                margin: '0 15px', 
-                position: 'relative', 
-                maxWidth: '360px',
-                minWidth: '150px',
-                float: 'none'
+            style={{
+              flexGrow: 1,
+              margin: '0 15px',
+              position: 'relative',
+              maxWidth: '360px',
+              minWidth: '150px',
+              float: 'none'
             }}
           >
             <form onSubmit={handleSearch}>
               <div className="input-group">
-                <input 
-                  type="text" 
-                  className="form-control input-field" 
-                  placeholder="Search" 
+                <input
+                  type="text"
+                  className="form-control input-field"
+                  placeholder="Search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
