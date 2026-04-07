@@ -1,6 +1,6 @@
 import {createContainer} from "unstated-next";
 import {useEffect, useRef, useState} from "react";
-import { multiGetUserThumbnails } from "../../../services/thumbnails";
+import { multiGetUserThumbnails, multiGetUserThumbnails3D } from "../../../services/thumbnails";
 import AuthenticationStore from "../../../stores/authentication";
 import {
     getItemRestrictions,
@@ -30,6 +30,7 @@ const AvatarInfoStore = createContainer(() => {
     const [bodyScales, setBodyScales] = useState(null);
     const [bodyRigType, setBodyRigType] = useState(null);
     const [avThumb, setAvThumb] = useState(null);
+    const [avThumb3D, setAvThumb3D] = useState(null);
     
     const [isRendering, setIsRendering] = useState(false);
     const [avRules, setAvRules] = useState(false);
@@ -60,6 +61,7 @@ const AvatarInfoStore = createContainer(() => {
     async function ReloadAvatar(){
         setLoadingAvatar(true);
         setAvThumb(null);
+        setAvThumb3D(null);
         setAvRules(await getRules());
         let avatar = await getMyAvatar();
         setWearingAssets(avatar.assets.map(v => {
@@ -83,6 +85,7 @@ const AvatarInfoStore = createContainer(() => {
         
         await redrawMyAvatar();
         setAvThumb(null);
+        setAvThumb3D(null);
         await wait(0.2);
         setIsRendering(true);
         await wait(3);
@@ -96,6 +99,7 @@ const AvatarInfoStore = createContainer(() => {
             }
         }
         setAvThumb(null);
+        setAvThumb3D(null);
         setIsRendering(true);
     }
     
@@ -108,20 +112,34 @@ const AvatarInfoStore = createContainer(() => {
         let stopwatch = new Stopwatch();
         stopwatch.Start();
         let attempts = 0;
-        while (avThumb == null && attempts <= 10) {
-            let thumbnail = await multiGetUserThumbnails({userIds: [auth.userId]})
-                .then(result => result[0]);
-            if (thumbnail.state === "Completed" && typeof thumbnail.imageUrl === "string") {
-                setAvThumb(thumbnail.imageUrl);
-                break;
-            } else {
-                console.warn("User thumbnail has not completed rendering yet.");
+        let got2d = false;
+        let got3d = false;
+        while ((!got2d || !got3d) && attempts <= 10) {
+            if (!got2d) {
+                let thumbnail = await multiGetUserThumbnails({userIds: [auth.userId]})
+                    .then(result => result[0]);
+                if (thumbnail.state === "Completed" && typeof thumbnail.imageUrl === "string") {
+                    setAvThumb(thumbnail.imageUrl);
+                    got2d = true;
+                }
             }
+            if (!got3d) {
+                let thumbnail3d = await multiGetUserThumbnails3D({userIds: [auth.userId]})
+                    .then(result => result[0]);
+                if (thumbnail3d.state === "Completed" && typeof thumbnail3d.imageUrl === "string") {
+                    let thumbJson = (await request("GET", thumbnail3d.imageUrl)).data;
+                    if (thumbJson?.textures?.length > 0) {
+                        setAvThumb3D(thumbJson);
+                        got3d = true;
+                    }
+                }
+            }
+            if (got2d && got3d) break;
             attempts++;
             await wait(1);
         }
         stopwatch.Stop();
-        if (attempts > 10 && avThumb == null)
+        if (attempts > 10 && (!got2d || !got3d))
             console.error("Could not get new avatar render. Please try again later.");
         console.log(`Got avatar render in ${stopwatch.ElapsedMilliseconds()}ms, in ${attempts} attempts.`);
         
@@ -262,6 +280,8 @@ const AvatarInfoStore = createContainer(() => {
         
         avThumb,
         setAvThumb,
+        avThumb3D,
+        setAvThumb3D,
         
         loadingAvatar,
         setLoadingAvatar,

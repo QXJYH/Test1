@@ -115,6 +115,7 @@ const useStyles = createUseStyles({
         right: 10,
     },
     thumbnail3DButton: {
+        color: 'black!important',
         padding: 9,
         fontSize: "18px!important",
         lineHeight: "100%!important",

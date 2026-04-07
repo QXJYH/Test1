@@ -8,6 +8,8 @@ import Subtitle from "./subtitle"
 import Link from "../../link";
 import { Thumbnail3DHandler } from "../../thumbnail3D";
 import UserProfileStore from "../stores/UserProfileStore";
+import ActionButton from "../../actionButton";
+import useButtonStyles from "../../../styles/buttonStyles";
 
 const useAvatarStyles = createUseStyles({
   avatarImageWrapper: {
@@ -37,19 +39,18 @@ const useAvatarStyles = createUseStyles({
 
   },
   thumbnail3DButtonContainer: {
-    display: 'flex',
-    position: 'absolute',
-    top: 5,
-    right: 5,
+    display: "flex",
+    position: "absolute",
+    bottom: 10,
+    right: 10,
     zIndex: 3,
   },
   thumbnail3DButton: {
-    padding: '4px 8px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    background: '#fff',
-    border: '1px solid #777',
-    borderRadius: '3px'
+    color: 'black!important',
+    padding: 9,
+    fontSize: "18px!important",
+    lineHeight: "100%!important",
+    minHeight: 32,
   },
   avatarImageSpinner: {
     display: 'flex',
@@ -68,6 +69,7 @@ const useAvatarStyles = createUseStyles({
 
 const Avatar = props => {
   const s = useAvatarStyles();
+  const buttonStyles = useButtonStyles();
   const { userId } = props;
   const assetsLimit = 8;
   const [assets, setAssets] = useState(null);
@@ -135,12 +137,12 @@ const Avatar = props => {
           }
         </div>
         <div className={s.thumbnail3DButtonContainer}>
-          <button
+          <ActionButton
             className={s.thumbnail3DButton}
+            buttonStyle={buttonStyles.newCancelButton}
             onClick={() => setThumbType(thumbType === 1 ? 0 : 1)}
-          >
-            {thumbType === 1 ? "2D" : "3D"}
-          </button>
+            label={thumbType === 1 ? "2D" : "3D"}
+          />
         </div>
       </div>
     </div>

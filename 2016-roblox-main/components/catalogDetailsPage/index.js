@@ -29,6 +29,7 @@ import AudioPlayButton from "./components/audioPlayButton";
 import { Thumbnail3DHandler } from "../thumbnail3D";
 import ActionButton from "../actionButton";
 import request from "../../lib/request";
+import useButtonStyles from "../../styles/buttonStyles";
 
 const emptyDescriptionMessage = 'No description available.';
 const filterTextForEmpty = str => {
@@ -171,19 +172,18 @@ const useStyles = createUseStyles({
     fontWeight: 500,
   },
   thumbnail3DButtonContainer: {
-    display: 'flex',
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
+    display: "flex",
+    position: "absolute",
+    bottom: 10,
+    right: 10,
     zIndex: 3,
   },
   thumbnail3DButton: {
-    padding: '4px 8px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    background: '#fff',
-    border: '1px solid #777',
-    borderRadius: '3px'
+    color: 'black!important',
+    padding: 9,
+    fontSize: "18px!important",
+    lineHeight: "100%!important",
+    minHeight: 32,
   },
 
 })
@@ -197,6 +197,7 @@ const CatalogDetails = props => {
   const { details } = props;
   const authStore = AuthenticationStore.useContainer();
   const s = useStyles();
+  const buttonStyles = useButtonStyles();
   const isLimited = details.itemRestrictions.includes('Limited');
   const isLimitedUnique = details.itemRestrictions.includes('LimitedUnique');
   const store = CatalogDetailsPage.useContainer();
@@ -360,13 +361,13 @@ const CatalogDetails = props => {
                 {store.details.assetType === 3 ? <AudioPlayButton audioId={details.id} /> : null}
                 {(isLimitedUnique && <LimitedUniqueOverlay />) || (isLimited && <LimitedOverlay />) || null}
                 <div className={s.thumbnail3DButtonContainer}>
-                  <button
+                  <ActionButton
                     className={s.thumbnail3DButton}
+                    buttonStyle={buttonStyles.newCancelButton}
                     disabled={isRendering3D}
                     onClick={toggle3D}
-                  >
-                    {is3dMode ? "2D" : "3D"}
-                  </button>
+                    label={is3dMode ? "2D" : "3D"}
+                  />
                 </div>
               </div>
             </div>
