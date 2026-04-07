@@ -763,7 +763,7 @@ namespace Roblox.Rendering
 
             try
             {
-                return await RenderRcc2020Asset(assetId, "Model", "Obj", cancellationToken);
+                return await RenderRcc2020Asset(assetId, "Hat", "Obj", cancellationToken);
             }
             finally
             {
