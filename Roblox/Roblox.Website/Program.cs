@@ -342,17 +342,21 @@ if (string.IsNullOrWhiteSpace(Roblox.Configuration.CdnBaseUrl))
 		await context.Response.SendFileAsync(filePath);
 	});
 
-	app.Use(async (context, next) =>
+    app.Use(async (context, next) =>
 	{
 		if (context.Request.Path.StartsWithSegments("/images") && 
-			!context.Request.Path.Value.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+			!context.Request.Path.Value.EndsWith(".png", StringComparison.OrdinalIgnoreCase) &&
+			!context.Request.Path.Value.EndsWith(".json", StringComparison.OrdinalIgnoreCase) &&
+			!context.Request.Path.Value.EndsWith(".mtl", StringComparison.OrdinalIgnoreCase) &&
+			!context.Request.Path.Value.EndsWith(".obj", StringComparison.OrdinalIgnoreCase))
 		{
 			context.Response.StatusCode = 400;
-			await context.Response.WriteAsync("Could not find image");
+			await context.Response.WriteAsync("Could not find asset");
 			return;
 		}
 		await next();
 	});
+
 
     app.UseStaticFiles(new StaticFileOptions
     {
