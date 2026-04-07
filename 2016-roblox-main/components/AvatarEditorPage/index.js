@@ -187,9 +187,6 @@ const useStyles = createUseStyles({
     },
 });
 
-// REF: https://youtu.be/iXI3aut2UWs
-// REF2: https://youtu.be/pF-jlI9OJGs
-
 function AvatarEditor() {
     const s = useStyles();
     const buttonStyles = useButtonStyles();
@@ -202,15 +199,19 @@ function AvatarEditor() {
     const [avThumb, setAvThumb] = useState(null);
     const [isRendering, setIsRendering] = useState(false);
     const [is3DReady, set3DReady] = useState(false);
+    const [thumbType, setThumbType] = useState(0);
 
     /** @type RefObject<HTMLElement> */
     const canvasParentRef = useRef(null);
-    const thumbnail3D = useRef(new Thumbnail3DHandler());
+    const [thumbnail3D, setThumbnail3D] = useState(() => new Thumbnail3DHandler());
 
     useEffect(() => {
         listItemMetadata.current = page.listItemMetadata;
-    }, [page.listItemMetadata]); // keeps listItemMetadata fresh for below functions
-    // (because apparently that doesnt happen by default?? i have no clue)
+    }, [page.listItemMetadata]);
+
+    useEffect(() => {
+        setThumbType(page.thumbnailType);
+    }, [page.thumbnailType]);
 
     /**
      * @param {SubmenuData} item
@@ -240,7 +241,6 @@ function AvatarEditor() {
      * @constructor
      */
     async function RecentClick(item, e) {
-        // DO NOT PUT === HERE!!
         if (debounce.current || listItemMetadata.current.recentType == item.typeId) return;
         debounce.current = true;
         page.setSelectedList({
@@ -265,29 +265,43 @@ function AvatarEditor() {
     }, [debounce]);
 
     useEffect(() => {
-        setAvThumb(store.avThumb)
+        setAvThumb(store.avThumb);
     }, [store.avThumb]);
 
     useEffect(() => {
         setIsRendering(store.isRendering);
     }, [store.isRendering]);
 
-    useEffect(async () => {
-        if (store.isRendering || page.thumbnailType !== 1 || !store.avThumb3D) {
-            await thumbnail3D.current.Stop();
-        } else if (page.thumbnailType === 1 && !thumbnail3D.current.isLoadingThumbnail) {
-            await thumbnail3D.current.LoadThumbnail(store.avThumb3D, canvasParentRef.current, set3DReady);
+    useEffect(() => {
+        if (thumbType === 1 && (!store || !store.avThumb3D || !store.avThumb3D.camera)) {
+            thumbnail3D.Stop();
+            setThumbType(0);
+            return;
         }
-    }, [store.avThumb3D, page.thumbnailType, canvasParentRef.current, store.isRendering]);
+
+        if (thumbType !== 1) {
+            thumbnail3D.Stop();
+        } else if (thumbType === 1 && !thumbnail3D.isLoadingThumbnail) {
+            thumbnail3D.LoadThumbnail(store.avThumb3D, canvasParentRef.current, set3DReady);
+        }
+    }, [thumbType, store.userId, store.avThumb3D, store.isRendering]);
 
     useEffect(() => {
-        if (typeof THREE !== "undefined" && thumbnail3D.current.scene === null) {
-            thumbnail3D.current.Init();
+        if (typeof window !== "undefined" && typeof window.THREE !== "undefined" && thumbnail3D.scene === null) {
+            thumbnail3D.Init();
         }
         return () => {
-            thumbnail3D.current.Dispose();
+            thumbnail3D.Dispose();
+            setThumbnail3D(new Thumbnail3DHandler());
+            setThumbType(0);
+            set3DReady(false);
         };
-    }, []);
+    }, [store.userId]);
+
+    const handleThumbnailToggle = () => {
+        setThumbType(thumbType === 1 ? 0 : 1);
+        page.LoadNewThumbnailType(thumbType === 1 ? 0 : 1);
+    };
 
     return <div>
         <div className={`${s.avatarHeader} flex justify-content-between align-items-center`}>
@@ -306,13 +320,16 @@ function AvatarEditor() {
                 <div className={`section-content ${s.contentContainer}`}>
                     <div className={s.avatarThumbContainer}>
                         {
-                            avThumb && page.thumbnailType !== 1 ?
+                            avThumb && thumbType !== 1 ?
                                 <img src={avThumb} alt={`${auth.username}'s Avatar`} />
                                 :
-                                store.avThumb3D && is3DReady ?
+                                store.avThumb3D && is3DReady && thumbType === 1 ?
                                     null
                                     :
-                                    <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
+                                    thumbType !== 1 ?
+                                        <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
+                                        :
+                                        null
                         }
                         <div className={s.thumbnail3DContainer} ref={canvasParentRef} />
                         <div className={s.avatarRigTypeSelector}>
@@ -323,10 +340,10 @@ function AvatarEditor() {
                         </div>
                         <div className={s.thumbnail3DButtonContainer}>
                             <ActionButton
-                                label={page.thumbnailType === 1 ? "2D" : "3D"}
+                                label={thumbType === 1 ? "2D" : "3D"}
                                 buttonStyle={buttonStyles.newCancelButton}
                                 className={s.thumbnail3DButton}
-                                onClick={() => page.LoadNewThumbnailType(page.thumbnailType === 1 ? 0 : 1)}
+                                onClick={handleThumbnailToggle}
                             />
                         </div>
                     </div>
@@ -400,10 +417,6 @@ function AvatarEditor() {
                                         name: "All",
                                         typeId: "all",
                                     }
-                                    // TODO: implement recent outfits {
-                                    //     name: "Outfits",
-                                    //     typeId: "outfits",
-                                    // },
                                 ]}
                                 onButtonClick={async (item, e) => await RecentClick(item, e)}
                             />
@@ -634,9 +647,6 @@ function AvatarEditor() {
                     })()
                 }
             </div>
-            {
-                /** this had to be copy and pasted twice for mobile support but its SO ugly */
-            }
             <div className={`section-content ${s.scalingContainerMobile}`} style={{ padding: 0 }}>
                 <div className={`${s.scalingContainer}`}>
                     <div className={s.scalingHeaderContainer}>
