@@ -326,6 +326,9 @@ public class ThumbnailsControllerV1 : ControllerBase
 		foreach (var v in usersNeedingRedraw)
 		{
 			_ = Task.Run(async () => {
+				await using var redrawLock = await Roblox.Services.Cache.redLock.CreateLockAsync(
+					$"Redraw3D:{v}", TimeSpan.FromMinutes(5));
+				if (!redrawLock.IsAcquired) return;
 				await services.avatar.RedrawAvatar(v);
 			});
 		}

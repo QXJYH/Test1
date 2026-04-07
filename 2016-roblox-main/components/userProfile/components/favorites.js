@@ -1,11 +1,11 @@
-import {useEffect, useState} from "react";
-import {getFavorites} from "../../../services/inventory";
+import { useEffect, useState } from "react";
+import { getFavorites } from "../../../services/inventory";
 import Subtitle from "./subtitle";
 import SmallButtonLink from "./smallButtonLink";
-import {createUseStyles} from "react-jss";
+import { createUseStyles } from "react-jss";
 import GameRow from "../../gamesPage/components/gameRow";
-import SmallGameCard from "../../smallGameCard";
-import {multiGetUniverseIcons} from "../../../services/thumbnails";
+import SmallGameCard from "../../smallGameCardNoVoting";
+import { multiGetUniverseIcons } from "../../../services/thumbnails";
 
 const useStyles = createUseStyles({
   buttonWrapper: {
@@ -16,14 +16,14 @@ const useStyles = createUseStyles({
 });
 
 const Favorites = props => {
-  const {userId} = props;
+  const { userId } = props;
   const [favorites, setFavorites] = useState(null);
   const [icons, setIcons] = useState({});
   useEffect(() => {
     setFavorites(null);
     getFavorites({
       userId: userId,
-      limit: 6,
+      limit: 5,
       assetTypeId: 9,
     }).then(data => {
       setFavorites(data.Data.Items);
@@ -51,9 +51,9 @@ const Favorites = props => {
       </div>
     </div>
     <div className='col-12'>
-      <div className='row ms-0 me-0'>
+      <ul className='hlist game-cards' style={{ overflow: 'hidden' }}>
         {
-          favorites.slice(0,6).map(v => {
+          favorites.slice(0, 6).map(v => {
             return <SmallGameCard
               key={v.Item.AssetId}
               name={v.Item.Name}
@@ -67,7 +67,7 @@ const Favorites = props => {
             />
           })
         }
-      </div>
+      </ul>
     </div>
   </div>
 }
