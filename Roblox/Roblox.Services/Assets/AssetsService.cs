@@ -754,7 +754,7 @@ public class AssetsService : ServiceBase, IService
             var finalJson = new
             {
                 camera = thumbJson.camera,
-                aabb = thumbJson.aabb,
+                aabb = thumbJson.AABB,
                 mtl = mtl,
                 obj = obj,
                 textures = textures
