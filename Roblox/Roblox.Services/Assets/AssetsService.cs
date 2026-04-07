@@ -682,12 +682,12 @@ public class AssetsService : ServiceBase, IService
         await InsertOrReplaceThumbnail(assetId, latestVersion.assetVersionId, key, ModerationStatus.ReviewApproved);
     }
 
-    public async Task UpdateAsset3DThumbnail(long assetId, string? hash)
+    public async Task UpdateAsset3DThumbnail(long assetId, string? fileName)
     {
         await db.ExecuteAsync("UPDATE asset_thumbnail SET content_3d_url = :url WHERE asset_id = :id", new
         {
             id = assetId,
-            url = hash != null ? "/images/thumbnails/3d/" + hash + ".json" : null
+            url = fileName != null ? "/images/thumbnails/" + fileName : null
         });
     }
 	
@@ -710,32 +710,22 @@ public class AssetsService : ServiceBase, IService
             string? obj = null;
             string? mtl = null;
             var textures = new List<string>();
-            var hasher = SHA256.Create();
-
-            string threeDFolder = Path.Combine(Configuration.ThumbnailsDirectory, "3d");
-            if (!Directory.Exists(threeDFolder))
-            {
-                Directory.CreateDirectory(threeDFolder);
-            }
+            string jsonFileName = $"asset_{assetId}_3d.json";
+            string objFileName = $"asset_{assetId}_scene.obj";
+            string mtlFileName = $"asset_{assetId}_scene.mtl";
 
             if (thumbJson.files.TryGetValue("scene.obj", out var sceneObj))
             {
                 byte[] objData = Convert.FromBase64String(sceneObj.content);
-                string objHash = Convert.ToHexString(hasher.ComputeHash(objData)).ToLower();
-                obj = $"/images/thumbnails/3d/{objHash}";
-
-                if (!File.Exists(Path.Combine(threeDFolder, objHash)))
-                    await File.WriteAllBytesAsync(Path.Combine(threeDFolder, objHash), objData);
+                obj = $"/images/thumbnails/{objFileName}";
+                await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, objFileName), objData);
             }
 
             if (thumbJson.files.TryGetValue("scene.mtl", out var sceneMtl))
             {
                 byte[] mtlData = Convert.FromBase64String(sceneMtl.content);
-                string mtlHash = Convert.ToHexString(hasher.ComputeHash(mtlData)).ToLower();
-                mtl = $"/images/thumbnails/3d/{mtlHash}";
-
-                if (!File.Exists(Path.Combine(threeDFolder, mtlHash)))
-                    await File.WriteAllBytesAsync(Path.Combine(threeDFolder, mtlHash), mtlData);
+                mtl = $"/images/thumbnails/{mtlFileName}";
+                await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, mtlFileName), mtlData);
             }
 
             foreach (var kvp in thumbJson.files)
@@ -743,11 +733,9 @@ public class AssetsService : ServiceBase, IService
                 if (kvp.Key.EndsWith(".png"))
                 {
                     byte[] pngData = Convert.FromBase64String(kvp.Value.content);
-                    string pngHash = Convert.ToHexString(hasher.ComputeHash(pngData)).ToLower();
-                    textures.Add($"/images/thumbnails/3d/{pngHash}");
-
-                    if (!File.Exists(Path.Combine(threeDFolder, pngHash)))
-                        await File.WriteAllBytesAsync(Path.Combine(threeDFolder, pngHash), pngData);
+                    string pngFileName = $"asset_{assetId}_{kvp.Key}";
+                    textures.Add($"/images/thumbnails/{pngFileName}");
+                    await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, pngFileName), pngData);
                 }
             }
 
@@ -761,12 +749,9 @@ public class AssetsService : ServiceBase, IService
             };
 
             var finalJsonBytes = JsonSerializer.SerializeToUtf8Bytes(finalJson);
-            var jsonHash = Convert.ToHexString(hasher.ComputeHash(finalJsonBytes)).ToLower();
+            await File.WriteAllBytesAsync(Path.Combine(Configuration.ThumbnailsDirectory, jsonFileName), finalJsonBytes);
 
-            if (!File.Exists(Path.Combine(threeDFolder, jsonHash + ".json")))
-                await File.WriteAllBytesAsync(Path.Combine(threeDFolder, jsonHash + ".json"), finalJsonBytes);
-
-            await UpdateAsset3DThumbnail(assetId, jsonHash);
+            await UpdateAsset3DThumbnail(assetId, jsonFileName);
         }
         catch (Exception ex)
         {

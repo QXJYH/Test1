@@ -338,8 +338,8 @@ public class ThumbnailsControllerV1 : ControllerBase
 		};
 	}
 
-	[HttpGet("assets/3d")]
-	public async Task<RobloxCollection<ThumbnailEntry>> GetAssetThumbnails3D(string assetIds)
+	[HttpGet("assets/thumbnail-3d")]
+	public async Task<dynamic> GetAssetThumbnails3D(string assetIds)
 	{
 		var parsed = assetIds.Split(",").Select(long.Parse).Distinct().ToList();
 		if (parsed.Count is > 200 or < 0) throw new BadRequestException();
@@ -356,9 +356,15 @@ public class ThumbnailsControllerV1 : ControllerBase
 				await services.assets.RenderAsset3DAsync(v);
 			});
 		}
-		return new()
+		return new
 		{
-			data = result
+			data = result.Select(c => new
+			{
+				targetId = c.targetId,
+				state = c.state.ToString(),
+				imageUrl = c.imageUrl,
+				version = "TN3"
+			})
 		};
 	}
 }

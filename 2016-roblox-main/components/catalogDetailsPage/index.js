@@ -208,7 +208,7 @@ const CatalogDetails = props => {
       setIs3dMode(true);
       setRendering3D(true);
       try {
-        const result = await request('GET', `/apisite/thumbnails/v1/assets/3d?assetIds=${details.id}`);
+        const result = await request('GET', `/apisite/thumbnails/v1/assets/thumbnail-3d?assetIds=${details.id}`);
         if (result.data && result.data.data && result.data.data[0] && result.data.data[0].imageUrl) {
           const jsonBlobUrl = result.data.data[0].imageUrl;
           const blobResponse = await fetch(jsonBlobUrl);
