@@ -8,7 +8,7 @@ const useStyles = createUseStyles({
     right: 0,
     width: '100%',
     maxWidth: '300px',
-    margin: '0 auto',
+    // margin: '0 auto',
     zIndex: 1,
     pointerEvents: 'none',
   },

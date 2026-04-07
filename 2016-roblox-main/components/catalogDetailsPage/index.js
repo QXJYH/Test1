@@ -25,7 +25,7 @@ import { getCollections } from "../../services/inventory";
 import getFlag from "../../lib/getFlag";
 import Owners from "./components/owners";
 import Favorite from "./components/favorite";
-import AudioPlayButton from "./components/audioPlayButton";
+import AudioPlayer from "./components/audioPlayer";
 import { Thumbnail3DHandler } from "../thumbnail3D";
 import ActionButton from "../actionButton";
 import request from "../../lib/request";
@@ -358,7 +358,7 @@ const CatalogDetails = props => {
                     </div>
                   )}
                 </div>
-                {store.details.assetType === 3 ? <AudioPlayButton audioId={details.id} /> : null}
+                {store.details.assetType === 3 ? <AudioPlayer audioId={details.id} /> : null}
                 {(isLimitedUnique && <LimitedUniqueOverlay />) || (isLimited && <LimitedOverlay />) || null}
                 <div className={s.thumbnail3DButtonContainer}>
                   <ActionButton
