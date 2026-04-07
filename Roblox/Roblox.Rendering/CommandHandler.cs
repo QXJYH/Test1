@@ -580,8 +580,8 @@ namespace Roblox.Rendering
 					Type = renderType,
 					Arguments = new object[]
 					{
-						baseUrl,
 						assetUrl,
+						baseUrl,
 						format,
 						840,
 						840,
