@@ -117,8 +117,12 @@ export class Thumbnail3DHandler {
                     for (const key in info) {
                         if (key.startsWith('map_')) {
                             info[key] = (() => {
+                                const originalName = info[key] || "";
                                 const texId = materialName.match(/Player\d+/)?.[0];
-                                return texArr.find(tex => tex.includes(`${texId}Tex`))
+                                if (texId) {
+                                    return texArr.find(tex => tex.includes(`${texId}Tex`));
+                                }
+                                return texArr.find(tex => tex.includes(materialName) || tex.endsWith(originalName)) || (texArr.length === 1 ? texArr[0] : "");
                             })() || "";
                         }
                     }
