@@ -264,6 +264,7 @@ if (string.IsNullOrWhiteSpace(Roblox.Configuration.CdnBaseUrl))
             var filePathWithoutExtension = Path.Combine(Roblox.Configuration.ThumbnailsDirectory, "3d", fileName);
             if (File.Exists(filePathWithoutExtension))
             {
+                context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
                 context.Response.ContentType = "application/octet-stream";
                 await context.Response.SendFileAsync(filePathWithoutExtension);
                 return;
