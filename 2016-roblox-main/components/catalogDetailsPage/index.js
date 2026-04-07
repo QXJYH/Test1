@@ -173,7 +173,7 @@ const useStyles = createUseStyles({
   thumbnail3DButtonContainer: {
     display: 'flex',
     position: 'absolute',
-    top: 5,
+    bottom: 5,
     right: 5,
     zIndex: 3,
   },
@@ -236,7 +236,7 @@ const CatalogDetails = props => {
             setIs3dMode(false);
           }
         } else {
-            setIs3dMode(false);
+          setIs3dMode(false);
         }
       } catch (err) {
         console.error("Error loading 3D:", err);
@@ -348,25 +348,25 @@ const CatalogDetails = props => {
             <div className='col-12 col-md-6 mb-4'>
               <div style={{ position: 'relative', display: 'table', margin: '0 auto', width: '352px', height: '352px' }}>
                 <div style={{ display: is3dMode ? 'none' : 'block' }}>
-                    <ItemImage id={details.id} name={details.name} />
+                  <ItemImage id={details.id} name={details.name} />
                 </div>
                 <div ref={canvasParentRef} style={{ display: is3dMode ? 'block' : 'none', width: '352px', height: '352px', position: 'relative', overflow: 'hidden' }}>
-                    {is3dMode && !is3DReady && (
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e3e3e3', zIndex: 1, borderRadius: '4px' }}>
-                            <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
-                        </div>
-                    )}
+                  {is3dMode && !is3DReady && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e3e3e3', zIndex: 1, borderRadius: '4px' }}>
+                      <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
+                    </div>
+                  )}
                 </div>
                 {store.details.assetType === 3 ? <AudioPlayButton audioId={details.id} /> : null}
                 {(isLimitedUnique && <LimitedUniqueOverlay />) || (isLimited && <LimitedOverlay />) || null}
                 <div className={s.thumbnail3DButtonContainer}>
-                    <button
-                        className={s.thumbnail3DButton}
-                        disabled={isRendering3D}
-                        onClick={toggle3D}
-                    >
-                        {is3dMode ? "2D" : "3D"}
-                    </button>
+                  <button
+                    className={s.thumbnail3DButton}
+                    disabled={isRendering3D}
+                    onClick={toggle3D}
+                  >
+                    {is3dMode ? "2D" : "3D"}
+                  </button>
                 </div>
               </div>
             </div>
