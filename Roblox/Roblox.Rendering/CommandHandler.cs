@@ -581,10 +581,10 @@ namespace Roblox.Rendering
 					Arguments = new object[]
 					{
 						assetUrl,
-						baseUrl,
 						format,
 						840,
 						840,
+						baseUrl,
 					}
 				}
 			};
