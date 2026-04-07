@@ -270,6 +270,21 @@ if (string.IsNullOrWhiteSpace(Roblox.Configuration.CdnBaseUrl))
                 return;
             }
         }
+        else if (normalizedPath.StartsWith("/images/thumbnails/") && 
+                (normalizedPath.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) || 
+                 normalizedPath.EndsWith(".mtl", StringComparison.OrdinalIgnoreCase) || 
+                 normalizedPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+        {
+            var fileName = normalizedPath.Substring("/images/thumbnails/".Length);
+            var filePath = Path.Combine(Roblox.Configuration.ThumbnailsDirectory, fileName);
+            if (File.Exists(filePath))
+            {
+                context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                context.Response.ContentType = "application/octet-stream";
+                await context.Response.SendFileAsync(filePath);
+                return;
+            }
+        }
         await next();
     });
 
