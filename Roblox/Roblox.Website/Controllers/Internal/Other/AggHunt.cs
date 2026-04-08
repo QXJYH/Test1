@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Roblox.Website.WebsiteModels.Authentication;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -24,48 +23,7 @@ namespace Roblox.Website.Controllers
         private static bool IsTheAggHuntEnably = false;
 		// Top secret fbi bobux key
         private const string ApiKey = "eggjgjasnfdwrgkjehkjghwejdawgbrothathwthatomgomfdhwyig";
-
-      [HttpPostBypass("v1/login")]
-        public async Task<dynamic> LoginV1([FromBody] LoginRequest request)
-        {
-            FeatureCheck();
-            await RateLimitCheck();
-            string username = request.cvalue;
-            string password = request.password;
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-                throw new BadRequestException((int)LoginError400.UsernamePasswordRequired, "Username or password is missing.");
-
-            // Format: {username}|{2facode}
-            string[] splittedUsername = username.Split('|');
-
-            username = splittedUsername[0];
-            string totpCode = splittedUsername.Length == 2 ? splittedUsername[1] : "";
-
-            UserInfo userInfo;
-            try
-            {
-                userInfo = await services.users.GetUserByName(username);
-            }
-            catch (RecordNotFoundException)
-            {
-                throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect username or password. Please try again.");
-            }
-
-            if (await Login(userInfo.username, request.password, userInfo.userId, totpCode, isPasswordLeaked))
-                await CreateSessionAndSetCookie(userInfo.userId);
-
-            return new
-            {
-                user = new
-                {
-                    id = userInfo.userId,
-                    name = userInfo.username,
-                    displayName = userInfo.username,
-                },
-                isBanned = userInfo.IsDeleted()
-            };
-
-        }
+        
         [HttpGetEgg("game/EggHunt.ashx")]
         public async Task<IActionResult> AggHuntReqrust([FromQuery] long? placeId, [FromQuery] long? playerId, [FromQuery] long? eggId, [FromQuery] bool? toggle, [FromQuery] bool? getStatus, [FromQuery] string apiKey)
         {
