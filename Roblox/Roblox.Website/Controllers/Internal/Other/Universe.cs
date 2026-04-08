@@ -135,6 +135,14 @@ namespace Roblox.Website.Controllers
                 PageSize = 50
             };
         }
+    [HttpGetBypass("universes/get-universe-containing-place")]
+    public async Task<dynamic> GetUniverse(long placeid)
+    {
+        return new
+        {
+            UniverseId = await services.games.GetUniverseId(placeid)
+        };
+    }
 
         [HttpGetBypass("v1/gametemplates")]
         public dynamic GameTemplates()
