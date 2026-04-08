@@ -22,18 +22,20 @@ namespace Roblox.Website.Controllers
         }
 
         [HttpPostBypass("v1/login")]
-        public async Task<dynamic> LoginV1([FromBody] LoginRequestV1 request)
+        public async Task<dynamic> LoginV1([FromBody] LoginRequest request)
         {
+            FeatureCheck()
             await RateLimitCheck();
-            
             string username = request.cvalue;
             string password = request.password;
-
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-                throw new BadRequestException(0, "Username or password is missing.");
+                throw new BadRequestException((int)LoginError400.UsernamePasswordRequired, "Username or password is missing.");
 
-            string[] splittedUsername = username.Split('|');
-            username = splittedUsername[0];
+            // Format: {username}|{2facode}
+            // string[] splittedUsername = username.Split('|');
+
+            // username = splittedUsername[0];
+            // string totpCode = splittedUsername.Length == 2 ? splittedUsername[1] : "";
 
             UserInfo userInfo;
             try
@@ -42,13 +44,12 @@ namespace Roblox.Website.Controllers
             }
             catch (RecordNotFoundException)
             {
-                throw new ForbiddenException(1, "Incorrect username or password. Please try again.");
+                throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect username or password. Please try again.");
             }
 
-            if (!await services.users.VerifyPassword(userInfo.userId, password))
-                throw new ForbiddenException(1, "Incorrect username or password. Please try again.");
-
-            await CreateSessionAndSetCookie(userInfo.userId);
+            // if (await Login(userInfo.username, request.password, userInfo.userId, totpCode, isPasswordLeaked))
+            if (await Login(userInfo.username, request.password, userInfo.userId))
+                await CreateSessionAndSetCookie(userInfo.userId);
 
             return new
             {
@@ -60,6 +61,19 @@ namespace Roblox.Website.Controllers
                 },
                 isBanned = userInfo.IsDeleted()
             };
+
+        }
+
+        private void FeatureCheck()
+        {
+            try
+            {
+                FeatureFlags.FeatureCheck(FeatureFlag.LoginEnabled);
+            }
+            catch (RobloxException)
+            {
+                throw new RobloxException(503, (int)LoginError503.ServiceUnavailable, "Login is currently disabled. Please try again later.");
+            }
         }
 
         private async Task RateLimitCheck()
@@ -70,6 +84,39 @@ namespace Roblox.Website.Controllers
             {
                 throw new ForbiddenException(0, "Too many attempts.");
             }
+        }
+        //private async Task<bool> Login(string username, string password, long userId, string? totpCode, bool isPasswordLeaked, bool? skip2FA = false)
+        private async Task<bool> Login(string username, string password, long userId)
+        {
+            FeatureCheck();
+            await RateLimitCheck();
+            //get totp info
+            try
+            {
+                if (!await services.users.VerifyPassword(userId, password))
+                    throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect username or password. Please try again");
+            }
+            catch (RecordNotFoundException)
+            {
+                throw new ForbiddenException((int)LoginError403.AccountLocked, "Your account has been locked. Please reset your password to unlock your account.");
+            }
+
+            // if (skip2FA == true)
+            //     return true;
+
+            // if (await services.users.GetTotpStatus(userId) == TotpStatus.Enabled)
+            // {
+            //     TotpInfo? totpInfo = await services.users.GetTotp(userId);
+            //     //null check
+            //     if (string.IsNullOrEmpty(totpCode))
+            //         throw new ForbiddenException((int)LoginError403.IncorrectCredentials, $"You have 2FA enabled. Please login with this username format {username}|2FA Code");
+
+            //     //verify totp code
+            //     if (!services.users.VerifyTotp(totpInfo.secret, totpCode))
+            //         throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect 2FA code. Please try again.");
+            // }
+
+            return true;
         }
 
         private async Task CreateSessionAndSetCookie(long userId)
