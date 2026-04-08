@@ -14,7 +14,7 @@ using ServiceProvider = Microsoft.Extensions.DependencyInjection.ServiceProvider
 namespace Roblox.Website.Controllers;
 
 [ApiController]
-[Route("v2")]
+[Route("/v2")]
 public class LogoutV2Controller : ControllerBase
 {
     [HttpPost("logout")]
