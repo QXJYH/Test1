@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Roblox.Exceptions;
-using Roblox.Models.Users;
+using Roblox.Dto.Users;
 using Roblox.Services;
 using Roblox.Services.Exceptions;
 using Roblox.Website.Middleware;
