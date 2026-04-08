@@ -353,7 +353,7 @@ const CatalogDetails = props => {
                 </div>
                 <div ref={canvasParentRef} style={{ display: is3dMode ? 'block' : 'none', width: '352px', height: '352px', position: 'relative', overflow: 'hidden' }}>
                   {is3dMode && !is3DReady && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e3e3e3', zIndex: 1, borderRadius: '4px' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', zIndex: 1, borderRadius: '4px' }}>
                       <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
                     </div>
                   )}

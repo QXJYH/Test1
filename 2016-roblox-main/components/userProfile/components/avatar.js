@@ -131,7 +131,7 @@ const Avatar = props => {
           {
             thumbType === 1 && !is3DReady ?
               <div className={s.avatarImageSpinner}>
-                <span>Loading 3D...</span>
+                <span className="spinner" style={{ height: "100%", backgroundSize: "auto 36px" }} />
               </div>
               : null
           }
