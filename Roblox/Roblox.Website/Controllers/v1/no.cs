@@ -4,7 +4,7 @@ namespace Roblox.Website.Controllers;
 
 [ApiController]
 [Route("/")]
-public class NotificationsControllerV2 : ControllerBase
+public class NotificationsControllerV12 : ControllerBase
 {
     [HttpGet("notifications/v1/stream/unread-count")]
     public dynamic GetUnreadCount()

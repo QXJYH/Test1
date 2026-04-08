@@ -7,7 +7,7 @@ namespace Roblox.Website.Controllers;
 
 [ApiController]
 [Route("/")]
-public class PresenceControllerV1 : ControllerBase
+public class PresenceController : ControllerBase
 {
 
 
