@@ -135,5 +135,36 @@ namespace Roblox.Website.Controllers
                 PageSize = 50
             };
         }
+
+        [HttpGetBypass("v1/gametemplates")]
+        public dynamic GameTemplates()
+        {
+            return new
+            {
+                data = new[]
+                {
+                    new
+                    {
+                        gameTemplateType = "Generic",
+                        hasTutorials = false,
+                        universe = new
+                        {
+                            id = 95206881,
+                            name = "Baseplate",
+                            description = (string?)null,
+                            isArchived = false,
+                            rootPlaceId = 95206881,
+                            isActive = true,
+                            privacyType = "Public",
+                            creatorType = "User",
+                            creatorTargetId = 1,
+                            creatorName = "ROBLOX",
+                            created = "2013-11-01T08:47:14.07Z",
+                            updated = "2023-05-02T22:03:01.107Z"
+                        }
+                    }
+                }
+            };
+        }
 	}
-}	
+}
