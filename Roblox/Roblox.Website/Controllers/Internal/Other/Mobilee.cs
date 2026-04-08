@@ -13,7 +13,7 @@ namespace Roblox.Website.Controllers
 {
     [ApiController]
     [Route("/")]
-    public class AuthenticationV1Controller : ControllerBase
+    public class Mobilee : ControllerBase
     {
         public class LoginRequestV1
         {
