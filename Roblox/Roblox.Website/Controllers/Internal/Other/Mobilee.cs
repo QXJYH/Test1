@@ -22,7 +22,7 @@ namespace Roblox.Website.Controllers
         }
 
         [HttpPostBypass("v1/login")]
-        public async Task<dynamic> LoginV1([FromBody] LoginRequest request)
+        public async Task<dynamic> LoginV1([FromBody] LoginRequestV1 request)
         {
             FeatureCheck()
             await RateLimitCheck();
