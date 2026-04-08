@@ -33,11 +33,11 @@ namespace Roblox.Website.Controllers
     [MVC.Route("/")]
     public class MobileShitTesting : ControllerBase 
     {
-		[HttpGetBypass("mobile/check-app-version")]
-        [HttpPostBypass("mobile/check-app-version")]
+		[HttpGetBypass("mobileapi/check-app-version")]
+        [HttpPostBypass("mobileapi/check-app-version")]
 		public MVC.IActionResult MobileCheckAppVer()
 		{
-            Console.WriteLine("[POST] /mobile/check-app-version");
+            Console.WriteLine("[POST] /mobileapi/check-app-version");
 			return Ok(new
 			{
 				data = new

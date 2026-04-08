@@ -66,6 +66,14 @@ namespace Roblox.Website.Controllers
 
         }
 
+        [HttpGetBypass("client/pbe")]
+        [HttpPostBypass("client/pbe")]
+        [HttpGetBypass("mobile/pbe")]
+        public OkResult PBE()
+        {
+            return Ok();
+        }
+
         private void FeatureCheck()
         {
             try
