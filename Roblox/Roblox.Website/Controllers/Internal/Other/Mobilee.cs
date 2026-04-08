@@ -24,7 +24,7 @@ namespace Roblox.Website.Controllers
         [HttpPostBypass("v1/login")]
         public async Task<dynamic> LoginV1([FromBody] LoginRequestV1 request)
         {
-            FeatureCheck()
+            FeatureCheck();
             await RateLimitCheck();
             string username = request.cvalue;
             string password = request.password;
