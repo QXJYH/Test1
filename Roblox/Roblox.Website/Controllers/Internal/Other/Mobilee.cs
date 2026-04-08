@@ -129,14 +129,14 @@ namespace Roblox.Website.Controllers
             return true;
         }
 
-        private async Task CreateSessionAndSetCookie(long userId)
+        private async Task<string> CreateSessionAndSetCookie(long userId)
         {
             var sessionCookie = Middleware.SessionMiddleware.CreateJwt(new Middleware.JwtEntry()
             {
                 sessionId = await services.users.CreateSession(userId),
                 createdAt = DateTimeOffset.Now.ToUnixTimeSeconds(),
             });
-
+            // will be removed later this is just a hack to get the website to work :sob:
             HttpContext.Response.Cookies.Append(Middleware.SessionMiddleware.CookieName, sessionCookie, new CookieOptions()
             {
                 Domain = ".kornet.lat",
@@ -146,6 +146,7 @@ namespace Roblox.Website.Controllers
                 Path = "/",
                 SameSite = SameSiteMode.Lax,
             });
+            return sessionCookie;
         }
     }
 }
