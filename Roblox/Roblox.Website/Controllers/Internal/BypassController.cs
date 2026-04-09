@@ -156,7 +156,29 @@ namespace Roblox.Website.Controllers
             ValidateBotAuthorization();
             return await MigrateItem.MigrateItemFromRoblox(assetId, true, 5, new List<Models.Assets.Type>() { Models.Assets.Type.TeeShirt, Models.Assets.Type.Shirt, Models.Assets.Type.Pants });
         }
-        
+                [HttpPostBypass("v1/join-game")]
+        public async Task<PlaceLaunchResponse> JoinGameMobile([FromBody] JoinGame request)
+        {
+            long year = await services.games.GetYear(request.placeId);
+            if (year != 2020 && year != 2021)
+            {
+                return new PlaceLaunchResponse()
+                {
+                    status = (int)JoinStatus.Error,
+                    message = "An error occured while starting the game."
+                };
+            }
+            var placeLauncherRequest = new PlaceLaunchRequest
+            {
+                request = "RequestGame",
+                placeId = request.placeId,
+                userId = safeUserSession.userId,
+                username = safeUserSession.username,
+                cookie = ROBLOSECURITY,
+                special = true
+            };
+            return await services.placeLauncher.PlaceLauncherAsync(placeLauncherRequest);
+        }
         [HttpGetBypass("BuildersClub/Upgrade.ashx")]
         public MVC.IActionResult UpgradeNow()
         {
