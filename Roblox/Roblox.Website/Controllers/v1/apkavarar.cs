@@ -11,7 +11,6 @@ using Roblox.Services;
 using Roblox.Services.App.FeatureFlags;
 using Roblox.Website.WebsiteModels;
 using ServiceProvider = Roblox.Services.ServiceProvider;
-# i used bubba one but i modified it to apk apis
 namespace Roblox.Website.Controllers;
 
 [ApiController]
