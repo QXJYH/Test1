@@ -6,6 +6,7 @@ using System.Text.Json;
 using Roblox.Models.Sessions;
 using Roblox.Services;
 using Roblox.Services.Exceptions;
+using Roblox.Website.Middleware;
 
 namespace Roblox.Website.Controllers
 {
@@ -26,9 +27,9 @@ namespace Roblox.Website.Controllers
                     return userSessionForTests;
 #endif
                 var dict = HttpContext.Items;
-                if (dict.ContainsKey(Roblox.Website.Middleware.SessionMiddleware.CookieName))
+                if (dict.ContainsKey(SessionMiddleware.CookieName))
                 {
-                    return (UserSession?)dict[Middleware.SessionMiddleware.CookieName];
+                    return (UserSession?)dict[SessionMiddleware.CookieName];
                 }
 
                 return null;
