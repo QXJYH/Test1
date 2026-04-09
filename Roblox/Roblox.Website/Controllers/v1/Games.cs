@@ -73,15 +73,18 @@ public class GamesControllerV1 : ControllerBase
         var results = new List<dynamic>();
         if (gameSortsContext == "HomeSorts")
         {
-            if (userSession == null)
-                throw new ForbiddenException();
-            // we need to check if player actually has anything recent before showing recent sort
-            var recent = await services.games.GetRecentGames(userSession.userId, 1);
-            if (recent.Any())
+            if (safeUserSession == null)
             {
-                results.Add(sorts["recent"]);
                 results.Add(sorts["popular"]);
-                // results.Add(sorts["mostFavorited"]);
+            }
+            else
+            {
+                var recent = await services.games.GetRecentGames(safeUserSession.userId, 1);
+                if (recent.Any())
+                {
+                    results.Add(sorts["recent"]);
+                }
+                results.Add(sorts["popular"]);
             }
         }
         else
@@ -89,7 +92,6 @@ public class GamesControllerV1 : ControllerBase
             results.Add(sorts["popular"]);
             results.Add(sorts["mostFavorited"]);
             results.Add(sorts["recentlyUpdated"]);
-            // results.Add(sorts["recentlyCreated"]);
         }
 
         return new
