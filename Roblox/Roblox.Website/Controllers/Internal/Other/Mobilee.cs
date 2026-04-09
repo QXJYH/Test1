@@ -66,12 +66,101 @@ namespace Roblox.Website.Controllers
 
         }
 
+        [HttpGetBypass("v1/users/{userId:long}/currency")]
+        public async Task<dynamic> GetUserCurrency(long userId)
+        {
+            FeatureCheck();
+            return await services.economy.GetUserBalance(safeUserSession.userId);
+        }
+
         [HttpGetBypass("client/pbe")]
         [HttpPostBypass("client/pbe")]
         [HttpGetBypass("mobile/pbe")]
         public OkResult PBE()
         {
             return Ok();
+        }
+
+        [HttpGetBypass("v2/metadata")]
+        public dynamic GetMetadata()
+        {
+            return new
+            {
+                isChatEnabledByPrivacySetting = 0,
+                languageForPrivacySettingUnavailable = "Chat is currently unavailable",
+                maxConversationTitleLength = 150,
+                numberOfMembersForPartyChrome = 6,
+                partyChromeDisplayTimeStampInterval = 300000,
+                signalRDisconnectionResponseInMilliseconds = 3000,
+                typingInChatFromSenderThrottleMs = 5000,
+                typingInChatForReceiverExpirationMs = 8000,
+                relativeValueToRecordUiPerformance = 0.0,
+                isChatDataFromLocalStorageEnabled = false,
+                chatDataFromLocalStorageExpirationSeconds = 30,
+                isUsingCacheToLoadFriendsInfoEnabled = false,
+                cachedDataFromLocalStorageExpirationMS = 30000,
+                senderTypesForUnknownMessageTypeError = new List<string>() { "User" },
+                isInvalidMessageTypeFallbackEnabled = false,
+                isRespectingMessageTypeEnabled = false,
+                validMessageTypesWhiteList = new List<string>() { "PlainText", "Link" },
+                shouldRespectConversationHasUnreadMessageToMarkAsRead = true,
+                isVoiceChatForClientSideEnabled = false,
+                isAliasChatForClientSideEnabled = true,
+                isPlayTogetherForGameCardsEnabled = true,
+                isRoactChatEnabled = true
+            };
+        }
+
+        [HttpGetBypass("v1/enrollments")]
+        [HttpPostBypass("v1/enrollments")]
+        public dynamic Enrollments()
+        {
+            return new
+            {
+                data = new[]
+                {
+                    new
+                    {
+                        SubjectType = "BrowserTracker",
+                        SubjectTargetId = 63713166375,
+                        ExperimentName = "AllUsers.DevelopSplashScreen.GreenStartCreatingButton",
+                        Status = "Inactive",
+                        Variation = (string?)null
+                    }
+                }
+            };
+        }
+
+        [HttpGetBypass("v2/passwords/current-status")]
+        public dynamic GetPasswordStatus()
+        {
+            return new 
+            {
+                valid = userSession != null
+            };
+        }
+
+        [HttpGetBypass("v2/get-rollout-settings")]
+        public dynamic ChatRollout(string featureNames)
+        {
+            return new
+            {
+                rolloutFeatures = new[]
+                {
+                    new
+                    {
+                        featureName = featureNames,
+                        isRolloutEnabled = true
+                    }
+                }
+            };
+        }
+
+        [HttpGetBypass("v1/get-enrollments")]
+        [HttpPostBypass("v1/get-enrollments")]
+        public dynamic GetEnrollments()
+        {
+            return Array.Empty<object>();
         }
 
         private void FeatureCheck()
