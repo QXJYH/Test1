@@ -66,6 +66,13 @@ namespace Roblox.Website.Controllers
 
         }
 
+        [HttpGetBypass("v1/users/{userId:long}/currency")]
+        public async Task<dynamic> GetUserCurrency(long userId)
+        {
+            FeatureCheck();
+            return await services.economy.GetUserBalance(safeUserSession.userId);
+        }
+
         [HttpGetBypass("client/pbe")]
         [HttpPostBypass("client/pbe")]
         [HttpGetBypass("mobile/pbe")]
