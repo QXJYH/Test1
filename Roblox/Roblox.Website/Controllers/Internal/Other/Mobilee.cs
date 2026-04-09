@@ -23,6 +23,18 @@ namespace Roblox.Website.Controllers
             public string password { get; set; } = "";
         }
 
+        private static GamesControllerV1 _gamesControllerV1 { get; } = new();
+
+        [HttpGetBypass("v1/games/sorts")]
+        public async Task<dynamic> GameSort(string? gameSortsContext)
+        {
+            if (gameSortsContext is not null)
+            {
+                Console.WriteLine($"GameSortsContext: {gameSortsContext}");
+            }
+            return await _gamesControllerV1.GetGameSorts(gameSortsContext);
+        }
+
         [HttpPostBypass("v1/login")]
         public async Task<dynamic> LoginV1([FromBody] LoginRequestV1 request)
         {
