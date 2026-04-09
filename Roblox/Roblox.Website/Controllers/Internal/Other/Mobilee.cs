@@ -131,6 +131,26 @@ namespace Roblox.Website.Controllers
             };
         }
 
+        [HttpGetBypass("v1/themes/User/{userId:long}")]
+        public dynamic GetUserTheme(long userId)
+        {
+            return new
+            {
+                themeType = "Dark"
+            };
+        }
+
+        [HttpGetBypass("v2/chat-settings")]
+        [HttpGetBypass("v1/chat-settings")]
+        public dynamic GetChatSettings()
+        {
+            return new
+            {
+                chatEnabled = FeatureFlags.IsEnabled(FeatureFlag.WebsiteChat),
+                isActiveChatUser = true, // todo
+            };
+        }
+
         [HttpGetBypass("v2/passwords/current-status")]
         public dynamic GetPasswordStatus()
         {
@@ -218,46 +238,46 @@ namespace Roblox.Website.Controllers
             return true;
         }
 
-private async Task<string> CreateSessionAndSetCookie(long userId)
-{
-    var sessionCookie = Middleware.SessionMiddleware.CreateJwt(new Middleware.JwtEntry()
-    {
-        sessionId = await services.users.CreateSession(userId),
-        createdAt = DateTimeOffset.Now.ToUnixTimeSeconds(),
-    });
-
-    Console.WriteLine($"starting debug: {userId}");
-
-    var options = new CookieOptions()
-    {
-        Domain = ".kornet.lat",
-        Secure = false, 
-        HttpOnly = false,
-        Expires = DateTimeOffset.Now.AddDays(364),
-        IsEssential = true,
-        Path = "/",
-        SameSite = SameSiteMode.None, 
-    };
-
-    try 
-    {
-        HttpContext.Response.Cookies.Append(Middleware.SessionMiddleware.CookieName, sessionCookie, options);
-        
-        var hasHeader = HttpContext.Response.Headers.ContainsKey("Set-Cookie");
-        Console.WriteLine($"cooke name {Middleware.SessionMiddleware.CookieName}");
-        Console.WriteLine($"set header output {hasHeader}");
-        
-        if (hasHeader)
+        private async Task<string> CreateSessionAndSetCookie(long userId)
         {
-            Console.WriteLine($"header value is {HttpContext.Response.Headers["Set-Cookie"]}");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"fail append {ex.Message}");
-    }
+            var sessionCookie = Middleware.SessionMiddleware.CreateJwt(new Middleware.JwtEntry()
+            {
+                sessionId = await services.users.CreateSession(userId),
+                createdAt = DateTimeOffset.Now.ToUnixTimeSeconds(),
+            });
 
-    return sessionCookie;
-}
+            Console.WriteLine($"starting debug: {userId}");
+
+            var options = new CookieOptions()
+            {
+                Domain = ".kornet.lat",
+                Secure = false, 
+                HttpOnly = false,
+                Expires = DateTimeOffset.Now.AddDays(364),
+                IsEssential = true,
+                Path = "/",
+                SameSite = SameSiteMode.None, 
+            };
+
+            try 
+            {
+                HttpContext.Response.Cookies.Append(Middleware.SessionMiddleware.CookieName, sessionCookie, options);
+                
+                var hasHeader = HttpContext.Response.Headers.ContainsKey("Set-Cookie");
+                Console.WriteLine($"cooke name {Middleware.SessionMiddleware.CookieName}");
+                Console.WriteLine($"set header output {hasHeader}");
+                
+                if (hasHeader)
+                {
+                    Console.WriteLine($"header value is {HttpContext.Response.Headers["Set-Cookie"]}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"fail append {ex.Message}");
+            }
+
+            return sessionCookie;
+        }
     }
 }
