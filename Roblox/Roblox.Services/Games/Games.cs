@@ -37,7 +37,7 @@ public class GamesService : ServiceBase, IService
             throw new RobloxException(400, 0, "Invalid place ID");
         return arr[0].universeId;
     }
-        public async Task<Universe> GetUniverseInfo(long universeId)
+        public async Task<long> GetUniverseInfo(long universeId)
     {
         var build = new SqlBuilder();
         var template = build.AddTemplate(
