@@ -16,7 +16,7 @@ namespace Roblox.Website.Controllers;
 
 [ApiController]
 [Route("/")]
-public class AvatarControllerV1 : ControllerBase
+public class aaveter : ControllerBase
 {
     private void FeatureCheck()
     {
