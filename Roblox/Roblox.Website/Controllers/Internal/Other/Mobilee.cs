@@ -142,7 +142,7 @@ private async Task<string> CreateSessionAndSetCookie(long userId)
     var options = new CookieOptions()
     {
         Domain = ".kornet.lat",
-        Secure = true, 
+        Secure = false, 
         HttpOnly = false,
         Expires = DateTimeOffset.Now.AddDays(364),
         IsEssential = true,
