@@ -37,7 +37,49 @@ public class GamesService : ServiceBase, IService
             throw new RobloxException(400, 0, "Invalid place ID");
         return arr[0].universeId;
     }
-    
+        public async Task<Universe> GetUniverseInfo(long universeId)
+    {
+        var build = new SqlBuilder();
+        var template = build.AddTemplate(
+            @"SELECT
+                u.id,
+                u.root_asset_id AS rootPlaceId,
+                u.is_public AS isPublic,
+                u.forcemorph_type AS universeAvatarType,
+                u.privacy_type AS privacyType,
+                a.name AS sourceName,
+                a.description AS sourceDescription,
+                a.asset_genre AS genre,
+                a.created_at AS created,
+                a.updated_at AS updated,
+                ap.max_player_count AS maxPlayers,
+                ap.year AS year,
+                ap.visit_count AS visits,
+                ap.is_vip_enabled AS createVipServersAllowed,
+                ap.roblox_place_id AS robloxPlaceId,
+                a.price_robux AS price,
+                a.creator_id AS creatorId,
+                a.creator_type AS creatorType,
+                (SELECT COUNT(*) FROM asset_server_player WHERE asset_id = u.root_asset_id) AS playing,
+                COALESCE(u_user.username, g.name) AS creatorName
+            FROM universe u
+            INNER JOIN asset a ON a.id = u.root_asset_id
+            INNER JOIN asset_place ap ON ap.asset_id = u.root_asset_id
+            LEFT JOIN ""user"" u_user ON a.creator_type = 1 AND u_user.id = a.creator_id
+            LEFT JOIN ""group"" g ON a.creator_type = 2 AND g.id = a.creator_id
+            /**where**/
+            LIMIT 1");
+
+        build.Where("u.id = :universeId", new { universeId = universeId });
+
+        var result = (await db.QueryAsync<MultiGetUniverseEntry>(template.RawSql, template.Parameters)).FirstOrDefault();
+        if (result == null)
+            throw new RecordNotFoundException("Universe does not exist.");
+
+        using var assets = ServiceProvider.GetOrCreate<AssetsService>(this);
+        result.favoritedCount = await assets.CountFavorites(result.rootPlaceId);
+        return result;
+    }
     public async Task<IEnumerable<MultiGetUniverseEntry>> MultiGetUniverseInfo(IEnumerable<long> universeIds)
     {
         var ids = universeIds.ToArray();
