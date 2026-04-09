@@ -216,16 +216,17 @@ namespace Roblox.Website.Controllers
             };
         }
 
-        [HttpGetBypass("v1/user/friend-requests/count")]
-        public async Task<dynamic> GetFriendRequestCount()
-        {
-            var result = await services.friends.GetFriendRequestCount(safeUserSession.userId);
-            return new
-            {
-                count = result,
-            };
-        }
+      [HttpGetBypass("v1/user/friend-requests/count")]
+    public async Task<dynamic> GetFriendRequestCount()
+   {
+    if (safeUserSession == null)
+    {
+        return new { count = 0 }; // should work
+    }
 
+    var result = await services.friends.GetFriendRequestCount(safeUserSession.userId);
+    return new { count = result };
+  }
         [HttpGetBypass("v1/users/{userId}/friends/count")]
         public async Task<dynamic> GetFriendCount(long userId)
         {
