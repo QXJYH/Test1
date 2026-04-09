@@ -158,10 +158,12 @@ namespace Roblox.Website.Controllers
             ValidateBotAuthorization();
             return await MigrateItem.MigrateItemFromRoblox(assetId, true, 5, new List<Models.Assets.Type>() { Models.Assets.Type.TeeShirt, Models.Assets.Type.Shirt, Models.Assets.Type.Pants });
         }
-                [HttpPostBypass("v1/join-game")]
+        
+        [HttpPostBypass("v1/join-game")]
         public async Task<PlaceLaunchResponse> JoinGameMobile([FromBody] JoinGame request)
         {
-            long year = await services.games.GetYear(request.placeId);
+            var yearInt = await services.games.GetPlaceYear(request.placeId);
+            long year = yearInt ?? 0;
             if (year != 2020 && year != 2021)
             {
                 return new PlaceLaunchResponse()
@@ -170,16 +172,31 @@ namespace Roblox.Website.Controllers
                     message = "An error occured while starting the game."
                 };
             }
-            var placeLauncherRequest = new PlaceLaunchRequest
+            
+            var launchResult = await services.gameServer.GetServerForPlace(request.placeId, year.ToString());
+            
+            if (launchResult.status == JoinStatus.Joining)
             {
-                request = "RequestGame",
-                placeId = request.placeId,
-                userId = safeUserSession.userId,
-                username = safeUserSession.username,
-                cookie = ROBLOSECURITY,
-                special = true
+                var port = await services.gameServer.GetServerPortFromDatabase(launchResult.job);
+                var ticket = ROBLOSECURITY;
+                var script = await services.gameJoin.GenerateJoinScript(safeUserSession.userId, request.placeId, launchResult.job, port, ticket, year.ToString());
+                
+                return new PlaceLaunchResponse()
+                {
+                    jobId = Guid.Parse(launchResult.job),
+                    status = (int)JoinStatus.Joining,
+                    joinScript = script,
+                    authenticationUrl = Configuration.BaseUrl + "/Login/Negotiate.ashx",
+                    authenticationTicket = ticket
+                };
+            }
+            
+            return new PlaceLaunchResponse()
+            {
+                status = (int)launchResult.status,
+                jobId = launchResult.job != null ? Guid.Parse(launchResult.job) : null,
+                message = "Waiting for server"
             };
-            return await services.placeLauncher.PlaceLauncherAsync(placeLauncherRequest);
         }
         [HttpGetBypass("BuildersClub/Upgrade.ashx")]
         public MVC.IActionResult UpgradeNow()
