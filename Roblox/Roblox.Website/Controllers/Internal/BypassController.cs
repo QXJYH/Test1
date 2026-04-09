@@ -51,7 +51,7 @@ namespace Roblox.Website.Controllers
     [MVC.Route("/")]
     public class BypassController : ControllerBase
     {	
-		[HttpGet("logout")]
+		[@HttpGet("logout")]
         public MVC.IActionResult Logout()
         {
             foreach (var cookie in Request.Cookies.Keys)
@@ -93,7 +93,7 @@ namespace Roblox.Website.Controllers
             return new MVC.RedirectResult("/internal/report-abuse");
         }
 		
-        [HttpGet("internal/release-metadata")]
+        [@HttpGet("internal/release-metadata")]
         public dynamic GetReleaseMetaData([Required] string requester)
         {
             throw new RobloxException(RobloxException.BadRequest, 0, "BadRequest");
