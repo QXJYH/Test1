@@ -119,7 +119,13 @@ namespace Roblox.Website.Controllers
                 }
             }
         }
-        
+                protected string? ROBLOSECURITY
+        {
+            get
+            {
+                return Request.Cookies.ContainsKey(SessionMiddleware.CookieName) ? Request.Cookies[SessionMiddleware.CookieName]!.ToString() : null;
+            }
+        }
         public static ulong ConvertFromIpAddressToInteger(string ipAddress)
         {
             var address = IPAddress.Parse(ipAddress);
