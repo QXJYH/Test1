@@ -30,7 +30,10 @@ public class GameServerEmptyResponse
 {
     
 }
-
+public class JoinGame
+{
+    public long placeId { get; set; }
+}
 public class GameServerPlayer
 {
     public long userId { get; set; }
