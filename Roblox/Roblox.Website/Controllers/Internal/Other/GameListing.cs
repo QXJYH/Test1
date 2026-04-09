@@ -64,6 +64,14 @@ namespace Roblox.Website.Controllers
             };
         }
 
+        [HttpGetBypass("v1/games/{universeId:long}/social-links/list")]
+        public dynamic GetSocialLinks()
+        {
+            return new
+            {
+                data = new List<int>(),
+            };
+        }
 
         [HttpGetBypass("/v1/games/{universeId:long}/favorites")]
         public async Task<dynamic> GetFavoriteStatus(long universeId)
