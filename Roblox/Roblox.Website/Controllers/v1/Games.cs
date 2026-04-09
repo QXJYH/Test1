@@ -32,20 +32,8 @@ public class GamesControllerV1 : ControllerBase
                 "popular", new
                 {
                     token = "popular",
-                    name = "Popular",
-                    displayName = "Popular",
-                    gameSetTypeId = 1,
-                    gameSetTargetId = 90
-                }
-            },
-            {
-                "classics", new
-                {
-                    token = "classics",
-                    name = "Classics",
-                    displayName = "Classics",
-                    gameSetTypeId = 2,
-                    gameSetTargetId = 91
+                    name = "popular",
+                    displayName = "popular",
                 }
             },
             {
@@ -54,8 +42,6 @@ public class GamesControllerV1 : ControllerBase
                     token = "recent",
                     name = "Recent",
                     displayName = "Recent",
-                    gameSetTypeId = 3,
-                    gameSetTargetId = 92
                 }
             },
             {
@@ -64,30 +50,28 @@ public class GamesControllerV1 : ControllerBase
                     token = "mostFavorited",
                     name = "Most Favorited",
                     displayName = "Most Favorited",
-                    gameSetTypeId = 4,
-                    gameSetTargetId = 93
                 }
             },
-            // {
-            //     "recentlyUpdated", new
-            //     {
-            //         token = "recentlyUpdated",
-            //         name = "Recently Updated",
-            //         displayName = "Recently Updated",
-            //     }
-            // },
-            // {
-            //     "recentlyCreated", new
-            //     {
-            //         token = "recentlyCreated",
-            //         name = "Recently Created",
-            //         displayName = "Recently Created",
-            //     }
-            // },
+            {
+                "recentlyUpdated", new
+                {
+                    token = "recentlyUpdated",
+                    name = "Recently Updated",
+                    displayName = "Recently Updated",
+                }
+            },
+            {
+                "recentlyCreated", new
+                {
+                    token = "recentlyCreated",
+                    name = "Recently Created",
+                    displayName = "Recently Created",
+                }
+            },
         };
 
         var results = new List<dynamic>();
-        if (gameSortsContext != null && gameSortsContext is "HomeSorts" or "UnifiedHomeSorts")
+        if (gameSortsContext == "HomeSorts")
         {
             if (userSession == null)
                 throw new ForbiddenException();
@@ -96,7 +80,6 @@ public class GamesControllerV1 : ControllerBase
             if (recent.Any())
             {
                 results.Add(sorts["recent"]);
-                //results.Add(sorts["roulette"]);
                 results.Add(sorts["popular"]);
                 // results.Add(sorts["mostFavorited"]);
             }
@@ -104,10 +87,8 @@ public class GamesControllerV1 : ControllerBase
         else
         {
             results.Add(sorts["popular"]);
-            results.Add(sorts["classics"]);
-            //results.Add(sorts["roulette"]);
             results.Add(sorts["mostFavorited"]);
-            //results.Add(sorts["recentlyUpdated"]);
+            results.Add(sorts["recentlyUpdated"]);
             // results.Add(sorts["recentlyCreated"]);
         }
 
@@ -118,54 +99,17 @@ public class GamesControllerV1 : ControllerBase
                 c.token,
                 c.name,
                 c.displayName,
-                c.gameSetTypeId,
-                c.gameSetTargetId,
+                getSetTypeId = 0,
+                gameSetTargetId = 0,
                 timeOptionsAvailable = false,
                 genreOptionsAvailable = false,
                 numberOfRows = 1,
                 numberOfGames = 0,
                 isDefaultSort = true,
-                contextUniverseId = (long?)null,
-                contextCountryRegionId = (int?)null,
+                contextUniverseId = (long?) null,
+                contextCountryRegionId = (int?) null,
                 tokenExpiryInSeconds = 86400,
             }),
-            timeFilters = new[]
-            {
-                new { token = "Now", name = "Now", tokenExpiryInSeconds = 3600 },
-                new { token = "PastDay", name = "PastDay", tokenExpiryInSeconds = 3600 },
-                new { token = "PastWeek", name = "PastWeek", tokenExpiryInSeconds = 3600 },
-                new { token = "PastMonth", name = "PastMonth", tokenExpiryInSeconds = 3600 },
-                new { token = "AllTime", name = "AllTime", tokenExpiryInSeconds = 3600 }
-            },
-            genreFilters = new[]
-            {
-                new { token = "T638364961735517991_1_89de", name = "All", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518009_19_3d2", name = "Building", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518045_11_3de6", name = "Horror", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518062_7_558c", name = "Town and City", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518076_17_c371", name = "Military", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518094_15_2056", name = "Comedy", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518107_8_6d4f", name = "Medieval", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518120_13_c168", name = "Adventure", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518134_9_e6aa", name = "Sci-Fi", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518156_12_13fb", name = "Naval", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518169_20_46a", name = "FPS", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518183_21_4bbf", name = "RPG", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518192_14_efc6", name = "Sports", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518205_10_fa83", name = "Fighting", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518223_16_5d38", name = "Western", tokenExpiryInSeconds = 3600 }
-            },
-            gameFilters = new[]
-            {
-                new { token = "T638364961735518263_Any_56d2", name = "Any", tokenExpiryInSeconds = 3600 },
-                new { token = "T638364961735518277_Classic_a1f4", name = "Classic", tokenExpiryInSeconds = 3600 }
-            },
-            pageContext = new
-            {
-                pageId = "f5b1510e-3810-42ab-8135-8ffa5ef221ba",
-                isSeeAllPage = (bool?)null
-            },
-            gameSortStyle = (string?)null
         };
     }
 
