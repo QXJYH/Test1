@@ -86,7 +86,7 @@ public class aaveter : ControllerBase
 		});
 	}
     
-    [HttpPostBypass("v1/avatar/redraw-thumbnail")]
+    [HttpPost("v1/avatar/redraw-thumbnail")]
     public async Task RequestRedrawAvatar()
     {
         FeatureCheck();
@@ -107,7 +107,7 @@ public class aaveter : ControllerBase
 		}
     }
 	
-	[HttpPostBypass("v1/avatar/set-wearing-assets")]
+	[HttpPost("v1/avatar/set-wearing-assets")]
 	public async Task SetWornAssets([Required, FromBody] SetWearingAssetsRequest request)
 	{
 		FeatureCheck();
@@ -166,7 +166,7 @@ public class aaveter : ControllerBase
 		}
 	}
 
-    [HttpPostBypass("v1/avatar/assets/{assetId:long}/wear")]
+    [HttpPost("v1/avatar/assets/{assetId:long}/wear")]
     public async Task WearAsset([Required] long assetId)
     {
         FeatureCheck();
@@ -182,7 +182,7 @@ public class aaveter : ControllerBase
         AttemptScheduleRender();
     }
 
-    [HttpPostBypass("v1/avatar/set-body-colors")]
+    [HttpPost("v1/avatar/set-body-colors")]
     public async Task SetBodyColors([Required, FromBody] SetColorsRequest colors)
     {
         FeatureCheck();
@@ -205,7 +205,7 @@ public class aaveter : ControllerBase
 		}
     }
 
-	[HttpGetBypass("v1/avatar/recent-items/{item}/list")]
+	[HttpGet("v1/avatar/recent-items/{item}/list")]
 	public async Task<dynamic> GetRecentItems()
 	{
 		FeatureCheck();
@@ -251,7 +251,7 @@ public class aaveter : ControllerBase
 		};
 	}
 
-    [HttpGetBypass("v1/users/{userId:long}/outfits")]
+    [HttpGet("v1/users/{userId:long}/outfits")]
     public async Task<dynamic> GetUserOutfits(long userId, int itemsPerPage, int page)
     {
         FeatureCheck();
@@ -265,7 +265,7 @@ public class aaveter : ControllerBase
         };
     }
 
-    [HttpPostBypass("v1/outfits/{outfitId:long}/wear")]
+    [HttpPost("v1/outfits/{outfitId:long}/wear")]
     public async Task WearOutfit(long outfitId)
     {
         FeatureCheck();
@@ -273,7 +273,7 @@ public class aaveter : ControllerBase
         await services.avatar.RedrawAvatar(safeUserSession.userId, outfitDetails.assetIds, outfitDetails.details, AvatarType.R6);
     }
 
-    [HttpPostBypass("v1/outfits/create")]
+    [HttpPost("v1/outfits/create")]
     public async Task CreateOutfit([Required,FromBody] CreateOutfitRequest request)
     {
         FeatureCheck();
@@ -296,7 +296,7 @@ public class aaveter : ControllerBase
             });
     }
 
-    [HttpPostBypass("v1/outfits/{outfitId:long}/delete")]
+    [HttpPost("v1/outfits/{outfitId:long}/delete")]
     public async Task DeleteOutfit(long outfitId)
     {
         FeatureCheck();
@@ -307,7 +307,7 @@ public class aaveter : ControllerBase
         await services.avatar.DeleteOutfit(outfitId);
     }
     
-    [HttpPatchBypass("v1/outfits/{outfitId:long}")]
+    [HttpPatch("v1/outfits/{outfitId:long}")]
     public async Task UpdateOutfit(long outfitId, [Required,FromBody] UpdateOutfitRequest request)
     {
         FeatureCheck();
@@ -333,7 +333,7 @@ public class aaveter : ControllerBase
             });
     }
 
-    [HttpGetBypass("v1/users/{userId:long}/avatar")]
+    [HttpGet("v1/users/{userId:long}/avatar")]
     public async Task<dynamic> GetAvatar(long userId)
     {
         var assets = await services.avatar.GetWornAssets(userId);
@@ -371,13 +371,13 @@ public class aaveter : ControllerBase
         };
     }
 
-    [HttpGetBypass("v1/avatar")]
+    [HttpGet("v1/avatar")]
     public async Task<dynamic> GetMyAvatar()
     {
         return await GetAvatar(userSession.userId);
     }
 
-    [HttpGetBypass("v1/avatar/metadata")]
+    [HttpGet("v1/avatar/metadata")]
     public dynamic GetAvatarMetadata()
     {
         return new
@@ -396,7 +396,7 @@ public class aaveter : ControllerBase
         };
     }
 
-    [HttpGetBypass("v1/avatar-rules")]
+    [HttpGet("v1/avatar-rules")]
     public dynamic GetAvatarRules()
     {
         return new
@@ -512,8 +512,8 @@ public class aaveter : ControllerBase
         };
     }
 
-	[HttpPostBypass("v1/avatar/set-scales")]
-	[HttpPostBypass("v1/avatar/set-player-avatar-type")]
+	[HttpPost("v1/avatar/set-scales")]
+	[HttpPost("v1/avatar/set-player-avatar-type")]
 	public async Task<dynamic> AvatarSetScalesAndType()
 	{
 		try
