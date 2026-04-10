@@ -30,7 +30,7 @@ public class InventoryService : ServiceBase, IService
                 offset = offset,
                 user_id = userId,
             });
-        sql.OrderBy("user_asset.id " + (sortOrder == SortOrder.Desc ? "desc" : "asc"));
+        sql.OrderBy("user_asset.id " + (sortOrder.ToLower() == "desc" ? "desc" : "asc"));
         sql.Where("user_asset.user_id = :user_id", new { user_id = userId });
         foreach (var type in types)
         {
