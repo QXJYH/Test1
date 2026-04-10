@@ -2,6 +2,7 @@ using System.Text.Json;
 using Dapper;
 using Roblox.Dto.Users;
 using Roblox.Models.Users;
+using Roblox.Models.Db;
 
 namespace Roblox.Services;
 
