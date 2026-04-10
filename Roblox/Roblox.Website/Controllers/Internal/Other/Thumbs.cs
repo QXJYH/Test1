@@ -292,11 +292,13 @@ namespace Roblox.Website.Controllers
 			var parsed = universeIds.Split(",").Select(long.Parse).Distinct().ToList();
 			if (parsed.Count is > 200 or < 0) throw new BadRequestException();
 			
+			string basurl = "https://kornet.lat";
+
 			var result = await services.thumbnails.GetGameIcons(parsed);
 			var result2 = result.Select(thumbnail => new ThumbnailEntry
 			{
 				targetId = thumbnail.targetId,
-				imageUrl = "https://kornet.lat" + thumbnail.imageUrl, //Configuration.BaseUrl + thumbnail.imageUrl,
+				imageUrl = basurl + thumbnail.imageUrl,
 				state = (ThumbnailState)thumbnail.state,
 			}).ToList();
 			
@@ -312,6 +314,8 @@ namespace Roblox.Website.Controllers
 			var parsed = userIds.Split(",").Select(long.Parse).Distinct().ToList();
 			if (parsed.Count is > 200 or < 0) throw new BadRequestException();
 			
+			string basurl = "https://kornet.lat";
+
 			var result = (await services.thumbnails.GetUserHeadshots(parsed)).ToList();
 			var result2 = result.Select(x => new ThumbnailEntry
 			{
@@ -336,7 +340,7 @@ namespace Roblox.Website.Controllers
 					}
 					else
 					{
-						item.imageUrl = "https://kornet.lat" + item.imageUrl; //Configuration.BaseUrl + item.imageUrl;
+						item.imageUrl = basurl + item.imageUrl;
 					}
 				}
 			}
@@ -345,7 +349,7 @@ namespace Roblox.Website.Controllers
 				foreach (var item in result2)
 				{
 					if (item.imageUrl is null) continue;
-					item.imageUrl = "https://kornet.lat" + item.imageUrl; //Configuration.BaseUrl + item.imageUrl;
+					item.imageUrl = basurl + item.imageUrl;
 				}
 			}
 			return new()
