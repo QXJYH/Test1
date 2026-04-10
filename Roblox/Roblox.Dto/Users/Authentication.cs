@@ -68,6 +68,11 @@ namespace Roblox.Dto.Authentication
         AccountIssue = 6,
 
         /// <summary>
+        /// 8: 2FA is enabled. Please login with this username format: username|2FACode
+        /// </summary>
+        TwoFactorRequired = 8,
+
+        /// <summary>
         /// 9: Unable to login with provided credentials. Default login is required.
         /// </summary>
         DefaultLoginRequired = 9,
