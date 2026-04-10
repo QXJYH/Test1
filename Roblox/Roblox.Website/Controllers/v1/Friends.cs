@@ -107,7 +107,7 @@ public class FriendsControllerV1 : ControllerBase
     public async Task UnfriendUser(long userIdToRemove)
     {
         FeatureFlags.FeatureCheck(FeatureFlag.FriendingEnabled);
-        await services.friends.DeleteFriend(safeUserSession.userId, userIdToRemove);
+        await services.friends.DeleteFriend(userSession.userId, userIdToRemove);
     }
 
     [HttpPost("users/{userIdToFollow:long}/follow")]
