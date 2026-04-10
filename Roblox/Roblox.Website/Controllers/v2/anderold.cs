@@ -43,7 +43,7 @@ public class InventoryControllerV2O : ControllerBase
     }
 
     [HttpDelete("inventory/asset/{assetId:long}")]
-    [HttpDeleteBypass("v2/inventory/asset/{assetId:long}")]
+    [HttpDelete("v2/inventory/asset/{assetId:long}")]
     public async Task DeleteAssetFromInventory(long assetId)
     {
         long userId = safeUserSession.userId;
