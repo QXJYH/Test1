@@ -54,7 +54,7 @@ public class InventoryControllerV2O : ControllerBase
         }
         catch (RecordNotFoundException)
         {
-            throw new NotFoundException(1, "This item does not exist.");
+            throw new RobloxException(404, 1, "This item does not exist."); 
         }
         if ((asset.creatorType == CreatorType.User && asset.creatorTargetId == userId) || asset.itemRestrictions.Contains("Limited") || asset.itemRestrictions.Contains("LimitedUnique"))
             throw new ForbiddenException(3, "This item is not allowed to be deleted.");
@@ -78,7 +78,7 @@ public class InventoryControllerV2O : ControllerBase
         if (!canView)
             throw new ForbiddenException(11, "You don't have permissions to view the specified user's inventory");
 
-        var result = (await services.inventory.GetInventoryWithSpecifcAssetTypes(userId, assetTypeList, sortOrder, limit, offset)).ToList();
+        var result = (await services.inventory.GetInventoryWithSpecifcAssetTypes(userId, assetTypeList, sortOrder.ToString().ToLower(), limit, offset)).ToList();
         return new
         {
             previousPageCursor = offset >= limit ? (offset - limit).ToString() : null,
@@ -102,7 +102,7 @@ public class InventoryControllerV2O : ControllerBase
         var canView = await services.inventory.CanViewInventory(userId, userSession?.userId ?? 0);
         if (!canView)
             throw new ForbiddenException(11, "You don't have permissions to view the specified user's inventory");
-        var result = (await services.inventory.GetInventory(userId, (Models.Assets.Type)assetTypeId, sortOrder, limit, offset)).ToList();
+        var result = (await services.inventory.GetInventory(userId, (Models.Assets.Type)assetTypeId, sortOrder.ToString().ToLower(), limit, offset)).ToList();
         var user = await services.users.GetUserById(userId);
         return new
         {
