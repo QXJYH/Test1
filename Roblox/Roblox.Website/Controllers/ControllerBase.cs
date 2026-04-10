@@ -26,7 +26,9 @@ namespace Roblox.Website.Controllers
                 if (userSessionForTests != null)
                     return userSessionForTests;
 #endif
-                var dict = HttpContext.Items;
+                var context = HttpContext;
+                if (context == null) return null;
+                var dict = context.Items;
                 if (dict.ContainsKey(SessionMiddleware.CookieName))
                 {
                     return (UserSession?)dict[SessionMiddleware.CookieName];

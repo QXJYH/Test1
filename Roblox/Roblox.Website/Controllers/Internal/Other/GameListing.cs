@@ -44,6 +44,7 @@ namespace Roblox.Website.Controllers
             {
                 Console.WriteLine($"GameSortsContext: {gameSortsContext}");
             }
+            _gamesControllerV1.ControllerContext = this.ControllerContext;
             return await _gamesControllerV1.GetGameSorts(gameSortsContext);
         }
         [HttpGetBypass("v1/name-description/games/{universeId:long}")]

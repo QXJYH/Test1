@@ -73,13 +73,13 @@ public class GamesControllerV1 : ControllerBase
         var results = new List<dynamic>();
         if (gameSortsContext == "HomeSorts")
         {
-            if (safeUserSession == null)
+            if (userSession == null)
             {
                 results.Add(sorts["popular"]);
             }
             else
             {
-                var recent = await services.games.GetRecentGames(safeUserSession.userId, 1);
+                var recent = await services.games.GetRecentGames(userSession.userId, 1);
                 if (recent.Any())
                 {
                     results.Add(sorts["recent"]);
