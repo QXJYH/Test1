@@ -35,6 +35,9 @@ public class InventoryEntry : CollectibleItemEntry
     public string creatorName { get; set; }
     public long creatorId { get; set; }
     public CreatorType creatorType { get; set; }
+
+        public DateTime createdAt { get; set; } 
+    public DateTime updatedAt { get; set; }
 }
 
 public class OwnerUserEntry
