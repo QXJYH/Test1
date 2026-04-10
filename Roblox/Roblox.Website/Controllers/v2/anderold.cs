@@ -13,7 +13,7 @@ namespace Roblox.Website.Controllers;
 
 [ApiController]
 [Route("/")]
-public class InventoryControllerV2 : ControllerBase
+public class InventoryControllerV2O : ControllerBase
 {
     [HttpGetBypass("v2/assets/{assetId:long}/owners")]
     [HttpGet("assets/{assetId:long}/owners")]
