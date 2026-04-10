@@ -30,16 +30,14 @@ namespace Roblox.Website.Controllers
         {
             FeatureCheck();
             await RateLimitCheck();
-            string username = request.cvalue;
-            string password = request.password;
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+
+            if (string.IsNullOrEmpty(request.cvalue) || string.IsNullOrEmpty(request.password))
                 throw new BadRequestException((int)LoginError400.UsernamePasswordRequired, "Username or password is missing.");
 
             // Format: {username}|{2facode}
-            string[] splittedUsername = username.Split('|');
-
-            username = splittedUsername[0];
-            string totpCode = splittedUsername.Length == 2 ? splittedUsername[1] : "";
+            string[] splittedUsername = request.cvalue.Split('|');
+            string username = splittedUsername[0];
+            string? totpCode = splittedUsername.Length == 2 ? splittedUsername[1] : "";
 
             UserInfo userInfo;
             try
@@ -51,9 +49,10 @@ namespace Roblox.Website.Controllers
                 throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect username or password. Please try again.");
             }
 
-            // if (await Login(userInfo.username, request.password, userInfo.userId, totpCode, isPasswordLeaked))
             if (await Login(userInfo.username, request.password, userInfo.userId, totpCode))
+            {
                 await CreateSessionAndSetCookie(userInfo.userId);
+            }
 
             return new
             {
@@ -65,7 +64,6 @@ namespace Roblox.Website.Controllers
                 },
                 isBanned = userInfo.IsDeleted()
             };
-
         }
 
         [HttpGetBypass("v1/users/{userId:long}/currency")]
@@ -411,7 +409,7 @@ namespace Roblox.Website.Controllers
         {
             FeatureCheck();
             await RateLimitCheck();
-            //get totp info
+
             try
             {
                 if (!await services.users.VerifyPassword(userId, password))
@@ -436,6 +434,7 @@ namespace Roblox.Website.Controllers
 
             return true;
         }
+
 
         private async Task<string> CreateSessionAndSetCookie(long userId)
         {
