@@ -32,8 +32,8 @@ public class GamesControllerV1 : ControllerBase
                 "popular", new
                 {
                     token = "popular",
-                    name = "popular",
-                    displayName = "popular",
+                    name = "Popular",
+                    displayName = "Popular",
                 }
             },
             {
