@@ -15,7 +15,7 @@ player:LoadCharacterBlocking()
 
 ThumbnailGenerator:AddProfilingCheckpoint("PlayerCharacterLoaded")
 
-local poseAnimationId = "http://bbblox.org/asset/?id=532421348"
+local poseAnimationId = "http://kornet.lat/asset/?id=532421348"
 
 local function getJointBetween(part0, part1)
     for _, obj in pairs(part1:GetChildren()) do
