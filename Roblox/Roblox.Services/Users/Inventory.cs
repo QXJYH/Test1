@@ -20,7 +20,7 @@ public class InventoryService : ServiceBase, IService
 
         return await db.QueryAsync<InventoryPrivacyEntry>(t.RawSql, t.Parameters);
     }
-	    public async Task<IEnumerable<InventoryEntry>> GetInventoryWithSpecifcAssetTypes(long userId, List<Models.Assets.Type> types, SortOrder sortOrder, int limit, int offset)
+	    public async Task<IEnumerable<InventoryEntry>> GetInventoryWithSpecifcAssetTypes(long userId, List<Models.Assets.Type> types, string sortOrder, int limit, int offset)
     {
         var sql = new SqlBuilder();
         var t = sql.AddTemplate(
