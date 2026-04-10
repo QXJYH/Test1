@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using Roblox.Exceptions;
 using Roblox.Dto.Users;
 using Roblox.Dto.Authentication;

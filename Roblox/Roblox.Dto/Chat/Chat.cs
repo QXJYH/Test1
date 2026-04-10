@@ -44,6 +44,11 @@ public class MarkAsReadRequest
     public string endMessageId { get; set; }
 }
 
+public class StartCloudeditConversationRequest
+{
+    public long placeId { get; set; }
+}
+
 public class StartConversationRequest
 {
     public long participantUserId { get; set; }
@@ -53,6 +58,12 @@ public class SendMessageRequest
 {
     public long conversationId { get; set; }
     public string message { get; set; }
+}
+
+public class AddToConversationRequest
+{
+    public long conversationId { get; set; }
+    public List<long> participantUserIds { get; set; }
 }
 
 public class UpdateTypingStatusRequest
