@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using Roblox.Exceptions;
 using Roblox.Dto.Users;
 using Roblox.Dto.Authentication;
+using Roblox.Models.Chat;
 using Roblox.Services;
 using Roblox.Services.Exceptions;
 using Roblox.Services.App.FeatureFlags;
