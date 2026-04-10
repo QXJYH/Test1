@@ -41,21 +41,8 @@ public class InventoryService : ServiceBase, IService
 
         return await db.QueryAsync<InventoryEntry>(t.RawSql, t.Parameters);
     }
-    private bool CanAddTypeToCollections(Models.Assets.Type assetType)
-    {
-        return assetType switch
-        {
-            Models.Assets.Type.Hat => true,
-            Models.Assets.Type.HairAccessory => true,
-            Models.Assets.Type.FaceAccessory => true,
-            Models.Assets.Type.NeckAccessory => true,
-            Models.Assets.Type.ShoulderAccessory => true,
-            Models.Assets.Type.FrontAccessory => true,
-            Models.Assets.Type.BackAccessory => true,
-            Models.Assets.Type.WaistAccessory => true,
-            _ => false,
-        };
-    }
+
+    
     
 	public async Task<(IEnumerable<CollectibleItemEntry> items, long totalRap)> GetCollectibleInventoryWithRap(long userId, Models.Assets.Type? type,
 		string sortOrder, int limit, int offset)
@@ -92,7 +79,7 @@ public class InventoryService : ServiceBase, IService
         return result > 0;
     }
 	public async Task<IEnumerable<CollectibleItemEntry>> GetCollectibleInventory(long userId, Models.Assets.Type? type,
-		string sortOrder, int limit, int offset)
+		SortOrder sortOrder, int limit, int offset)
 	{
 		var (items, _) = await GetCollectibleInventoryGrouped(userId, type, sortOrder, limit, offset);
 		return items;
