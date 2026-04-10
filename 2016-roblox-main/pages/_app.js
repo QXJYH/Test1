@@ -43,6 +43,21 @@ if (typeof window !== 'undefined') {
 	`);
 }
 
+const loginandsignuppaths = ['/', '/auth'];
+
+const Unknownisaw = ({ children }) => {
+  const { isAuthenticated, isPending } = AuthenticationStore.useContainer();
+
+  useEffect(() => {
+    if (isPending) return;
+    if (!isAuthenticated && !loginandsignuppaths.includes(window.location.pathname)) {
+      window.location.href = '/';
+    }
+  }, [isAuthenticated, isPending]);
+
+  return children;
+};
+
 function RobloxApp({ Component, pageProps }) {
   // set theme:
   // jss globals apparently don't support parameters/props, so the only way to do a dynamic global style is to either append a <style> element, use setAttribute(), or append a css file.
@@ -79,14 +94,16 @@ function RobloxApp({ Component, pageProps }) {
         </NavigationStore.Provider>
       </LoginModalStore.Provider>
       <GlobalAlert />
-      <MainWrapper className="gotham-font light-theme">
-        {getFlag('clientSideRenderingEnabled', false) ? <NextNProgress options={{ showSpinner: false }} color='#fff' height={2} /> : null}
-        <ThumbnailStore.Provider>
-          <Component {...pageProps} />
-          <Chat />
-        </ThumbnailStore.Provider>
-      </MainWrapper>
-      <Footer />
+      <Unknownisaw>
+        <MainWrapper className="gotham-font light-theme">
+          {getFlag('clientSideRenderingEnabled', false) ? <NextNProgress options={{ showSpinner: false }} color='#fff' height={2} /> : null}
+          <ThumbnailStore.Provider>
+            <Component {...pageProps} />
+            <Chat />
+          </ThumbnailStore.Provider>
+        </MainWrapper>
+        <Footer />
+      </Unknownisaw>
     </AuthenticationStore.Provider>
   </div>
 }
