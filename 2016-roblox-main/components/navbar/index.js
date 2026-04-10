@@ -182,7 +182,7 @@ const Navbar = () => {
             <li><a className="font-header-2 nav-menu-title text-header" href="/games">Games</a></li>
             <li><a className="font-header-2 nav-menu-title text-header" href="/catalog">Avatar Shop</a></li>
             <li><a className="font-header-2 nav-menu-title text-header" href="/develop">Create</a></li>
-            <li><a className="font-header-2 nav-menu-title text-header" href="/My/Money.aspx">Robux</a></li>
+            <li><a className="font-header-2 nav-menu-title text-header" href="/download">Download</a></li>
           </ul>
 
         </div>

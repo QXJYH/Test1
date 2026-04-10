@@ -224,18 +224,18 @@ const LoggedInArea = () => {
                 id="nav-settings"
               />
             </a>
-            
+
             {settingsOpen && (
-              <Dropdown2016 
-                dropdownClass={s.dropdownClass} 
-                onlyDropdown={true} 
+              <Dropdown2016
+                dropdownClass={s.dropdownClass}
+                onlyDropdown={true}
                 options={[
                   {
                     name: 'Settings',
                     url: '/My/Account',
                   },
                   {
-                    name: 'Help',
+                    name: 'Discord Server',
                     url: 'https://discord.gg/yKheUexWm2',
                   },
                   {
@@ -247,7 +247,7 @@ const LoggedInArea = () => {
                       });
                     },
                   },
-                ]} 
+                ]}
               />
             )}
           </li>
