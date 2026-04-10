@@ -19,7 +19,44 @@ public class InventoryService : ServiceBase, IService
 
         return await db.QueryAsync<InventoryPrivacyEntry>(t.RawSql, t.Parameters);
     }
-	
+	    public async Task<IEnumerable<InventoryEntry>> GetInventoryWithSpecifcAssetTypes(long userId, List<Models.Assets.Type> types, SortOrder sortOrder, int limit, int offset)
+    {
+        var sql = new SqlBuilder();
+        var t = sql.AddTemplate(
+            "SELECT user_asset.id as userAssetId, user_asset.created_at as createdAt, serial as serialNumber, user_asset.asset_id as assetId, asset.recent_average_price as recentAveragePrice, asset.price_robux as originalPrice, asset.serial_count as assetStock, asset.asset_type as assetTypeId, asset.name as name, asset.is_limited as isLimited, asset.is_limited_unique as isLimitedUnique, asset.creator_id as creatorId, asset.creator_type as creatorType, (CASE WHEN asset.creator_type = 1 THEN u.username ELSE g.name END) as creatorName FROM user_asset INNER JOIN asset ON asset.id = user_asset.asset_id LEFT JOIN \"user\" u ON u.id = asset.creator_id AND asset.creator_type = 1 LEFT JOIN \"group\" g ON g.id = asset.creator_id AND asset.creator_type = 2 /**where**/ /**orderby**/ LIMIT :limit OFFSET :offset", new
+            {
+                limit = limit,
+                offset = offset,
+                user_id = userId,
+            });
+        sql.OrderBy("user_asset.id " + (sortOrder == SortOrder.Desc ? "desc" : "asc"));
+        sql.Where("user_asset.user_id = :user_id", new { user_id = userId });
+        foreach (var type in types)
+        {
+            sql.Where("asset.asset_type = :type", new
+            {
+                type = (int)type,
+            });
+        }
+
+        return await db.QueryAsync<InventoryEntry>(t.RawSql, t.Parameters);
+    }
+    private bool CanAddTypeToCollections(Models.Assets.Type assetType)
+    {
+        return assetType switch
+        {
+            Models.Assets.Type.Hat => true,
+            Models.Assets.Type.HairAccessory => true,
+            Models.Assets.Type.FaceAccessory => true,
+            Models.Assets.Type.NeckAccessory => true,
+            Models.Assets.Type.ShoulderAccessory => true,
+            Models.Assets.Type.FrontAccessory => true,
+            Models.Assets.Type.BackAccessory => true,
+            Models.Assets.Type.WaistAccessory => true,
+            _ => false,
+        };
+    }
+    
 	public async Task<(IEnumerable<CollectibleItemEntry> items, long totalRap)> GetCollectibleInventoryWithRap(long userId, Models.Assets.Type? type,
 		string sortOrder, int limit, int offset)
 	{
@@ -43,14 +80,40 @@ public class InventoryService : ServiceBase, IService
 
 		return await db.QuerySingleAsync<long>(t.RawSql, t.Parameters);
 	}
-	
+	    public async Task<bool> IsOwned(long userId, long assetId)
+    {
+        var result = await db.QuerySingleOrDefaultAsync<long>(
+            "SELECT COUNT(*) as total FROM user_asset WHERE user_id = :userId AND asset_id = :assetId", new
+            {
+                userId,
+                assetId
+            }
+        );
+        return result > 0;
+    }
 	public async Task<IEnumerable<CollectibleItemEntry>> GetCollectibleInventory(long userId, Models.Assets.Type? type,
 		string sortOrder, int limit, int offset)
 	{
 		var (items, _) = await GetCollectibleInventoryGrouped(userId, type, sortOrder, limit, offset);
 		return items;
 	}
-	
+	    public async Task DeleteUserAssetId(long userId, long assetId)
+    {
+        await db.QueryAsync("DELETE FROM user_asset WHERE user_id = :userId AND asset_id = :assetId", new
+        {
+            userId,
+            assetId
+        });
+    }
+        public async Task MarkTransactionAsDeleted(long sellerId, long buyerId, long assetId)
+    {
+        await db.QueryAsync("UPDATE user_transaction SET deleted = TRUE WHERE user_id_one = :buyerId AND user_id_two = :sellerId AND asset_id = :assetId", new
+        {
+            buyerId,
+            sellerId,
+            assetId
+        });
+    }
 	public async Task<(IEnumerable<CollectibleItemEntry> items, long totalRap)> GetCollectibleInventoryGrouped(long userId, Models.Assets.Type? type,
 		string sortOrder, int limit, int offset)
 	{
