@@ -127,12 +127,14 @@ namespace Roblox.Dto.Assets
             createdAt = internalEntry.createdAt;
             updatedAt = internalEntry.updatedAt;
             lowestSellerData = internalEntry.lowestSellerData;
+            expectedSellerId = creatorTargetId;
             
             // Special stuff
             serialCount = internalEntry.serialCount;
             if (internalEntry.lowestSellerData != null)
             {
                 lowestPrice = internalEntry.lowestSellerData.price;
+                expectedSellerId = internalEntry.lowestSellerData.userId;
             }
             if (internalEntry.isLimited && !internalEntry.isLimitedUnique)
             {

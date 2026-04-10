@@ -36,10 +36,10 @@ namespace Roblox.Website.Controllers
                 throw new BadRequestException((int)LoginError400.UsernamePasswordRequired, "Username or password is missing.");
 
             // Format: {username}|{2facode}
-            // string[] splittedUsername = username.Split('|');
+            string[] splittedUsername = username.Split('|');
 
-            // username = splittedUsername[0];
-            // string totpCode = splittedUsername.Length == 2 ? splittedUsername[1] : "";
+            username = splittedUsername[0];
+            string totpCode = splittedUsername.Length == 2 ? splittedUsername[1] : "";
 
             UserInfo userInfo;
             try
@@ -52,7 +52,7 @@ namespace Roblox.Website.Controllers
             }
 
             // if (await Login(userInfo.username, request.password, userInfo.userId, totpCode, isPasswordLeaked))
-            if (await Login(userInfo.username, request.password, userInfo.userId))
+            if (await Login(userInfo.username, request.password, userInfo.userId, totpCode))
                 await CreateSessionAndSetCookie(userInfo.userId);
 
             return new
@@ -407,7 +407,7 @@ namespace Roblox.Website.Controllers
             }
         }
         //private async Task<bool> Login(string username, string password, long userId, string? totpCode, bool isPasswordLeaked, bool? skip2FA = false)
-        private async Task<bool> Login(string username, string password, long userId)
+        private async Task<bool> Login(string username, string password, long userId, string? totpCode)
         {
             FeatureCheck();
             await RateLimitCheck();
@@ -425,17 +425,14 @@ namespace Roblox.Website.Controllers
             // if (skip2FA == true)
             //     return true;
 
-            // if (await services.users.GetTotpStatus(userId) == TotpStatus.Enabled)
-            // {
-            //     TotpInfo? totpInfo = await services.users.GetTotp(userId);
-            //     //null check
-            //     if (string.IsNullOrEmpty(totpCode))
-            //         throw new ForbiddenException((int)LoginError403.IncorrectCredentials, $"You have 2FA enabled. Please login with this username format {username}|2FA Code");
+            if (await services.twoFactor.IsEnabled(userId))
+            {
+                if (string.IsNullOrEmpty(totpCode))
+                    throw new ForbiddenException((int)LoginError403.TwoFactorRequired, "2FA is enabled. Please login with this username format: username|2FACode");
 
-            //     //verify totp code
-            //     if (!services.users.VerifyTotp(totpInfo.secret, totpCode))
-            //         throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect 2FA code. Please try again.");
-            // }
+                if (!await services.twoFactor.VerifyCode(userId, totpCode))
+                    throw new ForbiddenException((int)LoginError403.IncorrectCredentials, "Incorrect 2FA code. Please try again.");
+            }
 
             return true;
         }
