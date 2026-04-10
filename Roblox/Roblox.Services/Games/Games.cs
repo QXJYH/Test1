@@ -80,6 +80,20 @@ public class GamesService : ServiceBase, IService
         result.favoritedCount = await assets.CountFavorites(result.rootPlaceId);
         return result;
     }
+
+    public async Task<bool> CanEditUniverse(long userId, long universeId)
+    {
+        var result = await db.QuerySingleOrDefaultAsync<Dto.Total>(
+            "SELECT COUNT(*) AS total FROM universe_permission WHERE universe_id = :id AND subject_id = :userId AND subject_type = :subjectType AND action = :action", new
+            {
+                id = universeId,
+                userId,
+                subjectType = (int)CreatorType.User,
+                action = (int)PermittedAction.Edit
+            });
+        return result?.total > 0;
+    }
+
     public async Task<IEnumerable<MultiGetUniverseEntry>> MultiGetUniverseInfo(IEnumerable<long> universeIds)
     {
         var ids = universeIds.ToArray();

@@ -3,6 +3,7 @@ using Dapper;
 using Newtonsoft.Json;
 using Roblox.Dto.Chat;
 using Roblox.Logging;
+using Roblox.Models.Chat;
 using Roblox.Services.Exceptions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -120,6 +121,65 @@ public class ChatService : ServiceBase, IService
                 user_id = userId,
             });
         return result;
+    }
+
+    public async Task<Conversation> GetConversation(long conversationId)
+    {
+        var result = await db.QuerySingleOrDefaultAsync<Conversation>("SELECT id, created_at as createdAt, creator_id as creatorId, title, conversation_type as conversationType FROM user_conversation WHERE id = :id", new
+        {
+            id = conversationId,
+        });
+        return result;
+    }
+
+    public async Task<Conversation> GetUniverseConversation(long universeId)
+    {
+        var result = await db.QuerySingleOrDefaultAsync<Conversation>("SELECT id, created_at as createdAt, creator_id as creatorId, title, conversation_type as conversationType FROM user_conversation WHERE universe_id = :uni_id",
+            new
+            {
+                uni_id = universeId,
+            });
+        return result;
+    }
+
+    public async Task<Conversation> CreateCloudEditConversation(long userIdInitiating, long universeId)
+    {
+        using var friends = ServiceProvider.GetOrCreate<FriendsService>(this);
+
+        var dupeLockKey = GetCreateConvoLock(userIdInitiating, universeId);
+        await using var redlock = await Services.Cache.redLock.CreateLockAsync(dupeLockKey, TimeSpan.FromSeconds(5));
+        if (!redlock.IsAcquired)
+            throw new RobloxException(400, 0, "Failed to acquire lock for conversation creation.");
+
+        var conversation = await GetUniverseConversation(universeId);
+
+        if (conversation != null)
+        {
+            var participants = await GetChatParticipants(conversation.id);
+            foreach (var item in participants)
+            {
+                if (item.userId == userIdInitiating)
+                {
+                    return conversation;
+                }
+            }
+            await AddUserToConversation(conversation.id, userIdInitiating);
+            return conversation;
+        }
+
+        return await InTransaction(async (trx) =>
+        {
+            var result = await db.QuerySingleOrDefaultAsync<Conversation>("INSERT INTO user_conversation (creator_id, conversation_type, universe_id) VALUES (:creator_id, :conversation_type, :uni_id) RETURNING id, created_at as createdAt, creator_id as creatorId, title, conversation_type as conversationType",
+                new
+                {
+                    creator_id = userIdInitiating,
+                    conversation_type = (int)ConversationType.CloudEditConversation,
+                    uni_id = universeId,
+                });
+
+            await AddUserToConversation(result.id, userIdInitiating);
+            return result;
+        });
     }
 
     private string GetCreateConvoLock(long userIdA, long userIdB)

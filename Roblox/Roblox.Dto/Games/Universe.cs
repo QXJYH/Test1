@@ -12,6 +12,12 @@ public class UniverseCreator
     public bool isRNVAccount { get; set; }
 }
 
+public enum PermittedAction
+{
+    Play = 0,
+    Edit = 1,
+}
+
 public class MultiGetUniverseEntry
 {
     public Genre genre { get; set; }
