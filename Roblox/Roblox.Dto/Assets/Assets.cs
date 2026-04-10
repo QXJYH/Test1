@@ -100,7 +100,7 @@ namespace Roblox.Dto.Assets
             assetType = internalEntry.assetType;
             name = internalEntry.name;
             description = internalEntry.description;
-            genres = new[] {internalEntry.genre};
+            genres = new[] { internalEntry.genre.ToString() };
             creatorType = internalEntry.creatorType;
             creatorTargetId = internalEntry.creatorTargetId;
             recentAveragePrice = internalEntry.recentAveragePrice;
@@ -159,6 +159,7 @@ namespace Roblox.Dto.Assets
             itemRestrictions = restrictions;
             itemStatus = Array.Empty<string>();
             saleLocationType = "ShopAndAllExperiences";
+            genres = new List<string> { internalEntry.genre.ToString() };
         }
         public long id { get; set; }
         [JsonConverter(typeof(JsonIntEnumConverter<Type>))]
@@ -166,8 +167,7 @@ namespace Roblox.Dto.Assets
         public string name { get; set; }
         public string? description { get; set; }
         
-        public IEnumerable<Genre> genres { get; set; }
-        
+        public IEnumerable<string> genres { get; set; }
         public CreatorType creatorType { get; set; }
         public long creatorTargetId { get; set; }
         public string creatorName { get; set; }
@@ -178,6 +178,16 @@ namespace Roblox.Dto.Assets
         public int saleCount { get; set; }
         public int purchaseCount { get; set; }
         public string itemType { get; set; } = "Asset";
+        public bool isForRent { get; set; } = false;
+        public long expectedSellerId { get; set; } = 0;
+        public bool owned { get; set; } = false;
+        public bool isPurchasable => isForSale;
+        public IEnumerable<object> bundledItems { get; set; } = Array.Empty<object>();
+        public long? lowestResalePrice => lowestPrice;
+        public bool hasResellers => lowestSellerData != null;
+        public string itemCreatedUtc => createdAt.ToString("yyyy-MM-ddTHH:mm:ssK");
+        public string? collectibleItemId { get; set; } = null;
+        public int totalQuantity => serialCount ?? 0;
         public long? favoriteCount { get; set; } = null;
         public long productId => id;
         public bool creatorHasVerifiedBadge { get; set; }

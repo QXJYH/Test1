@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Roblox.Dto.Assets;
 using Roblox.Models;
 using Roblox.Models.Assets;
+using Roblox.Services;
+using Roblox.Services.Exceptions;
 using MultiGetEntry = Roblox.Dto.Assets.MultiGetEntry;
 #pragma warning disable CS8600
 
@@ -694,6 +696,22 @@ public class Catalogandroid : ControllerBase
         if (request.limit is > 100 or < 1) request.limit = 10;
         return await services.assets.SearchCatalogDetails(request);
     }
+    [HttpGetBypass("v1/catalog/items/{assetId:long}/details")]
+    public async Task<MultiGetEntry> GetItemDetails(long assetId, string itemType = "Asset")
+    {
+        var entries = await services.assets.MultiGetInfoById(new[] { assetId });
+        var entry = entries.FirstOrDefault();
+        if (entry == null) throw new RobloxException(404, 0, "Not Found");
+        
+        if (userSession != null)
+        {
+            using var inventory = Roblox.Services.ServiceProvider.GetOrCreate<InventoryService>();
+            entry.owned = await inventory.IsOwned(userSession.userId, assetId);
+        }
+        
+        return entry;
+    }
+
 	[HttpGetBypass("v1/favorites/assets/{assetId:long}/count")]
 	public async Task<long> GetFavoriteCount(long assetId)
 	{
