@@ -192,13 +192,14 @@ namespace Roblox.Dto.Assets
         {
             get
             {
-                if (isForSale && price == 0) return "Free";
+                if (price == 0 || priceTickets == 0) return "Free";
+                if (isForSale) return "ForSale";
                 if (itemRestrictions != null &&
                     (itemRestrictions.Contains("Limited") || itemRestrictions.Contains("LimitedUnique")))
                 {
                     if (lowestSellerData == null) return "No Resellers";
                 }
-                return null;
+                return "Offsale";
             }
         }
         
