@@ -48,7 +48,8 @@ public class InventoryService : ServiceBase, IService
 	public async Task<(IEnumerable<CollectibleItemEntry> items, long totalRap)> GetCollectibleInventoryWithRap(long userId, Models.Assets.Type? type,
 		string sortOrder, int limit, int offset)
 	{
-		var items = await GetCollectibleInventory(userId, type, sortOrder, limit, offset);
+		if (!Enum.TryParse<SortOrder>(sortOrder, true, out var parsedSort)) parsedSort = SortOrder.Asc;
+		var items = await GetCollectibleInventory(userId, type, parsedSort, limit, offset);
 		var totalRap = await GetAllRAP(userId, type);
 		return (items, totalRap);
 	}
@@ -82,7 +83,7 @@ public class InventoryService : ServiceBase, IService
 	public async Task<IEnumerable<CollectibleItemEntry>> GetCollectibleInventory(long userId, Models.Assets.Type? type,
 		SortOrder sortOrder, int limit, int offset)
 	{
-		var (items, _) = await GetCollectibleInventoryGrouped(userId, type, sortOrder, limit, offset);
+		var (items, _) = await GetCollectibleInventoryGrouped(userId, type, sortOrder.ToString().ToLower(), limit, offset);
 		return items;
 	}
 	    public async Task DeleteUserAssetId(long userId, long assetId)
