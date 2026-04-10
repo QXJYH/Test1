@@ -79,6 +79,7 @@ namespace Roblox.Dto.Assets
         public string groupName { get; set; }
         public string username { get; set; }
         public bool is18Plus { get; set; }
+        public bool verified { get; set; }
         public DateTime createdAt { get; set; }
         public DateTime updatedAt { get; set; }
         public ModerationStatus moderationStatus { get; set; }
@@ -114,9 +115,11 @@ namespace Roblox.Dto.Assets
             
             offsaleDeadline = internalEntry.offsaleDeadline;
             is18Plus = internalEntry.is18Plus;
+            creatorHasVerifiedBadge = internalEntry.verified;
             moderationStatus = internalEntry.moderationStatus;
             var restrictions = new List<string>();
             saleCount = internalEntry.saleCount;
+            purchaseCount = internalEntry.saleCount;
             favoriteCount = internalEntry.favoriteCount;
             isForSale = internalEntry.isForSale && (internalEntry.priceRobux != null || internalEntry.priceTickets != null);
             price = internalEntry.priceRobux;
@@ -154,6 +157,8 @@ namespace Roblox.Dto.Assets
             }
 
             itemRestrictions = restrictions;
+            itemStatus = Array.Empty<string>();
+            saleLocationType = "ShopAndAllExperiences";
         }
         public long id { get; set; }
         [JsonConverter(typeof(JsonIntEnumConverter<Type>))]
@@ -169,13 +174,20 @@ namespace Roblox.Dto.Assets
         public long? recentAveragePrice { get; set; }
         public DateTime? offsaleDeadline { get; set; }
         public IEnumerable<string> itemRestrictions { get; set; }
+        public IEnumerable<string> itemStatus { get; set; }
         public int saleCount { get; set; }
+        public int purchaseCount { get; set; }
         public string itemType { get; set; } = "Asset";
         public long? favoriteCount { get; set; } = null;
+        public long productId => id;
+        public bool creatorHasVerifiedBadge { get; set; }
         public bool isForSale { get; set; }
         public long? price { get; set; }
         public long? priceTickets { get; set; }
         public long? lowestPrice { get; set; } = null;
+        public string saleLocationType { get; set; }
+        public long? premiumPrice { get; set; } = null;
+        public object? premiumPricing { get; set; } = null;
         public string? priceStatus
         {
             get

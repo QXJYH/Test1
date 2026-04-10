@@ -37,6 +37,17 @@ public class SearchResponse : RobloxCollectionPaginated<CatalogMultiGetEntry>
     public object elasticsearchDebugInfo { get; set; }
 }
 
+public class SearchDetailsResponse : RobloxCollectionPaginated<MultiGetEntry>
+{
+    public SearchDetailsResponse()
+    {
+        data = Array.Empty<MultiGetEntry>();
+    }
+    public string? keyword { get; set; }
+    public int _total { get; set; }
+    public object elasticsearchDebugInfo { get; set; }
+}
+
 public class ItemRestrictions {
     public long assetId { get; set; }
     public bool isLimited { get; set; }

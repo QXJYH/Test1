@@ -673,6 +673,27 @@ public class Catalogandroid : ControllerBase
 	    if (request.limit is > 100 or < 1) request.limit = 10;
 	    return await services.assets.SearchCatalog(request);
     }
+
+    [HttpGetBypass("v1/search/items/details")]
+    public async Task<SearchDetailsResponse> SearchItemsDetails(string? category, string? subcategory, string? sortType, string? keyword, string? cursor, int limit = 10, CreatorType? creatorType = null, long? creatorTargetId = null)
+    {
+        var include18Plus = userSession != null && await services.users.Is18Plus(userSession.userId);
+        var request = new CatalogSearchRequest()
+        {
+            category = category,
+            keyword = keyword,
+            subcategory = subcategory,
+            sortType = sortType,
+            cursor = cursor,
+            limit = limit,
+            creatorType = creatorType,
+            creatorTargetId = creatorTargetId,
+            includeNotForSale = false,
+            include18Plus = include18Plus,
+        };
+        if (request.limit is > 100 or < 1) request.limit = 10;
+        return await services.assets.SearchCatalogDetails(request);
+    }
 	[HttpGetBypass("v1/favorites/assets/{assetId:long}/count")]
 	public async Task<long> GetFavoriteCount(long assetId)
 	{

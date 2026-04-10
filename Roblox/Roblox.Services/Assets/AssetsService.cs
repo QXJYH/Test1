@@ -1594,7 +1594,7 @@ public class AssetsService : ServiceBase, IService
         watch.Start();
         var query = new SqlBuilder();
         var t = query.AddTemplate(
-            "SELECT asset.id as id, asset_type as assetType, asset.name, asset.description, asset_genre as genre, creator_type as creatorType, creator_id as creatorTargetId, offsale_at as offsaleDeadline, is_for_sale as isForSale, price_robux as priceRobux, price_tix as priceTickets, is_limited as isLimited, is_limited_unique as isLimitedUnique, serial_count as serialCount, \"group\".name as groupName, \"user\".username as username, asset.created_at as createdAt, asset.updated_at as updatedAt, asset.is_18_plus, asset.moderation_status, asset.recent_average_price as recentAveragePrice FROM asset LEFT JOIN \"user\" ON \"user\".id = asset.creator_id LEFT JOIN \"group\" ON \"group\".id = asset.creator_id /**where**/ LIMIT 200", new
+            "SELECT asset.id as id, asset_type as assetType, asset.name, asset.description, asset_genre as genre, creator_type as creatorType, creator_id as creatorTargetId, offsale_at as offsaleDeadline, is_for_sale as isForSale, price_robux as priceRobux, price_tix as priceTickets, is_limited as isLimited, is_limited_unique as isLimitedUnique, serial_count as serialCount, \"group\".name as groupName, \"user\".username as username, \"user\".verified as verified, asset.created_at as createdAt, asset.updated_at as updatedAt, asset.is_18_plus, asset.moderation_status, asset.recent_average_price as recentAveragePrice FROM asset LEFT JOIN \"user\" ON \"user\".id = asset.creator_id LEFT JOIN \"group\" ON \"group\".id = asset.creator_id /**where**/ LIMIT 200", new
             {
                 sale_type = PurchaseType.Purchase,
                 sub_sale_type = TransactionSubType.ItemPurchase,
@@ -2013,6 +2013,35 @@ WHERE asset_type = :asset_type AND asset.id < :id AND NOT asset.is_18_plus ORDER
         resp._total = totalResults.total;
         resp.data = sortedList;
         return resp;
+    }
+
+    public async Task<SearchDetailsResponse> SearchCatalogDetails(CatalogSearchRequest request)
+    {
+        var searchResp = await SearchCatalog(request);
+        var detailsResp = new SearchDetailsResponse()
+        {
+            keyword = searchResp.keyword,
+            nextPageCursor = searchResp.nextPageCursor,
+            previousPageCursor = searchResp.previousPageCursor,
+            _total = searchResp._total,
+            elasticsearchDebugInfo = new
+            {
+                elasticsearchQuery = (string?)null,
+                isFromCache = false,
+                indexName = "",
+                isTerminatedEarly = (bool?)null,
+                isForceTerminationEnabledByRequest = (bool?)null,
+                searchResultDataSource = (string?)null
+            }
+        };
+
+        if (searchResp.data != null && searchResp.data.Any())
+        {
+            var details = await MultiGetInfoById(searchResp.data.Select(c => c.id));
+            detailsResp.data = details;
+        }
+
+        return detailsResp;
     }
 
     public async Task<IEnumerable<MultiGetAssetDeveloperDetails>> MultiGetAssetDeveloperDetails(
