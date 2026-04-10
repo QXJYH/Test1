@@ -296,7 +296,7 @@ namespace Roblox.Website.Controllers
 			var result2 = result.Select(thumbnail => new ThumbnailEntry
 			{
 				targetId = thumbnail.targetId,
-				imageUrl = Configuration.BaseUrl + thumbnail.imageUrl,
+				imageUrl = "https://kornet.lat" + thumbnail.imageUrl, //Configuration.BaseUrl + thumbnail.imageUrl,
 				state = (ThumbnailState)thumbnail.state,
 			}).ToList();
 			
@@ -336,7 +336,7 @@ namespace Roblox.Website.Controllers
 					}
 					else
 					{
-						item.imageUrl = Configuration.BaseUrl + item.imageUrl;
+						item.imageUrl = "https://kornet.lat" + item.imageUrl; //Configuration.BaseUrl + item.imageUrl;
 					}
 				}
 			}
@@ -345,7 +345,7 @@ namespace Roblox.Website.Controllers
 				foreach (var item in result2)
 				{
 					if (item.imageUrl is null) continue;
-					item.imageUrl = Configuration.BaseUrl + item.imageUrl;
+					item.imageUrl = "https://kornet.lat" + item.imageUrl; //Configuration.BaseUrl + item.imageUrl;
 				}
 			}
 			return new()
