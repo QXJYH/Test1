@@ -43,7 +43,7 @@ if (typeof window !== 'undefined') {
 	`);
 }
 
-const loginandsignuppaths = ['/', '/auth'];
+const loginandsignuppaths = ['/', '/auth', '/forgotpasswordOrUsername'];
 
 const Unknownisaw = ({ children }) => {
   const { isAuthenticated, isPending } = AuthenticationStore.useContainer();
