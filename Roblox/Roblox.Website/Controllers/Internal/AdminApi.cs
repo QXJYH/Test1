@@ -136,7 +136,7 @@ public class AdminApiController : ControllerBase
         var isAdmin = isOwner;
         var isMod = isAdmin;
         
-        var requiresTwoFactor = await services.twoFactor.IsEnabled(userSession.userId) && !await IsTwoFactorVerfied();
+        var requiresTwoFactor = !await IsTwoFactorVerfied();
 
         return new
         {
